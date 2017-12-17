@@ -9,7 +9,7 @@ The company would like to create a data store that keeps these vehicles with the
 
 # Features scope
 
-# Vehicles ping status
+# Vehicles ping
 
 As a vehicle (IoT device), device shall be able to submit it's status over http for a certain end-point, along with http header header   contains authorization key, on the request body optionaly, device can submit more details about the status, witch correlation Id for      this status to support future device features scaling.
 
@@ -19,5 +19,4 @@ As a vehicle (IoT device), device shall be able to submit it's status over http 
   - Authourzation token verfication is out of scope for the current implementation.
   
   # API contract
-    https://app.swaggerhub.com/apis/mohamed-abdo/vehicle-status/1.0.0#/vehicle/ping
-  
+    swagger API documentation [swagger API URL](https://app.swaggerhub.com/apis/mohamed-abdo/vehicle-status/1.0.0#/vehicle/ping/)
