@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  vehiclestatus:
+    image: vehiclestatus
+    build:
+      context: .
+      dockerfile: vehicleStatus/Dockerfile
+  
+  distributed_cache:
+    image: redis
+    ports:
+    - 5551:6739
+
+  event_bus:
+    image: rabbitmq
+    ports:
+    - 5552:5672
