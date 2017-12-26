@@ -1,8 +1,32 @@
 version: '3'
 
 services:
-  vehiclestatus:
+
+
+  tracking:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     ports:
       - "80"
+
+
+  vehicle:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "80"
+
+
+  customer:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "80"
+
+
+  ping:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "80"
+

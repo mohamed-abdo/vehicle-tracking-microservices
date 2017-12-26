@@ -12,9 +12,4 @@
     <PackageReference Include="NUnit" Version="3.9.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\vehicle-tracking-poc\DomainModels\DomainModels.csproj" />
-    <ProjectReference Include="..\vehicle-tracking-poc\vehicleStatus\vehicleStatus.csproj" />
-  </ItemGroup>
-
 </Project>

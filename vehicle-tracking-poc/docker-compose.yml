@@ -1,18 +1,38 @@
 version: '3'
 
 services:
-  vehiclestatus:
-    image: vehiclestatus
-    build:
-      context: .
-      dockerfile: vehicleStatus/Dockerfile
-  
+
   distributed_cache:
     image: redis
     ports:
     - 5551:6739
 
-  event_bus:
+  messages_middleware:
     image: rabbitmq
     ports:
     - 5552:5672
+
+  tracking:
+    image: tracking
+    build:
+      context: .
+      dockerfile: Tracking/Dockerfile
+
+  vehicle:
+    image: vehicle
+    build:
+      context: .
+      dockerfile: Vehicle/Dockerfile
+
+  customer:
+    image: customer
+    build:
+      context: .
+      dockerfile: Customer/Dockerfile
+
+  ping:
+    image: ping
+    build:
+      context: .
+      dockerfile: Ping/Dockerfile
+

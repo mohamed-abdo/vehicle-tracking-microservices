@@ -5,7 +5,8 @@ EXPOSE 80
 FROM microsoft/aspnetcore-build:2.0 AS build
 WORKDIR /src
 COPY *.sln ./
-COPY vehicleStatus/vehicleStatus.csproj vehicleStatus/
+COPY vehicleStatus/Ping.csproj vehicleStatus/
+COPY DomainModels/DomainModels.csproj DomainModels/
 RUN dotnet restore
 COPY . .
 WORKDIR /src/vehicleStatus
@@ -17,4 +18,4 @@ RUN dotnet publish -c Release -o /app
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app .
-ENTRYPOINT ["dotnet", "vehicleStatus.dll"]
+ENTRYPOINT ["dotnet", "Ping.dll"]
