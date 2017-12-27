@@ -6,6 +6,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,10 +24,19 @@ namespace BackgroundMiddleware.Concrete
         private readonly (string hostName, string userName, string password, string exchange, string[] routes) hostConfig;
         private RabbitMQSubscriber(ILogger logger, (string hostName, string userName, string password, string exchange, string[] routes) hostConfig)
         {
-            this.logger = logger ?? throw new ArgumentNullException("Logger reference is required");
+            this.logger = logger ?? throw new ArgumentNullException("Logger reference is invalid");
             this.hostConfig = hostConfig;
-            var hostName = hostConfig.hostName ?? throw new ArgumentNullException("hostName reference is required");
-
+            switch (hostConfig)
+            {
+                case var t when string.IsNullOrEmpty(t.hostName):
+                    throw new ArgumentNullException("hostName is invalid");
+                case var t when string.IsNullOrEmpty(t.exchange):
+                    throw new ArgumentNullException("exhange is invalid");
+                case var t when t.routes == null || t.routes.Length == 0 || t.routes.Any(r => string.IsNullOrEmpty(r)):
+                    throw new ArgumentNullException("routes is invalid");
+                default:
+                    break;
+            }
             this.connectionFactory = new ConnectionFactory() { HostName = hostConfig.hostName, UserName = hostConfig.userName, Password = hostConfig.password };
         }
         public static RabbitMQSubscriber<T> Create(ILogger logger, (string hostName, string userName, string password, string exchange, string[] routes) hostConfig)
@@ -38,10 +48,9 @@ namespace BackgroundMiddleware.Concrete
             using (var connection = connectionFactory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
-                channel.ExchangeDeclare(exchange: "topic_logs", type: "topic");
+                channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+                channel.ExchangeDeclare(exchange: hostConfig.exchange, type: ExchangeType.Topic);
                 var queueName = channel.QueueDeclare().QueueName;
-
-
 
                 foreach (var bindingKey in hostConfig.routes)
                 {
@@ -50,7 +59,7 @@ namespace BackgroundMiddleware.Concrete
                                       routingKey: bindingKey);
                 }
 
-                logger.LogInformation(" [*] Waiting for messages.");
+                logger.LogInformation("[*] Waiting for messages.");
 
                 var consumer = new EventingBasicConsumer(channel);
                 consumer.Received += (model, ea) =>
@@ -59,17 +68,19 @@ namespace BackgroundMiddleware.Concrete
                     var encodedBody = Encoding.UTF8.GetString(body);
                     if (string.IsNullOrEmpty(encodedBody))
                         throw new TypeLoadException("Invalid message body");
+
                     var message = JsonConvert.DeserializeObject<T>(encodedBody);
                     var routingKey = ea.RoutingKey;
+                    channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
                     logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", message.Id, hostConfig.exchange, routingKey);
                 };
                 channel.BasicConsume(queue: queueName,
-                                     autoAck: true,
+                                     autoAck: false,
                                      consumer: consumer);
-                Console.ReadLine();
 
-                return Task.CompletedTask;
+                Console.ReadLine();
             }
+            return Task.CompletedTask;
         }
     }
 }

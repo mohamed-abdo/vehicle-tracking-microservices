@@ -10,13 +10,6 @@ using RabbitMQ.Client;
 
 namespace BackgroundMiddleware.Concrete
 {
-    public enum ExchangeType
-    {
-        topic,
-        direct,
-        fanout,
-        header
-    }
     /// <summary>
     /// rabbitMQ publisher manager
     /// </summary>
@@ -45,13 +38,14 @@ namespace BackgroundMiddleware.Concrete
         public void Publish<T>(string exchange, string route, T message) where T : struct, IDomainModel<T>
         {
             verifyConnection();
-
-            channel.ExchangeDeclare(exchange: exchange, type: nameof(ExchangeType.topic));
+            var properties = channel.CreateBasicProperties();
+            properties.Persistent = true;
+            channel.ExchangeDeclare(exchange: exchange, type: ExchangeType.Topic, durable: true);
 
             var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
             channel.BasicPublish(exchange: exchange,
                                  routingKey: route,
-                                 basicProperties: null,
+                                 basicProperties: properties,
                                  body: body);
             logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", message.Id, exchange, route);
         }
