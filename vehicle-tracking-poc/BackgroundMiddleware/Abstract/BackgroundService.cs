@@ -3,7 +3,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Components.BackgroundMiddleware.Abstract
+namespace BackgroundMiddleware.Abstract
 {
     public abstract class BackgroundService : IHostedService
     {

@@ -8,6 +8,6 @@ namespace vehicleStatus.Ping
 {
     public interface IPingREST
     {
-       IResponseModel Ping(string vehicleId);
+       ResponseModel Ping(string vehicleId);
     }
 }

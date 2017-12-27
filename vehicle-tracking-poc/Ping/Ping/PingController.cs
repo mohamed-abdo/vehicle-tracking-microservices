@@ -43,7 +43,7 @@ namespace vehicleStatus.Controllers
         {
         }
 
-        public IResponseModel Ping(string vehicleId)
+        public ResponseModel Ping(string vehicleId)
         {
             throw new NotImplementedException();
         }

@@ -2,7 +2,7 @@
 
 namespace DomainModels.Vehicle
 {
-    public class VehicleModel
+    public struct VehicleModel
     {
     }
 }
