@@ -2,6 +2,15 @@ version: '3'
 
 services:
 
+  ping:
+    image: ping
+    build:
+      context: .
+      dockerfile: Ping/Dockerfile
+    depends_on:
+    - distributed_cache
+    - messages_middleware
+
   distributed_cache:
     image: redis
     ports:
@@ -30,9 +39,4 @@ services:
       context: .
       dockerfile: Customer/Dockerfile
 
-  ping:
-    image: ping
-    build:
-      context: .
-      dockerfile: Ping/Dockerfile
 

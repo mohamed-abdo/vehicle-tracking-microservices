@@ -4,7 +4,8 @@ using System.Text;
 
 namespace DomainModels.System
 {
-    public struct ResponseModel
+    public class ResponseModel
     {
+
     }
 }

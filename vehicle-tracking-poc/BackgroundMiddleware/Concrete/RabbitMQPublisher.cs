@@ -3,6 +3,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BackgroundMiddleware.Abstract;
+using BuildingAspects.Functors;
+using DomainModels.DataStructure;
 using DomainModels.System;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -16,44 +18,58 @@ namespace BackgroundMiddleware.Concrete
     public class RabbitMQPublisher : IMessagePublisher
     {
         private readonly ILogger logger;
-        private readonly string hostName;
+        private readonly RabbitMQConfiguration hostConfig;
         private readonly IConnectionFactory connectionFactory;
         private IConnection connection;
-        private readonly IModel channel;
-        private RabbitMQPublisher(ILogger logger, string hostName, string userName = null, string password = null)
+        private IModel channel;
+        private RabbitMQPublisher(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
         {
-            this.logger = logger ?? throw new ArgumentNullException("Logger reference is required");
-            this.hostName = hostName ?? throw new ArgumentNullException("hostName reference is required");
+            this.logger = logger?
+                            .AddConsole()
+                            .AddDebug()
+                            .CreateLogger<RabbitMQPublisher>()
+                            ?? throw new ArgumentNullException("Logger reference is required");
 
-            this.connectionFactory = new ConnectionFactory() { HostName = hostName, UserName = userName, Password = password };
-            this.connection = connectionFactory?.CreateConnection();
-
-            this.channel = connection.CreateModel();
+            Validators.EnsureHostConfig(hostConfig);
+            this.hostConfig = hostConfig;
+            this.connectionFactory = new ConnectionFactory() { HostName = hostConfig.hostName, UserName = hostConfig.userName, Password = hostConfig.password };
         }
-        public static RabbitMQPublisher Create(ILogger logger, string hostName, string userName = null, string password = null)
+        public static RabbitMQPublisher Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
         {
-            return new RabbitMQPublisher(logger, hostName, userName, password);
-        }
-
-        public void Publish<T>(string exchange, string route, T message) where T : struct, IDomainModel<T>
-        {
-            verifyConnection();
-            var properties = channel.CreateBasicProperties();
-            properties.Persistent = true;
-            channel.ExchangeDeclare(exchange: exchange, type: ExchangeType.Topic, durable: true);
-
-            var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
-            channel.BasicPublish(exchange: exchange,
-                                 routingKey: route,
-                                 basicProperties: properties,
-                                 body: body);
-            logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", message.Id, exchange, route);
+            return new RabbitMQPublisher(logger, hostConfig);
         }
 
-        void verifyConnection()
+        public Task Publish<T>(string exchange, string route, Message<T> message)
         {
-            if (!connection.IsOpen)
-                connection = connectionFactory?.CreateConnection();
+            try
+            {
+                using (var connection = connectionFactory.CreateConnection())
+                using (var channel = connection.CreateModel())
+                {
+                    channel.ExchangeDeclare(exchange: exchange, type: ExchangeType.Topic, durable: true);
+
+                    var properties = channel.CreateBasicProperties();
+                    properties.Persistent = true;
+
+                    var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+                    channel.BasicPublish(exchange: exchange,
+                                         routingKey: route,
+                                         basicProperties: properties,
+                                         body: body);
+                    logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", message.Header.ExecutionId, exchange, route);
+
+                    return Task.CompletedTask;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogCritical(ex.Message, ex);
+                throw ex;
+            }
+            finally
+            {
+
+            }
         }
     }
 }

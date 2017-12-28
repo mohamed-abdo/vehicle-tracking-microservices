@@ -8,6 +8,6 @@ namespace BackgroundMiddleware.Abstract
 {
     public interface IMessagePublisher
     {
-        void Publish<T>(string exchange, string route, T t) where T : struct, IDomainModel<T>;
+        Task Publish<T>(string exchange, string route, Message<T> message);
     }
 }

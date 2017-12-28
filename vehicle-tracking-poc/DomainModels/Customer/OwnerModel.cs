@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DomainModels.Customer
 {
-    public struct OwnerModel
+    public class OwnerModel
     {
     }
 }

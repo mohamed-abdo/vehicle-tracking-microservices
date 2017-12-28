@@ -2,48 +2,111 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BackgroundMiddleware.Abstract;
+using BackgroundMiddleware.Concrete;
+using DomainModels.DataStructure;
+using DomainModels.System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
+using Newtonsoft.Json;
+using Ping.Models;
 namespace vehicleStatus
 {
     public class Startup
     {
-        private const string cacheServer = "distributed_cache";
-        private const string eventBusServer = "event_bus";
-        private const string vehicles_HashTable = "vehicles";
-        public Startup(IConfiguration configuration)
+        #region config keys
+        private const string _cacheServer = "distributed_cache";
+        private const string _messagesMiddleware = "messages_middleware";
+        private const string _HTVehicles = "vehicles";
+
+        private const string _middlewareExchange = "platform3";
+        private const string _messagePuplicherRoute = "info.ping.vehicle";
+        private const string _messageSubscriberRoute = "info.ping.vehicle";
+
+
+        #endregion
+
+        public Startup(ILoggerFactory logger, IHostingEnvironment environemnt, IConfiguration configuration)
         {
+            Logger = logger.CreateLogger<Startup>();
+            Environemnt = environemnt;
             Configuration = configuration;
         }
 
+        public IHostingEnvironment Environemnt { get; }
         public IConfiguration Configuration { get; }
+        public ILogger Logger { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+
+        // Inject background service, for receiving message
         public void ConfigureServices(IServiceCollection services)
         {
+            var loggerFactorySrv = services.BuildServiceProvider().GetService<ILoggerFactory>();
+
+            services.AddSingleton<IMessagePublisher, RabbitMQPublisher>(srv =>
+            {
+                return RabbitMQPublisher.Create(loggerFactorySrv, new RabbitMQConfiguration
+                {
+                    hostName = _messagesMiddleware,
+                    exchange = _middlewareExchange,
+                    userName = "guest",
+                    password = "guest",
+                    routes = new string[] { _messagePuplicherRoute }
+                });
+            });
+
+            ///
+            /// Injecting message receiver background service
+            ///
+            services.AddSingleton<IHostedService, RabbitMQSubscriber<DomainModel<PingRequest>>>(srv =>
+            {
+                return RabbitMQSubscriber<DomainModel<PingRequest>>.Create(loggerFactorySrv,
+                    new RabbitMQConfiguration
+                    {
+                        hostName = _messagesMiddleware,
+                        exchange = _middlewareExchange,
+                        userName = "guest",
+                        password = "guest",
+                        routes = new string[] { _messageSubscriberRoute }
+                    }
+                    , (pingMessage) =>
+                    {
+                        Logger.LogInformation($"[x] Ping service receiving a message-Id: {pingMessage.Header.ExecutionId} from exchange: {_middlewareExchange}, route :{_messageSubscriberRoute}, message: {JsonConvert.SerializeObject(pingMessage)}");
+                    });
+            });
+
             services.AddDistributedRedisCache(redisOptions =>
             {
-                redisOptions.Configuration = cacheServer;
-                redisOptions.Configuration = vehicles_HashTable;
+                redisOptions.Configuration = _cacheServer;
+                redisOptions.Configuration = _HTVehicles;
             });
             services.AddMvc();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IDistributedCache cache, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IDistributedCache cache, IHostingEnvironment environemnt)
         {
-            if (env.IsDevelopment())
+            if (environemnt.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
-            
+            else
+            {
+                app.UseExceptionHandler("/Error");
+            }
             app.UseMvc();
+            //routes =>
+            //{
+            //    routes.MapRoute(
+            //        name: "default",
+            //        template: "api/v1/{controller=vehicle}/{id?}");
+            //}
         }
     }
 }

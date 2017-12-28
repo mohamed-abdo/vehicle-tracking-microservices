@@ -1,11 +1,12 @@
 ﻿using BackgroundMiddleware.Abstract;
+using BuildingAspects.Functors;
+using DomainModels.DataStructure;
 using DomainModels.System;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -16,71 +17,114 @@ namespace BackgroundMiddleware.Concrete
     /// <summary>
     /// rabbitMQ worker listener background service. 
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class RabbitMQSubscriber<T> : BackgroundService where T : struct, IDomainModel<T>
+    /// <typeparam name="T">Expected structure coming from the publisher to the subscriber.</typeparam>
+    public class RabbitMQSubscriber<T> : BackgroundService
     {
         private readonly ILogger logger;
+        private readonly RabbitMQConfiguration hostConfig;
         private readonly IConnectionFactory connectionFactory;
-        private readonly (string hostName, string userName, string password, string exchange, string[] routes) hostConfig;
-        private RabbitMQSubscriber(ILogger logger, (string hostName, string userName, string password, string exchange, string[] routes) hostConfig)
+        private IConnection connection;
+        private IModel channel;
+        private readonly Action<Message<T>> callback;
+        /// <summary>
+        /// internal construct subscriber object
+        /// </summary>
+        /// <param name="logger">ILogger instance</param>
+        /// <param name="hostConfig">rabbitMQ configuration</param>
+        private RabbitMQSubscriber(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Message<T>> callback)
         {
-            this.logger = logger ?? throw new ArgumentNullException("Logger reference is invalid");
+            this.logger = logger?
+                            .AddConsole()
+                            .AddDebug()
+                            .CreateLogger<RabbitMQPublisher>()
+                            ?? throw new ArgumentNullException("Logger reference is required");
+
+            Validators.EnsureHostConfig(hostConfig);
             this.hostConfig = hostConfig;
-            switch (hostConfig)
-            {
-                case var t when string.IsNullOrEmpty(t.hostName):
-                    throw new ArgumentNullException("hostName is invalid");
-                case var t when string.IsNullOrEmpty(t.exchange):
-                    throw new ArgumentNullException("exhange is invalid");
-                case var t when t.routes == null || t.routes.Length == 0 || t.routes.Any(r => string.IsNullOrEmpty(r)):
-                    throw new ArgumentNullException("routes is invalid");
-                default:
-                    break;
-            }
+            this.callback = callback ?? throw new ArgumentNullException("Callback reference is invalid");
             this.connectionFactory = new ConnectionFactory() { HostName = hostConfig.hostName, UserName = hostConfig.userName, Password = hostConfig.password };
         }
-        public static RabbitMQSubscriber<T> Create(ILogger logger, (string hostName, string userName, string password, string exchange, string[] routes) hostConfig)
+
+        /// <summary>
+        /// factory constructor for subscriber object
+        /// </summary>
+        /// <param name="logger">ILogger instance</param>
+        /// <param name="hostConfig">rabbitMQ configuration</param>
+        public static RabbitMQSubscriber<T> Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Message<T>> callback)
         {
-            return new RabbitMQSubscriber<T>(logger, hostConfig);
+            return new RabbitMQSubscriber<T>(logger, hostConfig, callback);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stoppingToken"></param>
+        /// <returns></returns>
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            using (var connection = connectionFactory.CreateConnection())
-            using (var channel = connection.CreateModel())
+            try
             {
-                channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
-                channel.ExchangeDeclare(exchange: hostConfig.exchange, type: ExchangeType.Topic);
-                var queueName = channel.QueueDeclare().QueueName;
-
-                foreach (var bindingKey in hostConfig.routes)
+                using (var connection = connectionFactory.CreateConnection())
+                using (var channel = connection.CreateModel())
                 {
-                    channel.QueueBind(queue: queueName,
-                                      exchange: hostConfig.hostName,
-                                      routingKey: bindingKey);
+                    channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+                    channel.ExchangeDeclare(exchange: hostConfig.exchange, type: ExchangeType.Topic, durable: true);
+
+                    var queueName = channel.QueueDeclare().QueueName;
+
+                    foreach (var bindingKey in hostConfig.routes)
+                    {
+                        channel.QueueBind(queue: queueName,
+                                          exchange: hostConfig.exchange,
+                                          routingKey: bindingKey);
+                    }
+
+                    logger.LogInformation("[*] Waiting for messages.");
+
+                    var consumer = new EventingBasicConsumer(channel);
+                    consumer.Received += (model, ea) =>
+                    {
+                        try
+                        {
+                            var messageBody = ea.Body;
+                            var bodyStr = Encoding.UTF8.GetString(messageBody);
+                            if (string.IsNullOrEmpty(bodyStr))
+                                throw new TypeLoadException("Invalid message type");
+
+                            var message = JsonConvert.DeserializeObject<Message<T>>(bodyStr);
+
+                            // callback action feeding
+                            callback(message);
+                            //send acknowledgment to publisher
+                            var routingKey = ea.RoutingKey;
+                            channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+
+                            logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", "ExecutionId", hostConfig.exchange, routingKey);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogCritical(ex.Message, ex);
+                            throw ex;
+                        }
+                    };
+                    channel.BasicConsume(queue: queueName,
+                                         autoAck: false,
+                                         consumer: consumer);
+                    Console.ReadLine();
+
                 }
-
-                logger.LogInformation("[*] Waiting for messages.");
-
-                var consumer = new EventingBasicConsumer(channel);
-                consumer.Received += (model, ea) =>
-                {
-                    var body = ea.Body;
-                    var encodedBody = Encoding.UTF8.GetString(body);
-                    if (string.IsNullOrEmpty(encodedBody))
-                        throw new TypeLoadException("Invalid message body");
-
-                    var message = JsonConvert.DeserializeObject<T>(encodedBody);
-                    var routingKey = ea.RoutingKey;
-                    channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
-                    logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", message.Id, hostConfig.exchange, routingKey);
-                };
-                channel.BasicConsume(queue: queueName,
-                                     autoAck: false,
-                                     consumer: consumer);
-
-                Console.ReadLine();
+                return Task.CompletedTask;
             }
-            return Task.CompletedTask;
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                if (connection.IsOpen)
+                    connection.Close();
+            }
         }
     }
 }
+
