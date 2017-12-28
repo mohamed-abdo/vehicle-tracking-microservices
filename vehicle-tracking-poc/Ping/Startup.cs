@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BackgroundMiddleware.Abstract;
+﻿using BackgroundMiddleware.Abstract;
 using BackgroundMiddleware.Concrete;
 using DomainModels.DataStructure;
 using DomainModels.System;
@@ -13,14 +9,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Ping.Models;
+
 namespace vehicleStatus
 {
     public class Startup
     {
         #region config keys
+
         private const string _cacheServer = "distributed_cache";
         private const string _messagesMiddleware = "messages_middleware";
         private const string _HTVehicles = "vehicles";
@@ -28,7 +25,6 @@ namespace vehicleStatus
         private const string _middlewareExchange = "platform3";
         private const string _messagePuplicherRoute = "info.ping.vehicle";
         private const string _messageSubscriberRoute = "info.ping.vehicle";
-
 
         #endregion
 

@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\DomainModels\DomainModels.csproj" />
     <ProjectReference Include="..\vehicle-tracking-poc\DomainModels\DomainModels.csproj" />
   </ItemGroup>
 
