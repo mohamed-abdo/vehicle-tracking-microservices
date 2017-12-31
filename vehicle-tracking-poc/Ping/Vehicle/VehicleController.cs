@@ -36,22 +36,19 @@ namespace Ping
             const string _middlewareExchange = "platform3";
             const string _messagePuplicherRoute = "info.ping.vehicle";
 
+            // message definition
+            //(MessageHeader Header, DomainModel<PingRequest> Body, MessageFooter Footer)
             Task.Run(() => _publisher.Publish(
                 _middlewareExchange,
                 _messagePuplicherRoute,
                 (
-                    new Message<DomainModel<PingRequest>>
+                    Header: new MessageHeader { CorrelateId = Guid.Empty, Timestamp = 1010 },
+                    Body: new DomainModel<PingRequest>()
                     {
-                        Header =
-                        new MessageHeader { CorrelateId = Guid.Empty, Timestamp = 1010 },
-                        Body = new DomainModel<PingRequest>()
-                        {
-                            Model = new PingRequest() { Name = "ping - pong!" },
-                            Name = "me @abdo! domain model"
-                        }
-                        ,
-                        Footer = new MessageFooter { Route = _messagePuplicherRoute }
-                    }
+                        Model = new PingRequest() { Name = "ping - pong!" },
+                        Name = "me @abdo! domain model"
+                    },
+                    Footer: new MessageFooter { Route = _messagePuplicherRoute }
                 )));
 
             return "value";

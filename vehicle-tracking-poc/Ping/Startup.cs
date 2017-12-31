@@ -25,7 +25,8 @@ namespace vehicleStatus
         private const string _middlewareExchange = "platform3";
         private const string _messagePuplicherRoute = "info.ping.vehicle";
         private const string _messageSubscriberRoute = "info.ping.vehicle";
-
+        private const string _username = "guest";
+        private const string _password = "guest";
         #endregion
 
         public Startup(ILoggerFactory logger, IHostingEnvironment environemnt, IConfiguration configuration)
@@ -51,8 +52,8 @@ namespace vehicleStatus
                 {
                     hostName = _messagesMiddleware,
                     exchange = _middlewareExchange,
-                    userName = "guest",
-                    password = "guest",
+                    userName = _username,
+                    password = _password,
                     routes = new string[] { _messagePuplicherRoute }
                 });
             });
@@ -67,8 +68,8 @@ namespace vehicleStatus
                     {
                         hostName = _messagesMiddleware,
                         exchange = _middlewareExchange,
-                        userName = "guest",
-                        password = "guest",
+                        userName = _username,
+                        password = _password,
                         routes = new string[] { _messageSubscriberRoute }
                     }
                     , (pingMessage) =>
@@ -96,13 +97,14 @@ namespace vehicleStatus
             {
                 app.UseExceptionHandler("/Error");
             }
-            app.UseMvc();
-            //routes =>
-            //{
-            //    routes.MapRoute(
-            //        name: "default",
-            //        template: "api/v1/{controller=vehicle}/{id?}");
-            //}
+            app.UseMvc(
+                routes =>
+                {
+                    routes.MapRoute(
+                        name: "default",
+                        template: "api/v1/{controller=vehicle}/{id?}");
+                }
+            );
         }
     }
 }

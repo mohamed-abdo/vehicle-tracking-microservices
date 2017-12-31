@@ -39,7 +39,7 @@ namespace BackgroundMiddleware.Concrete
             return new RabbitMQPublisher(logger, hostConfig);
         }
 
-        public Task Publish<T>(string exchange, string route, Message<T> message)
+        public Task Publish<T>(string exchange, string route, (MessageHeader Header, T Body, MessageFooter Footer) message)
         {
             try
             {

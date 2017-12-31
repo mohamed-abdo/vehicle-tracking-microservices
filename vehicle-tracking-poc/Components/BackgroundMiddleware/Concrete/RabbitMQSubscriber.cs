@@ -25,13 +25,13 @@ namespace BackgroundMiddleware.Concrete
         private readonly IConnectionFactory connectionFactory;
         private IConnection connection;
         private IModel channel;
-        private readonly Action<Message<T>> callback;
+        private readonly Action<(MessageHeader Header, T Body, MessageFooter Footer)> callback;
         /// <summary>
         /// internal construct subscriber object
         /// </summary>
         /// <param name="logger">ILogger instance</param>
         /// <param name="hostConfig">rabbitMQ configuration</param>
-        private RabbitMQSubscriber(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Message<T>> callback)
+        private RabbitMQSubscriber(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<(MessageHeader Header, T Body, MessageFooter Footer)> callback)
         {
             this.logger = logger?
                             .AddConsole()
@@ -50,7 +50,7 @@ namespace BackgroundMiddleware.Concrete
         /// </summary>
         /// <param name="logger">ILogger instance</param>
         /// <param name="hostConfig">rabbitMQ configuration</param>
-        public static RabbitMQSubscriber<T> Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Message<T>> callback)
+        public static RabbitMQSubscriber<T> Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<(MessageHeader Header, T Body, MessageFooter Footer)> callback)
         {
             return new RabbitMQSubscriber<T>(logger, hostConfig, callback);
         }
@@ -87,11 +87,11 @@ namespace BackgroundMiddleware.Concrete
                         try
                         {
                             var messageBody = ea.Body;
-                            var bodyStr = Encoding.UTF8.GetString(messageBody);
-                            if (string.IsNullOrEmpty(bodyStr))
+                            var messageStr = Encoding.UTF8.GetString(messageBody);
+                            if (string.IsNullOrEmpty(messageStr))
                                 throw new TypeLoadException("Invalid message type");
 
-                            var message = JsonConvert.DeserializeObject<Message<T>>(bodyStr);
+                            var message = JsonConvert.DeserializeObject<(MessageHeader Header, T Body, MessageFooter Footer)>(messageStr);
 
                             // callback action feeding
                             callback(message);

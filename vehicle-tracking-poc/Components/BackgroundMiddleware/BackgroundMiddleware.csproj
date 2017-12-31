@@ -18,7 +18,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\DomainModels\DomainModels.csproj" />
     <ProjectReference Include="..\BuildingAspects\BuildingAspects.csproj" />
-    <ProjectReference Include="..\DomainModels\DomainModels.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -8,6 +8,6 @@ namespace BackgroundMiddleware.Abstract
 {
     public interface IMessagePublisher
     {
-        Task Publish<T>(string exchange, string route, Message<T> message);
+        Task Publish<T>(string exchange, string route, (MessageHeader Header, T Body, MessageFooter Footer) message);
     }
 }
