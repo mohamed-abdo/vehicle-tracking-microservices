@@ -13,6 +13,7 @@ namespace MessagesMiddleware
 
             var config = new ConfigurationBuilder()
                 .AddCommandLine(args)
+                .AddEnvironmentVariables()
                 .Build();
 
             var builder = new WebHostBuilder()
