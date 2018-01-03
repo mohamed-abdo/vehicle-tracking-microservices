@@ -13,7 +13,7 @@ namespace vehicleStatus
     /// <summary>
     /// Developed   By: Mohamed Abdo
     ///             On: 2017-12-23
-    /// Vehicle service to handle receving post request from vehicles (IoT) devices.
+    /// Vehicle service to handle receiving post request from vehicles (IoT) devices.
     /// </summary>
     public class Program
     {

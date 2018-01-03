@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace MessagesMiddleware
+namespace EventSourcingMiddleware
 {
     internal class Startup
     {
@@ -27,6 +27,7 @@ namespace MessagesMiddleware
             Configuration = configuration;
             //local system configuration
             SystemLocalConfiguration = LocalConfiguration.Create(new Dictionary<string, string>() {
+
                 {nameof(SystemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},
                 {nameof(SystemLocalConfiguration.CacheDBVehicles),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
                 {nameof(SystemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>(Identifiers.MessagesMiddleware)},
@@ -42,7 +43,6 @@ namespace MessagesMiddleware
         public IHostingEnvironment Environemnt { get; }
         public IConfiguration Configuration { get; }
         public ILogger Logger { get; }
-
 
         // Inject background service, for receiving message
         public void ConfigureServices(IServiceCollection services)
