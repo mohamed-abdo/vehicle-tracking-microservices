@@ -21,13 +21,13 @@ namespace vehicleStatus
             Configuration = configuration;
             //local system configuration
             SystemLocalConfiguration = LocalConfiguration.CreateSingletone(new Dictionary<string, string>() {
-                {nameof(SystemLocalConfiguration.CacheServer), Configuration.GetValue<string>("distributed_cache")},
-                {nameof(SystemLocalConfiguration.HTVehicles),  Configuration.GetValue<string>("vehicles")},
-                {nameof(SystemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>("messages_middleware")},
-                {nameof(SystemLocalConfiguration.MiddlewareExchange),  Configuration.GetValue<string>("middleware_exchange")},
-                {nameof(SystemLocalConfiguration.MessagePublisherRoute),  Configuration.GetValue<string>("middleware_info_publisher")},
-                {nameof(SystemLocalConfiguration.MessagesMiddlewareUsername),  Configuration.GetValue<string>("middleware_username")},
-                {nameof(SystemLocalConfiguration.MessagesMiddlewarePassword),  Configuration.GetValue<string>("middleware_password")},
+                {nameof(SystemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},
+                {nameof(SystemLocalConfiguration.CacheDBVehicles),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
+                {nameof(SystemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>(Identifiers.MessagesMiddleware)},
+                {nameof(SystemLocalConfiguration.MiddlewareExchange),  Configuration.GetValue<string>(Identifiers.MiddlewareExchange)},
+                {nameof(SystemLocalConfiguration.MessagePublisherRoute),  Configuration.GetValue<string>(Identifiers.MessagePublisherRoute)},
+                {nameof(SystemLocalConfiguration.MessagesMiddlewareUsername),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewareUsername)},
+                {nameof(SystemLocalConfiguration.MessagesMiddlewarePassword),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewarePassword)},
             });
         }
 
@@ -42,6 +42,7 @@ namespace vehicleStatus
         {
             var loggerFactorySrv = services.BuildServiceProvider().GetService<ILoggerFactory>();
 
+            services.AddSingleton<LocalConfiguration, LocalConfiguration>(srv => SystemLocalConfiguration);
             services.AddSingleton<IMessagePublisher, RabbitMQPublisher>(srv =>
             {
                 return RabbitMQPublisher.Create(loggerFactorySrv, new RabbitMQConfiguration
@@ -61,7 +62,7 @@ namespace vehicleStatus
             services.AddDistributedRedisCache(redisOptions =>
             {
                 redisOptions.Configuration = SystemLocalConfiguration.CacheServer;
-                redisOptions.Configuration = SystemLocalConfiguration.HTVehicles;
+                redisOptions.Configuration = SystemLocalConfiguration.CacheDBVehicles;
             });
             services.AddMvc();
         }
@@ -77,14 +78,7 @@ namespace vehicleStatus
             {
                 app.UseExceptionHandler("/Error");
             }
-            app.UseMvc(
-                routes =>
-                {
-                    routes.MapRoute(
-                        name: "default",
-                        template: "api/v1/{controller=vehicle}/{id?}");
-                }
-            );
+            app.UseMvc();
         }
     }
 }

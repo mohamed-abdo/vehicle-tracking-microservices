@@ -36,7 +36,7 @@ namespace DomainModels.System
         #region fields
         public string CacheServer { get; private set; }
         public string MessagesMiddleware { get; private set; }
-        public string HTVehicles { get; private set; }
+        public string CacheDBVehicles { get; private set; }
         public string MiddlewareExchange { get; private set; }
         public string MessageSubscriberRoute { get; private set; }
         public string MessagePublisherRoute { get; private set; }

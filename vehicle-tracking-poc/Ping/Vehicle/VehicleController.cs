@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BackgroundMiddleware.Abstract;
 using DomainModels.System;
+using DomainModels.Vehicle;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Ping.Models;
@@ -17,10 +18,12 @@ namespace Ping
     {
         private readonly ILogger _logger;
         private readonly IMessagePublisher _publisher;
-        public VehicleController(ILogger<VehicleController> logger, IMessagePublisher publisher)
+        private readonly LocalConfiguration _localConfiguration;
+        public VehicleController(ILogger<VehicleController> logger, IMessagePublisher publisher, LocalConfiguration localConfiguration)
         {
             _logger = logger;
             _publisher = publisher;
+            _localConfiguration = localConfiguration;
         }
         // GET: api/<controller>
         [HttpGet]
@@ -33,22 +36,19 @@ namespace Ping
         [HttpGet("{id}")]
         public string Get(int id)
         {
-            const string _middlewareExchange = "platform3";
-            const string _messagePublisherRoute = "info.ping.vehicle";
-
             // message definition
             //(MessageHeader Header, DomainModel<PingRequest> Body, MessageFooter Footer)
             Task.Run(() => _publisher.Publish(
-                _middlewareExchange,
-                _messagePublisherRoute,
+                _localConfiguration.MiddlewareExchange,
+                _localConfiguration.MessagePublisherRoute,
                 (
-                    Header: new MessageHeader { ExecutionId =Guid.NewGuid(), CorrelateId = Guid.Empty, Timestamp = 1010 },
-                    Body: new DomainModel<PingRequest>()
+                    Header: new MessageHeader { ExecutionId = Guid.NewGuid(), CorrelateId = Guid.Empty, Timestamp = 1010 },
+                    Body: new DomainModel<PingModel>()
                     {
-                        Model = new PingRequest() { Name = "ping - pong!" },
+                        Model = new PingModel() { VehicelId = Guid.NewGuid(), StatusDescription = "ping - pong!" },
                         Name = "me @abdo! domain model"
                     },
-                    Footer: new MessageFooter { Route = _messagePublisherRoute }
+                    Footer: new MessageFooter { Route = _localConfiguration.MessagePublisherRoute }
                 )));
 
             return "value";

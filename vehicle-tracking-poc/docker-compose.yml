@@ -10,13 +10,13 @@ services:
     depends_on:
     - distributed_cache
     - messages_middleware
+    - eventsourcingmiddleware
     environment:
     - distributed_cache=distributed_cache
-    - vehicles=vehicles
+    - cache_db_vehicles=vehicles
     - messages_middleware=messages_middleware
     - middleware_exchange=platform
     - middleware_info_publisher=info.ping.vehicle
-    - middleware_info_subscriber=info.ping.vehicle
     - middleware_username=guest
     - middleware_password=guest
   distributed_cache:
@@ -48,3 +48,20 @@ services:
       dockerfile: Customer/Dockerfile
 
 
+
+  eventsourcingmiddleware:
+    image: eventsourcingmiddleware
+    build:
+      context: .
+      dockerfile: EventSourcingMiddleware/Dockerfile
+    ports:
+    - 5553:5553
+    depends_on:
+    - messages_middleware
+    environment:
+    - cache_db_vehicles=vehicles
+    - messages_middleware=messages_middleware
+    - middleware_exchange=platform
+    - middleware_info_subscriber=info.ping.vehicle
+    - middleware_username=guest
+    - middleware_password=guest

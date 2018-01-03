@@ -27,13 +27,14 @@ namespace MessagesMiddleware
             Configuration = configuration;
             //local system configuration
             SystemLocalConfiguration = LocalConfiguration.CreateSingletone(new Dictionary<string, string>() {
-                {nameof(SystemLocalConfiguration.CacheServer), Configuration.GetValue<string>("distributed_cache")},
-                {nameof(SystemLocalConfiguration.HTVehicles),  Configuration.GetValue<string>("vehicles")},
-                {nameof(SystemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>("messages_middleware")},
-                {nameof(SystemLocalConfiguration.MiddlewareExchange),  Configuration.GetValue<string>("middleware_exchange")},
-                {nameof(SystemLocalConfiguration.MessagePublisherRoute),  Configuration.GetValue<string>("middleware_info_subscriber")},
-                {nameof(SystemLocalConfiguration.MessagesMiddlewareUsername),  Configuration.GetValue<string>("middleware_username")},
-                {nameof(SystemLocalConfiguration.MessagesMiddlewarePassword),  Configuration.GetValue<string>("middleware_password")},
+                {nameof(SystemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},
+                {nameof(SystemLocalConfiguration.CacheDBVehicles),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
+                {nameof(SystemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>(Identifiers.MessagesMiddleware)},
+                {nameof(SystemLocalConfiguration.MiddlewareExchange),  Configuration.GetValue<string>(Identifiers.MiddlewareExchange)},
+                {nameof(SystemLocalConfiguration.MessageSubscriberRoute),  Configuration.GetValue<string>(Identifiers.MessageSubscriberRoute)},
+                {nameof(SystemLocalConfiguration.MessagesMiddlewareUsername),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewareUsername)},
+                {nameof(SystemLocalConfiguration.MessagesMiddlewarePassword),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewarePassword)},
+
             });
         }
 
@@ -65,7 +66,7 @@ namespace MessagesMiddleware
                     }
                     , (pingMessage) =>
                     {
-                        Logger.LogInformation($"[x] Event sourcing service receiving a message-Id: {pingMessage.Header.ExecutionId} from exchange: {_middlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(pingMessage)}");
+                        Logger.LogInformation($"[x] Event sourcing service receiving a message-Id: {pingMessage.Header.ExecutionId} from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(pingMessage)}");
                     });
             });
         }
