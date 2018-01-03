@@ -20,7 +20,7 @@ namespace vehicleStatus
             Environemnt = environemnt;
             Configuration = configuration;
             //local system configuration
-            SystemLocalConfiguration = LocalConfiguration.CreateSingletone(new Dictionary<string, string>() {
+            SystemLocalConfiguration = LocalConfiguration.Create(new Dictionary<string, string>() {
                 {nameof(SystemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},
                 {nameof(SystemLocalConfiguration.CacheDBVehicles),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
                 {nameof(SystemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>(Identifiers.MessagesMiddleware)},

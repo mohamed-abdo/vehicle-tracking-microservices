@@ -7,30 +7,23 @@ namespace DomainModels.System
 {
     public sealed class LocalConfiguration
     {
-        private volatile static LocalConfiguration _instance;
-        private static object syncRoot = new object();
+        private static volatile object _sync = new object();
         private LocalConfiguration() { }
-
         //initialize read
-        public static LocalConfiguration CreateSingletone(IDictionary<string, string> configuration)
+        public static LocalConfiguration Create(IDictionary<string, string> configuration)
         {
-            //TODO: runtime metadata filling configuration for singletone object.
-
-            if (_instance == null)
+            lock (_sync)
             {
-                lock (syncRoot)
+                var _instance = new LocalConfiguration();
+                //TODO: runtime metadata filling configuration for this object.
+                foreach (var item in configuration ?? throw new ArgumentNullException($"configuration is required."))
                 {
-                    _instance = new LocalConfiguration();
-
-                    foreach (var item in configuration ?? throw new ArgumentNullException($"configuration is required."))
-                    {
-                        var property = _instance.GetType().GetProperty(item.Key) ??
-                                throw new KeyNotFoundException($"{item.Key} is not recognized as configuration field.");
-                        property.SetValue(obj: _instance, value: item.Value);
-                    }
+                    var property = _instance.GetType().GetProperty(item.Key) ??
+                            throw new KeyNotFoundException($"{item.Key} is not recognized as configuration field.");
+                    property.SetValue(obj: _instance, value: item.Value);
                 }
+                return _instance;
             }
-            return _instance;
         }
 
         #region fields

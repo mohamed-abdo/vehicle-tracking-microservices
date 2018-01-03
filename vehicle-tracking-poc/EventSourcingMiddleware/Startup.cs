@@ -26,7 +26,7 @@ namespace MessagesMiddleware
             Environemnt = environemnt;
             Configuration = configuration;
             //local system configuration
-            SystemLocalConfiguration = LocalConfiguration.CreateSingletone(new Dictionary<string, string>() {
+            SystemLocalConfiguration = LocalConfiguration.Create(new Dictionary<string, string>() {
                 {nameof(SystemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},
                 {nameof(SystemLocalConfiguration.CacheDBVehicles),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
                 {nameof(SystemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>(Identifiers.MessagesMiddleware)},
@@ -54,7 +54,7 @@ namespace MessagesMiddleware
             ///
             services.AddSingleton<IHostedService, RabbitMQSubscriber<DomainModel<PingModel>>>(srv =>
             {
-                
+
                 return RabbitMQSubscriber<DomainModel<PingModel>>.Create(loggerFactorySrv,
                     new RabbitMQConfiguration
                     {
@@ -81,7 +81,7 @@ namespace MessagesMiddleware
             {
                 context.Response.ContentType = "text/html";
                 await context.Response
-                    .WriteAsync("<p>Messages Middleware, Hosted by Kestrel </p>");
+                    .WriteAsync("<p>Event sourcing middleware service, Hosted by Kestrel </p>");
 
                 if (serverAddressesFeature != null)
                 {
