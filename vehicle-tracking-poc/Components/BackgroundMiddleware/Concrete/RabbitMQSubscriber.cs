@@ -1,7 +1,7 @@
 ﻿using BackgroundMiddleware.Abstract;
 using BuildingAspects.Functors;
 using DomainModels.DataStructure;
-using DomainModels.System;
+using DomainModels.Types;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RabbitMQ.Client;

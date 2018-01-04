@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DomainModels.System;
+using DomainModels.Types;
 using Microsoft.AspNetCore.Mvc;
 using vehicleStatus.Ping;
 

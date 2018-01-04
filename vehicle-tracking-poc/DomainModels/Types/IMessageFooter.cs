@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DomainModels.System
+namespace DomainModels.Types
 {
     public interface IMessageFooter
     {

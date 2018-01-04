@@ -22,7 +22,7 @@ namespace DomainModels.System
         #region settings
 
         public const int RetryCount = 3;
-
+        public const int TimeoutInSec = 30;
         #endregion
     }
 }

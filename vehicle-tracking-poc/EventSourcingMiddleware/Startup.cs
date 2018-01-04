@@ -1,6 +1,7 @@
 ﻿using BackgroundMiddleware.Concrete;
 using DomainModels.DataStructure;
 using DomainModels.System;
+using DomainModels.Types;
 using DomainModels.Vehicle;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;

@@ -19,7 +19,7 @@ namespace EventSourcingMiddleware
                                         .AddDebug()
                                         .CreateLogger<Program>();
 
-            return new ProgramPolicy(mainLogger, Identifiers.RetryCount).Decorate(() =>
+            return new Function(mainLogger, Identifiers.RetryCount).Decorate(() =>
              {
                  var config = new ConfigurationBuilder()
                      .AddCommandLine(args)
