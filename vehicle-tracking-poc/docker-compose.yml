@@ -19,6 +19,9 @@ services:
     - middleware_info_publisher=info.ping.vehicle
     - middleware_username=guest
     - middleware_password=guest
+    ports:
+    - 32777:80
+
   distributed_cache:
     image: redis
     ports:
@@ -47,15 +50,13 @@ services:
       context: .
       dockerfile: Customer/Dockerfile
 
-
-
   eventsourcingmiddleware:
     image: eventsourcingmiddleware
     build:
       context: .
       dockerfile: EventSourcingMiddleware/Dockerfile
     ports:
-    - 5553:5553
+    - 32770:80
     depends_on:
     - messages_middleware
     environment:

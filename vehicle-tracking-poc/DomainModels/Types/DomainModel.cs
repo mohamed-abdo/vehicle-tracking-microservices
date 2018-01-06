@@ -4,10 +4,18 @@ using System.Text;
 
 namespace DomainModels.Types
 {
-    public class DomainModel<T>
+    public sealed class DomainModel<T> where T : IDescribe
     {
-        public readonly int Id;
-        public string Name { get; set; }
+        public DomainModel()
+        {
+            InstanceId = Guid.NewGuid();
+            ModelName = nameof(T);
+            Timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+        }
+        public readonly long Timestamp;
+        public readonly Guid InstanceId;
+        public readonly string ModelName;
+
         public T Model { get; set; }
     }
 }

@@ -41,11 +41,10 @@ namespace Ping
                 _localConfiguration.MiddlewareExchange,
                 _localConfiguration.MessagePublisherRoute,
                 (
-                    Header: new MessageHeader { ExecutionId = Guid.NewGuid(), CorrelateId = Guid.Empty, Timestamp = 1010 },
+                    Header: new MessageHeader { CorrelateId = Guid.Empty },
                     Body: new DomainModel<PingModel>()
                     {
-                        Model = new PingModel() { VehicelId = Guid.NewGuid(), StatusDescription = "ping - pong!" },
-                        Name = "me @abdo! domain model"
+                        Model = new PingModel() { ChassisNumber = Guid.NewGuid(), Message = "ping - pong!" }
                     },
                     Footer: new MessageFooter { Route = _localConfiguration.MessagePublisherRoute }
                 )));

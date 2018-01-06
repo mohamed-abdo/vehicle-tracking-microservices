@@ -6,8 +6,10 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
 using System;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -115,6 +117,8 @@ namespace BackgroundMiddleware.Concrete
                 }
                 return Task.CompletedTask;
             }
+            //catch(BrokerUnreachableException be)
+            //catch(SocketException se)
             catch (Exception ex)
             {
                 throw ex;

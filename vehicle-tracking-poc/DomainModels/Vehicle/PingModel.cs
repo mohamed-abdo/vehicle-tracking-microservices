@@ -1,13 +1,23 @@
-﻿using System;
+﻿using DomainModels.Types;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace DomainModels.Vehicle
 {
-    public class PingModel
+    public class PingModel : IDescribe
     {
-        public Guid VehicelId { get; set; }
-        public Status Status { get; set; }
-        public string StatusDescription { get; set; }
+        public PingModel()
+        {
+            ReceivingTimestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+        }
+
+        public readonly long ReceivingTimestamp;
+
+        public Guid ChassisNumber { get; set; }
+        public StatusModel Status { get; set; }
+        public string Message { get; set; }
+
+        public string Descripition => $"vehicle:{ChassisNumber},status:{Status},received:{ReceivingTimestamp}";
     }
 }

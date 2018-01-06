@@ -5,8 +5,8 @@
     <DockerTargetOS>Linux</DockerTargetOS>
     <ProjectGuid>aceb3273-6757-4282-bbf3-79ed7747f763</ProjectGuid>
     <DockerLaunchBrowser>True</DockerLaunchBrowser>
-    <DockerServiceUrl>http://localhost:{ServicePort}/api/values</DockerServiceUrl>
-    <DockerServiceName>vehiclestatus</DockerServiceName>
+    <DockerServiceUrl>http://localhost:{ServicePort}/api/v1/vehicle/1010</DockerServiceUrl>
+    <DockerServiceName>ping</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
     <None Include="docker-compose.override.yml">

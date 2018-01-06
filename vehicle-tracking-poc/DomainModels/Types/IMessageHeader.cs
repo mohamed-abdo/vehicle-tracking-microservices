@@ -8,6 +8,6 @@ namespace DomainModels.Types
     {
         Guid ExecutionId { get; }
         Guid CorrelateId { get; }
-        Int32 Timestamp { get; }
+        long Timestamp { get; }
     }
 }
