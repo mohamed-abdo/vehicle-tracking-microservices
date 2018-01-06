@@ -17,4 +17,9 @@
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Components\BuildingAspects\BuildingAspects.csproj" />
+    <ProjectReference Include="..\DomainModels\DomainModels.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -23,6 +23,8 @@ namespace DomainModels.System
 
         public const int RetryCount = 3;
         public const int TimeoutInSec = 30;
+        public const int BreakTimeoutInSec = 3;
+        public const int CircutBreakerExceptionsCount = 3;
         #endregion
     }
 }

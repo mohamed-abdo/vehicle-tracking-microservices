@@ -1,20 +1,41 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using BuildingAspects.Behaviors;
+using DomainModels.System;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Vehicle
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static int Main(string[] args)
         {
-            BuildWebHost(args).Run();
+            Console.WriteLine("Running event sourcing middleware with Kestrel.");
+
+            ILogger mainLogger = new LoggerFactory()
+                                        .AddConsole()
+                                        .AddDebug()
+                                        .CreateLogger<Program>();
+            try
+            {
+                return new Function(mainLogger, Identifiers.RetryCount).Decorate(() =>
+                {
+                    var host = BuildWebHost(args);
+                    host.Run();
+                    return 0;
+                });
+            }
+            catch (Exception ex)
+            {
+                mainLogger.LogCritical($"Failed to start ping vehicle service, {ex.Message}.", ex);
+                return -1;
+            }
+            finally
+            {
+                mainLogger = null;
+            }
+
         }
 
         public static IWebHost BuildWebHost(string[] args) =>

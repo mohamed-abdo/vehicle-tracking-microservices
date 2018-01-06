@@ -18,27 +18,38 @@ namespace EventSourcingMiddleware
                                         .AddConsole()
                                         .AddDebug()
                                         .CreateLogger<Program>();
+            try
+            {
+                return new Function(mainLogger, Identifiers.RetryCount).Decorate(() =>
+                {
+                    var config = new ConfigurationBuilder()
+                        .AddCommandLine(args)
+                        .AddEnvironmentVariables()
+                        .Build();
 
-            return new Function(mainLogger, Identifiers.RetryCount).Decorate(() =>
-             {
-                 var config = new ConfigurationBuilder()
-                     .AddCommandLine(args)
-                     .AddEnvironmentVariables()
-                     .Build();
+                    var builder = new WebHostBuilder()
+                        .UseConfiguration(config)
+                        .UseStartup<Startup>()
+                        .UseKestrel(options =>
+                        {
+                            // TODO: support end-point for self checking, monitoring, administration, service / task cancellation.... 
+                            options.Listen(IPAddress.Any, 5553); // docker outer port
+                        });
 
-                 var builder = new WebHostBuilder()
-                     .UseConfiguration(config)
-                     .UseStartup<Startup>()
-                     .UseKestrel(options =>
-                     {
-                         // TODO: support end-point for self checking, monitoring, administration, service / task cancellation.... 
-                         options.Listen(IPAddress.Any, 5553); // docker outer port
-                     });
-
-                 var host = builder.Build();
-                 host.Run();
-                 return 0;
-             });
+                    var host = builder.Build();
+                    host.Run();
+                    return 0;
+                });
+            }
+            catch (Exception ex)
+            {
+                mainLogger.LogCritical($"Failed to start the event sourcing middleware service, {ex.Message}.", ex);
+                return -1;
+            }
+            finally
+            {
+                mainLogger = null;
+            }
         }
     }
 }
