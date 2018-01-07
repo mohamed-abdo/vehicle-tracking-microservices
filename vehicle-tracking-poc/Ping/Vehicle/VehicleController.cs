@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using BackgroundMiddleware.Abstract;
 using BuildingAspects.Behaviors;
@@ -8,12 +7,14 @@ using DomainModels.Types;
 using DomainModels.Vehicle;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using WebComponents.Interceptors;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Ping
 {
-    [Route("api/v1/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public class VehicleController : Controller
     {
         private readonly ILogger _logger;
@@ -25,16 +26,10 @@ namespace Ping
             _publisher = publisher;
             _localConfiguration = localConfiguration;
         }
-        // GET: api/<controller>
-        [HttpGet]
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
-
-        // GET api/<controller>/5
+        // GET api/v/<controller>/5
+        [CustomHeader("author", "mohamed-abdo=>mohamad.abdo@gmail.com")]
         [HttpGet("{id}")]
-        public string Get(int id)
+        public IActionResult Get(string id)
         {
             // message definition
             //(MessageHeader Header, DomainModel<PingRequest> Body, MessageFooter Footer)
@@ -55,25 +50,15 @@ namespace Ping
                           ));
                   });
             });
-            return id.ToString();
+            //return NotFound();
+            return Content(id);
         }
 
-        // POST api/<controller>
-        [HttpPost]
+        // POST api/v/<controller>
+        [HttpPost("{id}")]
         public void Post([FromBody]string value)
         {
-        }
 
-        // PUT api/<controller>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
-        {
-        }
-
-        // DELETE api/<controller>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
         }
     }
 }

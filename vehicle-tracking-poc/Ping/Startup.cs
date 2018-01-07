@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using WebComponents.Interceptors;
 
 namespace vehicleStatus
 {
@@ -42,6 +43,11 @@ namespace vehicleStatus
         {
             var loggerFactorySrv = services.BuildServiceProvider().GetService<ILoggerFactory>();
 
+            ILogger _logger = loggerFactorySrv
+                .AddConsole()
+                .AddDebug()
+                .CreateLogger<Startup>();
+
             services.AddSingleton<LocalConfiguration, LocalConfiguration>(srv => SystemLocalConfiguration);
             services.AddSingleton<IMessagePublisher, RabbitMQPublisher>(srv =>
             {
@@ -64,12 +70,21 @@ namespace vehicleStatus
                 redisOptions.Configuration = SystemLocalConfiguration.CacheServer;
                 redisOptions.Configuration = SystemLocalConfiguration.CacheDBVehicles;
             });
-            services.AddMvc();
+
+            services.AddApiVersioning(options =>
+            {
+                options.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0);
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.ReportApiVersions = true;
+            });
+
+            services.AddMvcCore(options => options.Filters.Add(new CustomResponseResult(_logger)));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IDistributedCache cache, IHostingEnvironment environemnt)
         {
+            app.UseStatusCodePages();
             if (environemnt.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -78,6 +93,9 @@ namespace vehicleStatus
             {
                 app.UseExceptionHandler("/Error");
             }
+
+            app.UseStaticFiles();
+
             app.UseMvc();
         }
     }

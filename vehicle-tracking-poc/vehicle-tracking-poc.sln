@@ -31,6 +31,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BackgroundMiddleware", "Com
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DomainModels", "DomainModels\DomainModels.csproj", "{6FD9D23D-64A7-45DD-9CD0-E77DC0608A33}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebComponents", "Components\WebComponents\WebComponents.csproj", "{26691331-90BD-4BE5-973B-ED48D8C63F03}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -89,6 +91,10 @@ Global
 		{6FD9D23D-64A7-45DD-9CD0-E77DC0608A33}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6FD9D23D-64A7-45DD-9CD0-E77DC0608A33}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6FD9D23D-64A7-45DD-9CD0-E77DC0608A33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26691331-90BD-4BE5-973B-ED48D8C63F03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26691331-90BD-4BE5-973B-ED48D8C63F03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26691331-90BD-4BE5-973B-ED48D8C63F03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26691331-90BD-4BE5-973B-ED48D8C63F03}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -96,6 +102,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{51E7A0CE-4E7E-48D1-9B9E-2E2C065F3952} = {33EE945D-0886-4DF6-91FD-735384347B4F}
 		{AF0C899A-0940-4F19-A5D6-DB95818A2D6A} = {33EE945D-0886-4DF6-91FD-735384347B4F}
+		{26691331-90BD-4BE5-973B-ED48D8C63F03} = {33EE945D-0886-4DF6-91FD-735384347B4F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {107189C0-8946-4CD0-8058-7C9C37B97253}

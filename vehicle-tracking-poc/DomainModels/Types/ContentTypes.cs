@@ -4,8 +4,8 @@ using System.Text;
 
 namespace DomainModels.Types
 {
-    public sealed class ResponseModel<T> : ResponseHeader
+    public sealed class ContentTypes
     {
-        public T Body { get; set; }
+        public const string ApplicationJson = "application/json";
     }
 }

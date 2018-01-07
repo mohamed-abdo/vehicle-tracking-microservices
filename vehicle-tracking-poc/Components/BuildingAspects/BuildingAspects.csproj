@@ -5,11 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\DomainModels\DomainModels.csproj" />
+    <PackageReference Include="Polly" Version="5.7.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Polly" Version="5.6.1" />
+    <ProjectReference Include="..\..\DomainModels\DomainModels.csproj" />
   </ItemGroup>
 
   <ItemGroup>

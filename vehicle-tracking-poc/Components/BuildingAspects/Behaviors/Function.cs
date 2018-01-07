@@ -11,7 +11,7 @@ namespace BuildingAspects.Behaviors
     {
         #region internal fields
 
-        private const int _waitTimeSpanInSec = 3;
+        private const int _waitTimeSpanInSec = 5;
         private readonly ILogger _logger;
         private readonly int _retryCount;
         public Function(ILogger logger, int retryCount = 3)
@@ -25,8 +25,8 @@ namespace BuildingAspects.Behaviors
 
         RetryPolicy<T> defaultPolicy<T>(Func<T> action, Func<Exception, bool> exceptionPredicate = null)
         {
-            Func<Exception, bool> defaultExHandler = (ex) => true;
-
+            Func<Exception, bool> defaultExHandler = (ex) => false;
+            //TODO:exception type pattern matching with relevant behavior / policy.
             return Policy<T>
                    // in case of T implementing IOptional (this type shouldn't allow null), and instance of T is null, consider as exception
                    .HandleResult(result => ((result is IOptional r) ? !r.IsOptional : false) && result == null)
@@ -34,7 +34,8 @@ namespace BuildingAspects.Behaviors
                    .WaitAndRetry(_retryCount,
                                    sleepDurationProvider: (i, result, context) =>
                                    {
-                                       logInfo($"Info-Now: {DateTime.UtcNow}. System Waiting for {_waitTimeSpanInSec} seconds, then retry of {i} for {_retryCount}; Execution Id {context.ExecutionGuid}.");
+                                       
+                                       logInfo($"Info-Now: {DateTime.UtcNow}. System is waiting for {_waitTimeSpanInSec} seconds, then retry of {i} for {_retryCount}; Execution Id {context.ExecutionGuid}.");
                                        return TimeSpan.FromSeconds(_waitTimeSpanInSec);
                                    },
                                    onRetry: (result, timespan, i, context) =>
