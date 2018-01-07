@@ -21,7 +21,7 @@ namespace BuildingAspects.Behaviors
         /// <returns>Policy</returns>
         public static PolicyBuilder<T> Result<T>() =>
             Policy<T>
-            .HandleResult(result => ((result is IOptional r) ? !r.Optional : true) || result != null);
+            .HandleResult(result => ((result is IOptional r) ? !r.IsOptional : true) || result != null);
 
 
         /// <summary>

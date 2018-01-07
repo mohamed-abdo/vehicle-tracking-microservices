@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace DomainModels.Types
 {
-    public sealed class DomainModel<T> where T : IDescribe
+    public sealed class DomainModel<T> where T : IDescribe, new()
     {
         public DomainModel()
         {
             InstanceId = Guid.NewGuid();
-            ModelName = nameof(T);
+            ModelName = $"{default(T) as Type}";
             Timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
         }
         public readonly long Timestamp;

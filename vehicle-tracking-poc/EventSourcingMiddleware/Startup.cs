@@ -55,7 +55,6 @@ namespace EventSourcingMiddleware
             ///
             services.AddSingleton<IHostedService, RabbitMQSubscriber<DomainModel<PingModel>>>(srv =>
             {
-
                 return RabbitMQSubscriber<DomainModel<PingModel>>.Create(loggerFactorySrv,
                     new RabbitMQConfiguration
                     {

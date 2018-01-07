@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Threading.Tasks;
 using BuildingAspects.Behaviors;
 using DomainModels.System;
 using Microsoft.AspNetCore.Hosting;
@@ -20,26 +21,27 @@ namespace EventSourcingMiddleware
                                         .CreateLogger<Program>();
             try
             {
-                return new Function(mainLogger, Identifiers.RetryCount).Decorate(() =>
-                {
-                    var config = new ConfigurationBuilder()
-                        .AddCommandLine(args)
-                        .AddEnvironmentVariables()
-                        .Build();
+                new Function(mainLogger, Identifiers.RetryCount).Decorate(() =>
+                 {
+                     var config = new ConfigurationBuilder()
+                         .AddCommandLine(args)
+                         .AddEnvironmentVariables()
+                         .Build();
 
-                    var builder = new WebHostBuilder()
-                        .UseConfiguration(config)
-                        .UseStartup<Startup>()
-                        .UseKestrel(options =>
-                        {
-                            // TODO: support end-point for self checking, monitoring, administration, service / task cancellation.... 
-                            options.Listen(IPAddress.Any, 5553); // docker outer port
-                        });
+                     var builder = new WebHostBuilder()
+                         .UseConfiguration(config)
+                         .UseStartup<Startup>()
+                         .UseKestrel(options =>
+                         {
+                             // TODO: support end-point for self checking, monitoring, administration, service / task cancellation.... 
+                             options.Listen(IPAddress.Any, 5553); // docker outer port
+                         });
 
-                    var host = builder.Build();
-                    host.Run();
-                    return 0;
-                });
+                     var host = builder.Build();
+                     host.Run();
+                     return Task.CompletedTask;
+                 }).Wait();
+                return 0;
             }
             catch (Exception ex)
             {

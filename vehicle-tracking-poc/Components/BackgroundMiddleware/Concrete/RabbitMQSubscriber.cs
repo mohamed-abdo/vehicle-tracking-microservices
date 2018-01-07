@@ -1,6 +1,8 @@
 ﻿using BackgroundMiddleware.Abstract;
+using BuildingAspects.Behaviors;
 using BuildingAspects.Functors;
 using DomainModels.DataStructure;
+using DomainModels.System;
 using DomainModels.Types;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -56,7 +58,6 @@ namespace BackgroundMiddleware.Concrete
         {
             return new RabbitMQSubscriber<T>(logger, hostConfig, callback);
         }
-
         /// <summary>
         /// 
         /// </summary>
@@ -64,71 +65,75 @@ namespace BackgroundMiddleware.Concrete
         /// <returns></returns>
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            try
-            {
-                using (var connection = connectionFactory.CreateConnection())
-                using (var channel = connection.CreateModel())
-                {
-                    channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
-                    channel.ExchangeDeclare(exchange: hostConfig.exchange, type: ExchangeType.Topic, durable: true);
+            return new Function(logger, Identifiers.RetryCount).Decorate(() =>
+             {
+                 using (var connection = connectionFactory.CreateConnection())
+                 using (var channel = connection.CreateModel())
+                 {
+                     channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+                     channel.ExchangeDeclare(exchange: hostConfig.exchange, type: ExchangeType.Topic, durable: true);
 
-                    var queueName = channel.QueueDeclare().QueueName;
+                     var queueName = channel.QueueDeclare().QueueName;
 
-                    foreach (var bindingKey in hostConfig.routes)
-                    {
-                        channel.QueueBind(queue: queueName,
-                                          exchange: hostConfig.exchange,
-                                          routingKey: bindingKey);
-                    }
+                     foreach (var bindingKey in hostConfig.routes)
+                     {
+                         channel.QueueBind(queue: queueName,
+                                           exchange: hostConfig.exchange,
+                                           routingKey: bindingKey);
+                     }
 
-                    logger.LogInformation("[*] Waiting for messages.");
+                     logger.LogInformation("[*] Waiting for messages.");
 
-                    var consumer = new EventingBasicConsumer(channel);
-                    consumer.Received += (model, ea) =>
-                    {
-                        try
-                        {
-                            var messageBody = ea.Body;
-                            var messageStr = Encoding.UTF8.GetString(messageBody);
-                            if (string.IsNullOrEmpty(messageStr))
-                                throw new TypeLoadException("Invalid message type");
+                     var consumer = new EventingBasicConsumer(channel);
 
-                            var message = JsonConvert.DeserializeObject<(MessageHeader Header, T Body, MessageFooter Footer)>(messageStr);
+                     consumer.Received += (model, ea) =>
+                     {
+                         new Function(logger, Identifiers.RetryCount).Decorate(() =>
+                         {
+                             var messageStr = Encoding.UTF8.GetString(ea.Body);
+                             if (string.IsNullOrEmpty(messageStr))
+                                 throw new TypeLoadException("Invalid message type");
 
-                            // callback action feeding
-                            callback(message);
-                            //send acknowledgment to publisher
-                            var routingKey = ea.RoutingKey;
-                            channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+                             var message = JsonConvert.DeserializeObject<(MessageHeader Header, T Body, MessageFooter Footer)>(messageStr);
 
-                            logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", "ExecutionId", hostConfig.exchange, routingKey);
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.LogCritical(ex.Message, ex);
-                            throw ex;
-                        }
-                    };
-                    channel.BasicConsume(queue: queueName,
-                                         autoAck: false,
-                                         consumer: consumer);
-                    Console.ReadLine();
+                             // callback action feeding
+                             callback(message);
+                             //send acknowledgment to publisher
 
-                }
-                return Task.CompletedTask;
-            }
-            //catch(BrokerUnreachableException be)
-            //catch(SocketException se)
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-            finally
-            {
-                if (connection.IsOpen)
-                    connection.Close();
-            }
+                             channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+                             logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", "ExecutionId", hostConfig.exchange, ea.RoutingKey);
+
+                             return true;
+                         }, (ex) =>
+                         {
+                             switch (ex)
+                             {
+                                 case TypeLoadException typeEx:
+                                     return true;
+                                 default:
+                                     return false;
+                             }
+                         });
+                     };
+                     //bind event handler
+                     channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
+                     Console.ReadLine();
+                     return Task.CompletedTask;
+                 }
+             }, (ex) =>
+             {
+                 switch (ex)
+                 {
+                     case BrokerUnreachableException brokerEx:
+                         return true;
+                     case ConnectFailureException connEx:
+                         return true;
+                     case SocketException socketEx:
+                         return true;
+                     default:
+                         return false;
+                 }
+             });
         }
     }
 }
-

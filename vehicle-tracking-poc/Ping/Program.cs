@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using BuildingAspects.Behaviors;
+using DomainModels.System;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -17,12 +19,35 @@ namespace vehicleStatus
     /// </summary>
     public class Program
     {
-        public static void Main(string[] args)
+        public static int Main(string[] args)
         {
-            BuildWebHost(args)
-                .UseStartup<Startup>()
-                .Build()
-                .Run();
+            Console.WriteLine("Running ping vehicle service with Kestrel.");
+
+            ILogger mainLogger = new LoggerFactory()
+                                        .AddConsole()
+                                        .AddDebug()
+                                        .CreateLogger<Program>();
+            try
+            {
+                new Function(mainLogger, Identifiers.RetryCount).Decorate(() =>
+                 {
+                     BuildWebHost(args)
+                     .UseStartup<Startup>()
+                     .Build()
+                     .Run();
+                     return Task.CompletedTask;
+                 }).Wait();
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                mainLogger.LogCritical($"Failed to start ping vehicle service, {ex.Message}.", ex);
+                return -1;
+            }
+            finally
+            {
+                mainLogger = null;
+            }
         }
 
         public static IWebHostBuilder BuildWebHost(string[] args) =>
@@ -42,6 +67,5 @@ namespace vehicleStatus
                     logging.AddConsole();
                     logging.AddDebug();
                 });
-
     }
 }

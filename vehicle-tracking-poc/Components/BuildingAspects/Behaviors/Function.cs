@@ -11,7 +11,7 @@ namespace BuildingAspects.Behaviors
     {
         #region internal fields
 
-        private const int _waitTimeSpanInSec = 1;
+        private const int _waitTimeSpanInSec = 3;
         private readonly ILogger _logger;
         private readonly int _retryCount;
         public Function(ILogger logger, int retryCount = 3)
@@ -23,11 +23,14 @@ namespace BuildingAspects.Behaviors
         Action<Exception> logCritical => (e) => _logger?.LogCritical(e, e.Message);
         Action<string> logInfo => (message) => _logger?.LogInformation(message);
 
-        RetryPolicy<T> defaultPolicy<T>(Func<T> action)
+        RetryPolicy<T> defaultPolicy<T>(Func<T> action, Func<Exception, bool> exceptionPredicate = null)
         {
+            Func<Exception, bool> defaultExHandler = (ex) => true;
+
             return Policy<T>
-                   .HandleResult(result => ((result is IOptional r) ? !r.Optional : true) || result != null)
-                   .Or<Exception>()
+                   // in case of T implementing IOptional (this type shouldn't allow null), and instance of T is null, consider as exception
+                   .HandleResult(result => ((result is IOptional r) ? !r.IsOptional : false) && result == null)
+                   .Or(exceptionPredicate ?? defaultExHandler)
                    .WaitAndRetry(_retryCount,
                                    sleepDurationProvider: (i, result, context) =>
                                    {
@@ -48,18 +51,9 @@ namespace BuildingAspects.Behaviors
 
         #endregion
 
-        public T Decorate<T>(Func<T> action)
+        public Task<T> Decorate<T>(Func<T> action, Func<Exception, bool> exceptionPredicate = null)
         {
-            return
-                defaultPolicy(action)
-                .Execute(action);
-        }
-
-        public Task<T> DecorateTask<T>(Func<T> action)
-        {
-            return
-                defaultPolicy(action)
-                .ExecuteAsync(() => Task.FromResult(action()));
+            return Task.FromResult(defaultPolicy(action).Execute(action));
         }
 
     }

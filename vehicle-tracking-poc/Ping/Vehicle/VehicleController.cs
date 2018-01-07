@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BackgroundMiddleware.Abstract;
+using BuildingAspects.Behaviors;
 using DomainModels.System;
 using DomainModels.Types;
 using DomainModels.Vehicle;
@@ -37,19 +38,24 @@ namespace Ping
         {
             // message definition
             //(MessageHeader Header, DomainModel<PingRequest> Body, MessageFooter Footer)
-            Task.Run(() => _publisher.Publish(
-                _localConfiguration.MiddlewareExchange,
-                _localConfiguration.MessagePublisherRoute,
-                (
-                    Header: new MessageHeader { CorrelateId = Guid.Empty },
-                    Body: new DomainModel<PingModel>()
-                    {
-                        Model = new PingModel() { ChassisNumber = Guid.NewGuid(), Message = "ping - pong!" }
-                    },
-                    Footer: new MessageFooter { Route = _localConfiguration.MessagePublisherRoute }
-                )));
-
-            return "value";
+            Task.Run(() =>
+            {
+                new Function(_logger, Identifiers.RetryCount).Decorate(() =>
+                  {
+                      return _publisher.Publish(
+                          _localConfiguration.MiddlewareExchange,
+                          _localConfiguration.MessagePublisherRoute,
+                          (
+                              Header: new MessageHeader { CorrelateId = Guid.Empty },
+                              Body: new DomainModel<PingModel>()
+                              {
+                                  Model = new PingModel() { ChassisNumber = Guid.NewGuid(), Message = "ping - pong!" }
+                              },
+                              Footer: new MessageFooter { Route = _localConfiguration.MessagePublisherRoute }
+                          ));
+                  });
+            });
+            return id.ToString();
         }
 
         // POST api/<controller>
