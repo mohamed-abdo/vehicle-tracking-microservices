@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace WebComponents.Interceptors
 {
-    public class CustomAuthorizer : IAsyncAuthorizationFilter, IFilterFactory, IPolicyEvaluator
+    public class CustomAuthorizer : IAsyncAuthorizationFilter, IFilterFactory
     {
         private readonly ILogger _logger;
         public CustomAuthorizer(ILogger logger)
@@ -26,17 +26,6 @@ namespace WebComponents.Interceptors
         }
 
         public bool IsReusable => false;
-
-        public Task<AuthenticateResult> AuthenticateAsync(AuthorizationPolicy policy, HttpContext context)
-        {
-            return new Task<AuthenticateResult>(() => AuthenticateResult.Success(new AuthenticationTicket(ClaimsPrincipal.Current, "Bearer")));
-        }
-
-        public Task<PolicyAuthorizationResult> AuthorizeAsync(AuthorizationPolicy policy, AuthenticateResult authenticationResult, HttpContext context, object resource)
-        {
-            return new Task<PolicyAuthorizationResult>(() => PolicyAuthorizationResult.Success());
-        }
-
         public IFilterMetadata CreateInstance(IServiceProvider serviceProvider)
         {
             return this;

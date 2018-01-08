@@ -12,39 +12,29 @@ using System.Threading.Tasks;
 
 namespace WebComponents.Interceptors
 {
-    public class CustomHeader : Attribute, IFilterFactory
+    public class CustomHeader : Attribute, IFilterFactory, IAsyncActionFilter
     {
-        public bool IsReusable => false;
-
         private readonly string _name, _value;
-        public CustomHeader(string name, string value)
+
+        public CustomHeader(string name, string value = null)
         {
             _name = name;
             _value = value;
         }
+
+        public bool IsReusable => false;
         public IFilterMetadata CreateInstance(IServiceProvider serviceProvider)
         {
-            return new AsyncCustomHeaderFilter(_name, _value);
+            return this;
         }
 
-        private class AsyncCustomHeaderFilter : IAsyncActionFilter
+        public Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            private readonly string _name, _value;
-            public AsyncCustomHeaderFilter(string name, string value)
+            if (!string.IsNullOrEmpty(_name))
             {
-                _name = name;
-                _value = value;
+                context.HttpContext.Response.Headers.Add(_name, new StringValues(_value));
             }
-
-            public Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
-            {
-                if (!string.IsNullOrEmpty(_name))
-                {
-                    context.HttpContext.Response.Headers.Add(_name, new StringValues(_value));
-                }
-                return next.Invoke();
-            }
+            return next.Invoke();
         }
-
     }
 }

@@ -15,6 +15,10 @@ namespace WebComponents.Interceptors
 
     {
         public bool IsReusable => false;
+        public IFilterMetadata CreateInstance(IServiceProvider serviceProvider)
+        {
+            return this;
+        }
 
         public Task<AuthenticateResult> AuthenticateAsync(AuthorizationPolicy policy, HttpContext context)
         {
@@ -25,12 +29,6 @@ namespace WebComponents.Interceptors
         {
             return new Task<PolicyAuthorizationResult>(() => PolicyAuthorizationResult.Success());
         }
-
-        public IFilterMetadata CreateInstance(IServiceProvider serviceProvider)
-        {
-            return this;
-        }
-
     }
 
 }

@@ -13,9 +13,9 @@ using System.Threading.Tasks;
 
 namespace WebComponents.Interceptors
 {
-    public class CustomeExceptoinHandler : IAsyncExceptionFilter, IFilterFactory
+    public class CustomeExceptoinHandler : IFilterFactory, IAsyncExceptionFilter
     {
-        public bool IsReusable => false;
+
         private readonly ILogger _logger;
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IModelMetadataProvider _modelMetadataProvider;
@@ -27,6 +27,7 @@ namespace WebComponents.Interceptors
             _modelMetadataProvider = modelMetadataProvider;
         }
 
+        public bool IsReusable => false;
         public IFilterMetadata CreateInstance(IServiceProvider serviceProvider)
         {
             return this;

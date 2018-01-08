@@ -10,15 +10,15 @@ using System.Threading.Tasks;
 
 namespace WebComponents.Interceptors
 {
-    public class CustomResponseResult : IAsyncResultFilter, IFilterFactory
+    public class CustomResponseResult : IFilterFactory, IAsyncResultFilter
     {
-        public bool IsReusable => false;
         private readonly ILogger _logger;
         public CustomResponseResult(ILogger logger)
         {
             _logger = logger;
         }
 
+        public bool IsReusable => false;
         public IFilterMetadata CreateInstance(IServiceProvider serviceProvider)
         {
             return this;
