@@ -1,7 +1,6 @@
 ﻿using BackgroundMiddleware.Concrete;
 using DomainModels.DataStructure;
 using DomainModels.System;
-using DomainModels.Types;
 using DomainModels.Vehicle;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,9 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace EventSourcingMiddleware
 {
@@ -53,9 +50,9 @@ namespace EventSourcingMiddleware
             ///
             /// Injecting message receiver background service
             ///
-            services.AddSingleton<IHostedService, RabbitMQSubscriber<DomainModel<PingModel>>>(srv =>
+            services.AddSingleton<IHostedService, RabbitMQSubscriber<DomainModels.Types.DomainModel<PingModel>>>(srv =>
             {
-                return RabbitMQSubscriber<DomainModel<PingModel>>.Create(loggerFactorySrv,
+                return RabbitMQSubscriber<DomainModels.Types.DomainModel<PingModel>>.Create(loggerFactorySrv,
                     new RabbitMQConfiguration
                     {
                         hostName = SystemLocalConfiguration.MessagesMiddleware,

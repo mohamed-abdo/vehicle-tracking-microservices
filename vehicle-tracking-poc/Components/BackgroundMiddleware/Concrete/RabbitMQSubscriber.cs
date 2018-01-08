@@ -65,7 +65,7 @@ namespace BackgroundMiddleware.Concrete
         /// <returns></returns>
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            return new Function(logger, Identifiers.RetryCount).Decorate(() =>
+            return new Function(logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
              {
                  using (var connection = connectionFactory.CreateConnection())
                  using (var channel = connection.CreateModel())
@@ -88,7 +88,7 @@ namespace BackgroundMiddleware.Concrete
 
                      consumer.Received += (model, ea) =>
                      {
-                         new Function(logger, Identifiers.RetryCount).Decorate(() =>
+                         new Function(logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
                          {
                              var messageStr = Encoding.UTF8.GetString(ea.Body);
                              if (string.IsNullOrEmpty(messageStr))

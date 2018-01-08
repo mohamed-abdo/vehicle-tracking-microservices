@@ -15,10 +15,10 @@ namespace DomainModels.Types
         private readonly Guid _ExecutionId;
         private readonly long _Timestamp;
 
-        public Guid CorrelateId { get; set; }
-
         public Guid ExecutionId => _ExecutionId;
-
         public long Timestamp => _Timestamp;
+
+        //TODO: utilize correlation id for building robust distributed messages.
+        public Guid CorrelateId { get; set; }
     }
 }

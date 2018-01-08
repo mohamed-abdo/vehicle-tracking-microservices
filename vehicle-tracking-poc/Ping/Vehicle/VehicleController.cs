@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using BackgroundMiddleware.Abstract;
 using BuildingAspects.Behaviors;
+using BuildingAspects.Services;
 using DomainModels.System;
 using DomainModels.Types;
 using DomainModels.Vehicle;
@@ -18,48 +20,61 @@ namespace Ping
     public class VehicleController : Controller
     {
         private readonly ILogger _logger;
+        private readonly IOperationalUnit _operationalUnit;
         private readonly IMessagePublisher _publisher;
         private readonly LocalConfiguration _localConfiguration;
-        public VehicleController(ILogger<VehicleController> logger, IMessagePublisher publisher, LocalConfiguration localConfiguration)
+        public VehicleController(
+            ILogger<VehicleController> logger,
+            IMessagePublisher publisher,
+            LocalConfiguration localConfiguration,
+            IOperationalUnit operationalUnit)
         {
             _logger = logger;
+            _operationalUnit = operationalUnit;
             _publisher = publisher;
             _localConfiguration = localConfiguration;
         }
+
         // GET api/v/<controller>/5
-        [CustomHeader("author", "mohamed-abdo=>mohamad.abdo@gmail.com")]
+        [CustomHeader(Models.Identifiers.DomainModel, Models.Identifiers.PingDomainModel)]
         [HttpGet("{id}")]
         public IActionResult Get(string id)
         {
+            //TODO:in the future in case of correlated action, link them by correlation header, ....       
+            //[CustomHeader(Models.Identifiers.CorrelationId, _operationalUnit.OperationId)]
+
             // message definition
             //(MessageHeader Header, DomainModel<PingRequest> Body, MessageFooter Footer)
             Task.Run(() =>
             {
-                new Function(_logger, Identifiers.RetryCount).Decorate(() =>
+                new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
                   {
                       return _publisher.Publish(
                           _localConfiguration.MiddlewareExchange,
                           _localConfiguration.MessagePublisherRoute,
                           (
-                              Header: new MessageHeader { CorrelateId = Guid.Empty },
+                              Header: new MessageHeader
+                              {
+                                  CorrelateId = _operationalUnit.InstanceId
+                              },
                               Body: new DomainModel<PingModel>()
                               {
                                   Model = new PingModel() { ChassisNumber = Guid.NewGuid(), Message = "ping - pong!" }
                               },
-                              Footer: new MessageFooter { Route = _localConfiguration.MessagePublisherRoute }
+                              Footer: new MessageFooter
+                              {
+                                  Sender = ControllerContext.ActionDescriptor.DisplayName,
+                                  Environemnt = _operationalUnit.Environment,
+                                  Assembly = _operationalUnit.Assembly,
+                                  FingerPrint = ControllerContext.ActionDescriptor.Id,
+                                  Route = new Dictionary<string, string> { { DomainModels.Types.Identifiers.MessagePublisherRoute, _localConfiguration.MessagePublisherRoute } },
+                                  Hint = MessageHint.OK
+                              }
                           ));
                   });
             });
-            throw new FieldAccessException();
-            //return BadRequest(id);
+            //throw new FieldAccessException();
             return Content(id);
-        }
-
-        // POST api/v/<controller>
-        [HttpPost("{id}")]
-        public void Post([FromBody]string value)
-        {
-
         }
     }
 }

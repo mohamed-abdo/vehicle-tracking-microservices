@@ -1,5 +1,6 @@
 ﻿using BackgroundMiddleware.Abstract;
 using BackgroundMiddleware.Concrete;
+using BuildingAspects.Services;
 using DomainModels.DataStructure;
 using DomainModels.System;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Swashbuckle.AspNetCore.Swagger;
 using System.Collections.Generic;
 using WebComponents.Interceptors;
 
@@ -38,7 +40,7 @@ namespace vehicleStatus
         public IHostingEnvironment Environemnt { get; }
         public IConfiguration Configuration { get; }
         public ILogger Logger { get; }
-
+        private string AssemblyName => $"{Environemnt.ApplicationName} V{this.GetType().Assembly.GetName().Version}";
 
         // Inject background service, for receiving message
         public void ConfigureServices(IServiceCollection services)
@@ -49,6 +51,12 @@ namespace vehicleStatus
                 .AddConsole()
                 .AddDebug()
                 .CreateLogger<Startup>();
+
+            var _operationalUnit = new OperationalUnit(
+                environment: Environemnt.EnvironmentName,
+                assembly: AssemblyName);
+
+            services.AddSingleton<IOperationalUnit>(srv => _operationalUnit);
 
             services.AddSingleton<LocalConfiguration, LocalConfiguration>(srv => SystemLocalConfiguration);
             services.AddSingleton<IMessagePublisher, RabbitMQPublisher>(srv =>
@@ -80,12 +88,17 @@ namespace vehicleStatus
                 options.ReportApiVersions = true;
             });
 
-            services.AddMvcCore(options =>
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Info { Title = _operationalUnit.Assembly, Version = "v1" });
+            });
+
+            services.AddMvc(options =>
             {
                 //TODO: add practical policy instead of empty policy for authentication / authorization .
-                options.Filters.Add(new CustomAuthorizer(_logger));
-                options.Filters.Add(new CustomeExceptoinHandler(_logger, Environemnt));
-                options.Filters.Add(new CustomResponseResult(_logger));
+                options.Filters.Add(new CustomAuthorizer(_logger, _operationalUnit));
+                options.Filters.Add(new CustomeExceptoinHandler(_logger, _operationalUnit, Environemnt));
+                options.Filters.Add(new CustomResponseResult(_logger, _operationalUnit));
             });
         }
 
@@ -101,9 +114,15 @@ namespace vehicleStatus
             {
                 app.UseExceptionHandler("/Error");
             }
-
+            // Enable static files (if exists)
             app.UseStaticFiles();
-
+            // Enable middleware to serve generated Swagger as a JSON endpoint.
+            app.UseSwagger();
+            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), specifying the Swagger JSON endpoint.
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", AssemblyName);
+            });
             app.UseMvc();
         }
     }

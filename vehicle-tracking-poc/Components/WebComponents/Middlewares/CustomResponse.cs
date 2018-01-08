@@ -1,7 +1,9 @@
-﻿using DomainModels.Types;
+﻿using BuildingAspects.Behaviors;
+using DomainModels.Types;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -17,25 +19,33 @@ namespace WebComponents.WebMiddlewares
         }
         public async Task Invoke(HttpContext context)
         {
+            var messageHeader = new MessageHeader();
+
+            var messageFooter = new MessageFooter
+            {
+                Sender = context.Request.Path,
+                //TODO: get request finger print
+                FingerPrint = context.Request.Path,
+                Route = context.Request.Query.ToDictionary(key => key.Key, vallue => vallue.Value.FirstOrDefault()),
+                Hint = MessageHint.Custom
+            };
+
             context.Response.ContentType = new MediaTypeHeaderValue(ContentTypes.ApplicationJson)?.MediaType;
             using (var writer = new StreamWriter(context.Response.Body))
             {
-                var json = new
-                {
-                    header = new ResponseHeader(),
-                    body = "custom content"
-                };
-                var jsonStr = JsonConvert.SerializeObject(json, new JsonSerializerSettings()
-                {
-                    ReferenceLoopHandling = ReferenceLoopHandling.Error,
-                    PreserveReferencesHandling = PreserveReferencesHandling.Arrays,
-                    TypeNameHandling = TypeNameHandling.Auto,
-                    NullValueHandling = NullValueHandling.Include
-                });
-
-                await writer.WriteAsync(jsonStr);
+                var content = JsonConvert.SerializeObject(closureGenerateResponseMessage(), Utilities.JsonSerializerSettings);
+                await writer.WriteAsync(content);
             }
             await _next(context);
+            object closureGenerateResponseMessage()
+            {
+                return new
+                {
+                    header = messageHeader,
+                    body = string.Empty,
+                    footer = messageFooter
+                };
+            }
         }
     }
 }

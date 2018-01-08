@@ -1,5 +1,4 @@
 ﻿using DomainModels.System;
-using DomainModels.Types;
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Fallback;
@@ -21,7 +20,7 @@ namespace BuildingAspects.Behaviors
         /// <returns>Policy</returns>
         public static PolicyBuilder<T> Result<T>() =>
             Policy<T>
-            .HandleResult(result => ((result is IOptional r) ? !r.IsOptional : true) || result != null);
+            .HandleResult(result => ((result is DomainModels.Types.IOptional r) ? !r.IsOptional : true) || result != null);
 
 
         /// <summary>
