@@ -2,6 +2,8 @@
 using BackgroundMiddleware.Concrete;
 using DomainModels.DataStructure;
 using DomainModels.System;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Distributed;
@@ -78,7 +80,13 @@ namespace vehicleStatus
                 options.ReportApiVersions = true;
             });
 
-            services.AddMvcCore(options => options.Filters.Add(new CustomResponseResult(_logger)));
+            services.AddMvcCore(options =>
+            {
+                //TODO: add practical policy instead of empty policy for authentication / authorization .
+                options.Filters.Add(new CustomAuthorizer(_logger));
+                options.Filters.Add(new CustomeExceptoinHandler(_logger, Environemnt));
+                options.Filters.Add(new CustomResponseResult(_logger));
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

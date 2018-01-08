@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace WebComponents.Interceptors
 {
-    public class CustomResponseResult : Attribute, IFilterFactory
+    public class CustomResponseResult : IAsyncResultFilter, IFilterFactory
     {
         public bool IsReusable => false;
         private readonly ILogger _logger;
@@ -21,27 +21,21 @@ namespace WebComponents.Interceptors
 
         public IFilterMetadata CreateInstance(IServiceProvider serviceProvider)
         {
-            return new AsyncCustomResponseResult(_logger);
+            return this;
         }
-        private class AsyncCustomResponseResult : ResultFilterAttribute
+
+        public Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
         {
-            private readonly ILogger _logger;
-            public AsyncCustomResponseResult(ILogger logger)
+            var rawContent = (context.Result as ContentResult)?.Content;
+            context.Result = new ContentResult()
             {
-                _logger = logger;
-            }
-            public override Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
-            {
-                var rawContent = (context.Result as ContentResult).Content;
-                context.Result = new ContentResult()
-                {
-                    StatusCode = StatusCodes.Status200OK,
-                    ContentType = ContentTypes.ApplicationJson,
-                    Content = JsonConvert.SerializeObject(new ResponseModel<PingModel>() { Body = new PingModel() { Message = "Hello world - microservices are here!!!" } })
-                };
-                _logger.LogInformation("Overriding response!");
-                return base.OnResultExecutionAsync(context, next);
-            }
+                StatusCode = StatusCodes.Status200OK,
+                ContentType = ContentTypes.ApplicationJson,
+                Content = JsonConvert.SerializeObject(new ResponseModel<PingModel>() { Body = new PingModel() { Message = $"Hello world - {rawContent} microservices are here!!!" } })
+            };
+            _logger.LogInformation("Overriding response!");
+            return next.Invoke();
         }
+
     }
 }

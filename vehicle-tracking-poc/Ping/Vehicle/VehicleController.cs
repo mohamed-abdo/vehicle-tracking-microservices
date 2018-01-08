@@ -50,7 +50,8 @@ namespace Ping
                           ));
                   });
             });
-            //return NotFound();
+            throw new FieldAccessException();
+            //return BadRequest(id);
             return Content(id);
         }
 
