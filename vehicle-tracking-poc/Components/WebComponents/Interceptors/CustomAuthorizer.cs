@@ -2,6 +2,7 @@
 using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
 using DomainModels.Types;
+using DomainModels.Types.Messages;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
@@ -63,8 +64,8 @@ namespace WebComponents.Interceptors
                 context.Result = new ContentResult()
                 {
                     StatusCode = StatusCodes.Status401Unauthorized,
-                    ContentType = ContentTypes.ApplicationJson,
-                    Content = JsonConvert.SerializeObject(closureGenerateResponseMessage(), Utilities.JsonSerializerSettings)
+                    ContentType = Identifiers.ApplicationJson,
+                    Content = JsonConvert.SerializeObject(closureGenerateResponseMessage(), Utilities.DefaultJsonSerializerSettings)
                 };
                 return Task.CompletedTask;
 

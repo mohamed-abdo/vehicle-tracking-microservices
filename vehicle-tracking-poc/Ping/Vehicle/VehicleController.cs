@@ -6,6 +6,8 @@ using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
 using DomainModels.System;
 using DomainModels.Types;
+using DomainModels.Types.Exceptions;
+using DomainModels.Types.Messages;
 using DomainModels.Vehicle;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -73,8 +75,8 @@ namespace Ping
                           ));
                   });
             });
-            //throw new FieldAccessException();
-            return Content(id);
+            throw new CustomException(code: ExceptionCodes.MessageMalformed);
+            //return Content(id);
         }
     }
 }

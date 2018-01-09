@@ -1,7 +1,4 @@
-﻿using DomainModels.Types;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using DomainModels.Types.Messages;
 using System.Threading.Tasks;
 
 namespace BackgroundMiddleware.Abstract

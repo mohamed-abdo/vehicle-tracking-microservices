@@ -8,5 +8,11 @@ namespace DomainModels.Types
     {
         public const string MessagePublisherRoute = "MessagePublisherRoute";
         public const string CorrelationId = "correlation-id";
+
+        #region content Types
+
+        public const string ApplicationJson = "application/json";
+
+        #endregion
     }
 }

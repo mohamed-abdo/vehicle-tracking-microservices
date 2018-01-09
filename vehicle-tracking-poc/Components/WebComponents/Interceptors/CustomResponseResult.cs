@@ -1,6 +1,7 @@
 ﻿using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
 using DomainModels.Types;
+using DomainModels.Types.Messages;
 using DomainModels.Vehicle;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -53,8 +54,8 @@ namespace WebComponents.Interceptors
             context.Result = new ContentResult()
             {
                 StatusCode = StatusCodes.Status200OK,
-                ContentType = ContentTypes.ApplicationJson,
-                Content = JsonConvert.SerializeObject(closureGenerateResponseMessage(), Utilities.JsonSerializerSettings)
+                ContentType = Identifiers.ApplicationJson,
+                Content = JsonConvert.SerializeObject(closureGenerateResponseMessage(), Utilities.DefaultJsonSerializerSettings)
             };
             _logger.LogInformation("Overriding response!");
             return next.Invoke();

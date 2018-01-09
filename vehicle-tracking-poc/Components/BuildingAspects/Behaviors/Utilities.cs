@@ -8,7 +8,7 @@ namespace BuildingAspects.Behaviors
 {
     public static class Utilities
     {
-        public static JsonSerializerSettings JsonSerializerSettings =>
+        public static JsonSerializerSettings DefaultJsonSerializerSettings =>
             new Newtonsoft.Json.JsonSerializerSettings()
             {
                 DateFormatHandling = DateFormatHandling.IsoDateFormat,

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace DomainModels.Types
+namespace DomainModels.Types.Messages
 {
     public class MessageFooter : IMessageFooter
     {

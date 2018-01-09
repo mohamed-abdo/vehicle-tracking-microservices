@@ -1,5 +1,6 @@
 ﻿using BuildingAspects.Behaviors;
 using DomainModels.Types;
+using DomainModels.Types.Messages;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using System.IO;
@@ -30,10 +31,10 @@ namespace WebComponents.WebMiddlewares
                 Hint = MessageHint.Custom
             };
 
-            context.Response.ContentType = new MediaTypeHeaderValue(ContentTypes.ApplicationJson)?.MediaType;
+            context.Response.ContentType = new MediaTypeHeaderValue(Identifiers.ApplicationJson)?.MediaType;
             using (var writer = new StreamWriter(context.Response.Body))
             {
-                var content = JsonConvert.SerializeObject(closureGenerateResponseMessage(), Utilities.JsonSerializerSettings);
+                var content = JsonConvert.SerializeObject(closureGenerateResponseMessage(), Utilities.DefaultJsonSerializerSettings);
                 await writer.WriteAsync(content);
             }
             await _next(context);

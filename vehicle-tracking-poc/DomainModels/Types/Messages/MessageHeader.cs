@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DomainModels.Types
+namespace DomainModels.Types.Messages
 {
     public class MessageHeader : IMessageHeader
     {

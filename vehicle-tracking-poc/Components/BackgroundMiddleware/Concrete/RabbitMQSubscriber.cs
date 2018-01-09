@@ -2,8 +2,7 @@
 using BuildingAspects.Behaviors;
 using BuildingAspects.Functors;
 using DomainModels.DataStructure;
-using DomainModels.System;
-using DomainModels.Types;
+using DomainModels.Types.Messages;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RabbitMQ.Client;

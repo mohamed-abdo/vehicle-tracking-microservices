@@ -1,6 +1,8 @@
 ﻿using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
 using DomainModels.Types;
+using DomainModels.Types.Exceptions;
+using DomainModels.Types.Messages;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,9 +11,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace WebComponents.Interceptors
@@ -59,24 +59,30 @@ namespace WebComponents.Interceptors
                 Route = context.RouteData.Values.ToDictionary(key => key.Key, value => value.Value?.ToString()),
                 Hint = MessageHint.SystemError
             };
-
+            var exception = context.Exception;
+            (int code, string message) = (exception is CustomException ex) ? ex.CustomMessage : (exception.HResult, exception.Message);
             context.ExceptionHandled = true;
             context.Result = new ContentResult()
             {
                 StatusCode = StatusCodes.Status500InternalServerError,
-                ContentType = ContentTypes.ApplicationJson,
-                Content = JsonConvert.SerializeObject(closureGenerateResponseMessage(), Utilities.JsonSerializerSettings)
+                ContentType = Identifiers.ApplicationJson,
+                Content = JsonConvert.SerializeObject(closureGenerateErrorMessage(), Utilities.DefaultJsonSerializerSettings)
             };
 
             return Task.CompletedTask;
 
-            object closureGenerateResponseMessage()
+            object closureGenerateErrorMessage()
             {
                 return new
                 {
                     header = messageHeader,
-                    //TODO: system only should share user friendly messages, as well to not break system security.
-                    body = context.Exception.Message,
+                    //TODO: system message only should share user friendly messages for system messages, as well to not break system security.
+                    body = new
+                    {
+                        code,
+                        message,
+                        systemMessage = exception.Message
+                    },
                     footer = messageFooter
                 };
             }
