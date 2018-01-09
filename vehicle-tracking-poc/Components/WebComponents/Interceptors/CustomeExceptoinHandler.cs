@@ -48,7 +48,10 @@ namespace WebComponents.Interceptors
             if (!string.IsNullOrEmpty(correlationHeader))
                 Guid.TryParse(correlationHeader, out correlationId);
 
-            var messageHeader = new MessageHeader { CorrelateId = correlationId };
+            var exception = context.Exception;
+            (int code, string message, ResponseHint responseHint) = (exception is CustomException ex) ? ex.CustomMessage : (exception.HResult, exception.Message, ResponseHint.SystemError);
+
+            var messageHeader = new MessageHeader(isSucceed: false) { CorrelateId = correlationId };
 
             var messageFooter = new MessageFooter
             {
@@ -57,10 +60,8 @@ namespace WebComponents.Interceptors
                 Assembly = _operationalUnit.Assembly,
                 FingerPrint = context.ActionDescriptor.Id,
                 Route = context.RouteData.Values.ToDictionary(key => key.Key, value => value.Value?.ToString()),
-                Hint = MessageHint.SystemError
+                Hint = responseHint
             };
-            var exception = context.Exception;
-            (int code, string message) = (exception is CustomException ex) ? ex.CustomMessage : (exception.HResult, exception.Message);
             context.ExceptionHandled = true;
             context.Result = new ContentResult()
             {

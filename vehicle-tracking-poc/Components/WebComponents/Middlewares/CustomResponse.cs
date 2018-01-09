@@ -28,7 +28,7 @@ namespace WebComponents.WebMiddlewares
                 //TODO: get request finger print
                 FingerPrint = context.Request.Path,
                 Route = context.Request.Query.ToDictionary(key => key.Key, vallue => vallue.Value.FirstOrDefault()),
-                Hint = MessageHint.Custom
+                Hint = ResponseHint.Custom
             };
 
             context.Response.ContentType = new MediaTypeHeaderValue(Identifiers.ApplicationJson)?.MediaType;

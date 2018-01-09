@@ -5,7 +5,7 @@ using System.Text;
 namespace DomainModels.Types.Messages
 {
     [Flags]
-    public enum MessageHint
+    public enum ResponseHint
     {
         OK = 1,
         Retry = 2,

@@ -70,13 +70,13 @@ namespace Ping
                                   Assembly = _operationalUnit.Assembly,
                                   FingerPrint = ControllerContext.ActionDescriptor.Id,
                                   Route = new Dictionary<string, string> { { DomainModels.Types.Identifiers.MessagePublisherRoute, _localConfiguration.MessagePublisherRoute } },
-                                  Hint = MessageHint.OK
+                                  Hint = ResponseHint.OK
                               }
                           ));
                   });
             });
-            throw new CustomException(code: ExceptionCodes.MessageMalformed);
-            //return Content(id);
+            //throw new CustomException(code: ExceptionCodes.MessageMalformed);
+            return Content(id);
         }
     }
 }

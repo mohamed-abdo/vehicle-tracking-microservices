@@ -11,6 +11,6 @@ namespace DomainModels.Types.Messages
         string Environemnt { get; }
         IDictionary<string, string> Route { get; }
         string FingerPrint { get; }
-        MessageHint Hint { get; }
+        ResponseHint Hint { get; }
     }
 }

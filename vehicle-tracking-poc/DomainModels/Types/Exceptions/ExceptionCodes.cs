@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DomainModels.Types.Messages;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -42,7 +43,7 @@ namespace DomainModels.Types.Exceptions
 
     public static class ExceptionCodesHelper
     {
-        public static (int code, string message) Translate(ExceptionCodes code)
+        public static (int code, string message, ResponseHint hint) Translate(ExceptionCodes code)
         {
             return code.GetType()
             .GetField(Enum.GetName(typeof(ExceptionCodes), code))
@@ -52,7 +53,7 @@ namespace DomainModels.Types.Exceptions
             }).Select(customAttr =>
             {
                 var attr = (customAttr as ExceptionCodeAttribute);
-                return (attr.Code, attr.FriendlyMessage);
+                return (attr.Code, attr.FriendlyMessage, attr.Hint);
             }).FirstOrDefault();
         }
     }

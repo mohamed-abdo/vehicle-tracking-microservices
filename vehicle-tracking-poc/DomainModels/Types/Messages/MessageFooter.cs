@@ -14,6 +14,6 @@ namespace DomainModels.Types.Messages
 
         public string FingerPrint { get; set; }
 
-        public MessageHint Hint { get; set; }
+        public ResponseHint Hint { get; set; }
     }
 }

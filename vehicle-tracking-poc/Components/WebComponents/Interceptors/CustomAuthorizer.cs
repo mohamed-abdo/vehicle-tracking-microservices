@@ -57,7 +57,7 @@ namespace WebComponents.Interceptors
                     Assembly = _operationalUnit.Assembly,
                     FingerPrint = context.ActionDescriptor.Id,
                     Route = context.RouteData.Values.ToDictionary(key => key.Key, value => value.Value?.ToString()),
-                    Hint = MessageHint.UnAuthorized
+                    Hint = ResponseHint.UnAuthorized
                 };
 
                 //reject the request

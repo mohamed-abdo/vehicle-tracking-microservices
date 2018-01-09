@@ -37,7 +37,7 @@ namespace WebComponents.Interceptors
             var correlationId = _operationalUnit.InstanceId;
             if (!string.IsNullOrEmpty(correlationHeader))
                 Guid.TryParse(correlationHeader, out correlationId);
-            var messageHeader = new MessageHeader { CorrelateId = correlationId };
+            var messageHeader = new MessageHeader(isSucceed: context.HttpContext.Response.StatusCode == 200) { CorrelateId = correlationId };
 
             var messageFooter = new MessageFooter
             {
@@ -46,14 +46,15 @@ namespace WebComponents.Interceptors
                 Assembly = _operationalUnit.Assembly,
                 FingerPrint = context.ActionDescriptor.Id,
                 Route = context.RouteData.Values.ToDictionary(key => key.Key, value => value.Value?.ToString()),
-                Hint = MessageHint.OK
+                //TODO: infer the hint from HTTP status code
+                Hint = ResponseHint.OK
             };
 
 
             var rawContent = (context.Result as ContentResult)?.Content;
             context.Result = new ContentResult()
             {
-                StatusCode = StatusCodes.Status200OK,
+                StatusCode = context.HttpContext.Response.StatusCode,
                 ContentType = Identifiers.ApplicationJson,
                 Content = JsonConvert.SerializeObject(closureGenerateResponseMessage(), Utilities.DefaultJsonSerializerSettings)
             };
