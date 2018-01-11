@@ -7,8 +7,6 @@ namespace DomainModels.Types.Exceptions
 {
     public class CustomException : Exception
     {
-        private readonly string _friendlyMessage;
-        private readonly ExceptionCodes _code;
         private readonly (int code, string friendlyMessage, ResponseHint responseHint) _message;
 
         public CustomException(ExceptionCodes code)

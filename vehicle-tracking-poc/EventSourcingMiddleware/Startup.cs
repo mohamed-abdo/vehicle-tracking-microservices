@@ -1,6 +1,7 @@
 ﻿using BackgroundMiddleware.Concrete;
 using DomainModels.DataStructure;
 using DomainModels.System;
+using DomainModels.Types.Messages;
 using DomainModels.Vehicle;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -12,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace EventSourcingMiddleware
@@ -50,22 +52,30 @@ namespace EventSourcingMiddleware
             ///
             /// Injecting message receiver background service
             ///
-            services.AddSingleton<IHostedService, RabbitMQSubscriber<DomainModels.Types.DomainModel<PingModel>>>(srv =>
+            services.AddSingleton<IHostedService, RabbitMQSubscriber<(MessageHeader, DomainModels.Types.DomainModel<PingModel>, MessageFooter)>>(srv =>
             {
-                return RabbitMQSubscriber<DomainModels.Types.DomainModel<PingModel>>.Create(loggerFactorySrv,
-                    new RabbitMQConfiguration
-                    {
-                        hostName = SystemLocalConfiguration.MessagesMiddleware,
-                        exchange = SystemLocalConfiguration.MiddlewareExchange,
-                        userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
-                        password = SystemLocalConfiguration.MessagesMiddlewarePassword,
-                        routes = new string[] { SystemLocalConfiguration.MessageSubscriberRoute }
-                    }
-                    , (pingMessage) =>
-                    {
-                        Logger.LogInformation($"[x] Event sourcing service receiving a message-Id: {pingMessage.Header.ExecutionId} from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(pingMessage)}");
-                    });
-            });
+                return RabbitMQSubscriber<(MessageHeader header, DomainModels.Types.DomainModel<PingModel> body, MessageFooter footer)>.Create(loggerFactorySrv,
+                   new RabbitMQConfiguration
+                   {
+                       hostName = SystemLocalConfiguration.MessagesMiddleware,
+                       exchange = SystemLocalConfiguration.MiddlewareExchange,
+                       userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
+                       password = SystemLocalConfiguration.MessagesMiddlewarePassword,
+                       routes = new string[] { SystemLocalConfiguration.MessageSubscriberRoute }
+                   }
+                   , (pingMessageCallback) =>
+                   {
+                       try
+                       {
+                           var message = pingMessageCallback();
+                           Logger.LogInformation($"[x] Event sourcing service receiving a message from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
+                       }
+                       catch (Exception ex)
+                       {
+                           Logger.LogCritical(ex, "de-serialize Object exceptions.");
+                       }
+                   });
+           });
         }
 
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)

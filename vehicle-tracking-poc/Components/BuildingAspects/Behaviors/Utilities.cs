@@ -9,13 +9,15 @@ namespace BuildingAspects.Behaviors
     public static class Utilities
     {
         public static JsonSerializerSettings DefaultJsonSerializerSettings =>
-            new Newtonsoft.Json.JsonSerializerSettings()
+            new JsonSerializerSettings()
             {
                 DateFormatHandling = DateFormatHandling.IsoDateFormat,
                 DateParseHandling = DateParseHandling.DateTimeOffset,
                 DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-                ContractResolver = new CamelCasePropertyNamesContractResolver(),
                 NullValueHandling = NullValueHandling.Include,
+                ConstructorHandling= ConstructorHandling.Default,
+                FloatFormatHandling= FloatFormatHandling.DefaultValue,
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
                 Converters = new List<JsonConverter> { new StringEnumConverter(camelCaseText: true) }
             };
     }

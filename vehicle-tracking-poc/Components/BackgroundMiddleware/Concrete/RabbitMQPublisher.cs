@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BackgroundMiddleware.Abstract;
+using BuildingAspects.Behaviors;
 using BuildingAspects.Functors;
 using DomainModels.DataStructure;
 using DomainModels.Types;
@@ -21,8 +22,6 @@ namespace BackgroundMiddleware.Concrete
         private readonly ILogger logger;
         private readonly RabbitMQConfiguration hostConfig;
         private readonly IConnectionFactory connectionFactory;
-        private IConnection connection;
-        private IModel channel;
         private RabbitMQPublisher(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
         {
             this.logger = logger?
@@ -52,7 +51,7 @@ namespace BackgroundMiddleware.Concrete
                     var properties = channel.CreateBasicProperties();
                     properties.Persistent = true;
 
-                    var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+                    var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message, Utilities.DefaultJsonSerializerSettings));
                     channel.BasicPublish(exchange: exchange,
                                          routingKey: route,
                                          basicProperties: properties,

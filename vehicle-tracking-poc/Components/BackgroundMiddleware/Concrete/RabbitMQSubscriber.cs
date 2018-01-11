@@ -9,7 +9,6 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 using System;
-using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -26,15 +25,14 @@ namespace BackgroundMiddleware.Concrete
         private readonly ILogger logger;
         private readonly RabbitMQConfiguration hostConfig;
         private readonly IConnectionFactory connectionFactory;
-        private IConnection connection;
-        private IModel channel;
-        private readonly Action<(MessageHeader Header, T Body, MessageFooter Footer)> callback;
+        //Design decision: keep/ delegate responsibility of translating and casting object to the target type, to receiver callback, even exception will be thrown in his execution thread.
+        private readonly Action<Func<T>> callback;
         /// <summary>
         /// internal construct subscriber object
         /// </summary>
         /// <param name="logger">ILogger instance</param>
         /// <param name="hostConfig">rabbitMQ configuration</param>
-        private RabbitMQSubscriber(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<(MessageHeader Header, T Body, MessageFooter Footer)> callback)
+        private RabbitMQSubscriber(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Func<T>> callback)
         {
             this.logger = logger?
                             .AddConsole()
@@ -53,7 +51,7 @@ namespace BackgroundMiddleware.Concrete
         /// </summary>
         /// <param name="logger">ILogger instance</param>
         /// <param name="hostConfig">rabbitMQ configuration</param>
-        public static RabbitMQSubscriber<T> Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<(MessageHeader Header, T Body, MessageFooter Footer)> callback)
+        public static RabbitMQSubscriber<T> Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Func<T>> callback)
         {
             return new RabbitMQSubscriber<T>(logger, hostConfig, callback);
         }
@@ -69,7 +67,8 @@ namespace BackgroundMiddleware.Concrete
                  using (var connection = connectionFactory.CreateConnection())
                  using (var channel = connection.CreateModel())
                  {
-                     channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+                     //TODO: in case scaling the middleware, runing multiple workers simultaneously. 
+                     //channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
                      channel.ExchangeDeclare(exchange: hostConfig.exchange, type: ExchangeType.Topic, durable: true);
 
                      var queueName = channel.QueueDeclare().QueueName;
@@ -92,16 +91,14 @@ namespace BackgroundMiddleware.Concrete
                              var messageStr = Encoding.UTF8.GetString(ea.Body);
                              if (string.IsNullOrEmpty(messageStr))
                                  throw new TypeLoadException("Invalid message type");
-
-                             var message = JsonConvert.DeserializeObject<(MessageHeader Header, T Body, MessageFooter Footer)>(messageStr);
-
-                             // callback action feeding
-                             callback(message);
+ 
+                             // callback action feeding 
+                                callback(()=> JsonConvert.DeserializeObject<T>(messageStr, Utilities.DefaultJsonSerializerSettings));
                              //send acknowledgment to publisher
 
                              channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
-                             logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", "ExecutionId", hostConfig.exchange, ea.RoutingKey);
 
+                             logger.LogInformation($"[x] Event sourcing service receiving a messaged from exchange: {hostConfig.exchange}, route :{ea.RoutingKey}.");
                              return true;
                          }, (ex) =>
                          {

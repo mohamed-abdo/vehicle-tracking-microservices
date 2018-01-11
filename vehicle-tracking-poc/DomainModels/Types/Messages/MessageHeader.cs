@@ -10,11 +10,11 @@ namespace DomainModels.Types.Messages
         private readonly Guid _ExecutionId;
         private readonly long _Timestamp;
         private readonly bool _isSucceed;
-        public MessageHeader(bool isSucceed = true)
+        public MessageHeader(Guid? executionId = null, long? timestamp = null, bool? isSucceed = null)
         {
-            _ExecutionId = Guid.NewGuid();
-            _Timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
-            _isSucceed = isSucceed;
+            _ExecutionId = executionId ?? Guid.NewGuid();
+            _Timestamp = timestamp ?? new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+            _isSucceed = isSucceed ?? true;
         }
 
         public Guid ExecutionId => _ExecutionId;
