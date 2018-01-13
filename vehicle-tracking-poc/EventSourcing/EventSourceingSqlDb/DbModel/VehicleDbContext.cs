@@ -8,6 +8,6 @@ namespace EventSourceingSqlDb.DbModel
     {
         public VehicleDbContext(DbContextOptions<VehicleDbContext> options) : base(options) { }
 
-        public DbSet<PingEventSource> InfoEventSource { get; set; }
+        public DbSet<PingEventSource> PingEventSource { get; set; }
     }
 }

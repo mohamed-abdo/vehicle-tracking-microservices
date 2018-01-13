@@ -10,7 +10,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EventSourceingSqlDb.DbModel
 {
-    public class PingEventSource: BaseModel
+    public class PingEventSource: BaseDbModel
     {
         //TODO: add try catch to make it safe for getter and setter, by use lambda Func
         [NotMapped]
@@ -22,14 +22,5 @@ namespace EventSourceingSqlDb.DbModel
 
         public string Raw_Data { get; set; }
 
-        //TODO: add try catch to make it safe for getter and setter, by use lambda Func
-        [NotMapped]
-        public IDictionary<string, string> Route
-        {
-            get => JsonConvert.DeserializeObject<IDictionary<string, string>>(Raw_Route, Utilities.DefaultJsonSerializerSettings);
-            set => JsonConvert.SerializeObject(value, Utilities.DefaultJsonSerializerSettings);
-        }
-
-        public string Raw_Route { get; set; }
     }
 }

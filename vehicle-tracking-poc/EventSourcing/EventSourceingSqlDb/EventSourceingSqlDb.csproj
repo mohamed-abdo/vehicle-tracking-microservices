@@ -13,8 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Components\BuildingAspects\BuildingAspects.csproj" />
     <ProjectReference Include="..\..\DomainModels\DomainModels.csproj" />
-    <ProjectReference Include="..\BuildingAspects\BuildingAspects.csproj" />
   </ItemGroup>
 
 </Project>
