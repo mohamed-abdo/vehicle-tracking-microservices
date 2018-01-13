@@ -3,8 +3,6 @@ using BackgroundMiddleware.Concrete;
 using BuildingAspects.Services;
 using DomainModels.DataStructure;
 using DomainModels.System;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Distributed;
@@ -46,6 +44,9 @@ namespace vehicleStatus
         public void ConfigureServices(IServiceCollection services)
         {
             var loggerFactorySrv = services.BuildServiceProvider().GetService<ILoggerFactory>();
+            
+            //add application insights information, could be used to monitor the performance, and more analytics when application moved to the cloud.
+            loggerFactorySrv.AddApplicationInsights(services.BuildServiceProvider(), LogLevel.Information);
 
             ILogger _logger = loggerFactorySrv
                 .AddConsole()

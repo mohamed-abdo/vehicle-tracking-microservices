@@ -11,6 +11,7 @@ services:
     - distributed_cache
     - messages_middleware
     - eventsourcingmiddleware
+    - database_sql
     environment:
     - distributed_cache=distributed_cache
     - cache_db_vehicles=vehicles
@@ -31,6 +32,15 @@ services:
     image: rabbitmq
     ports:
     - 5552:5672
+  
+  database_sql:
+    image: microsoft/mssql-server-linux:latest
+    environment:
+    - MSSQL_SA_PASSWORD=Pass@word
+    - ACCEPT_EULA=Y
+    - MSSQL_PID=Express
+    ports:
+    - 5553:1433
 
   tracking:
     image: tracking
@@ -59,6 +69,7 @@ services:
     - 32770:80
     depends_on:
     - messages_middleware
+    - database_sql
     environment:
     - cache_db_vehicles=vehicles
     - messages_middleware=messages_middleware
@@ -66,3 +77,4 @@ services:
     - middleware_info_subscriber=info.ping.vehicle
     - middleware_username=guest
     - middleware_password=guest
+    - event_db_connection=Server=database_sql;Database=vehicle_events;User Id=sa;Password=Pass@word

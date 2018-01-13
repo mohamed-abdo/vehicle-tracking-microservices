@@ -29,13 +29,19 @@ namespace EventSourcingMiddleware
                          .Build();
 
                      var builder = new WebHostBuilder()
-                         .UseConfiguration(config)
-                         .UseStartup<Startup>()
-                         .UseKestrel(options =>
-                         {
-                             // TODO: support end-point for self checking, monitoring, administration, service / task cancellation.... 
-                             options.Listen(IPAddress.Any, 5553); // docker outer port
-                         });
+                            .UseConfiguration(config)
+                            .ConfigureLogging((hostingContext, logging) =>
+                            {
+                                logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+                                logging.AddConsole();
+                                logging.AddDebug();
+                            })
+                            .UseStartup<Startup>()
+                            .UseKestrel(options =>
+                            {
+                                // TODO: support end-point for self checking, monitoring, administration, service / task cancellation.... 
+                                options.Listen(IPAddress.Any, 80); // docker outer port
+                            });
 
                      var host = builder.Build();
                      host.Run();

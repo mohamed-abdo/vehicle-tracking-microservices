@@ -35,6 +35,7 @@ namespace DomainModels.System
         public string MessagePublisherRoute { get; private set; }
         public string MessagesMiddlewareUsername { get; private set; }
         public string MessagesMiddlewarePassword { get; private set; }
+        public string EventDbConnection { get;private set; }
         #endregion
     }
 }

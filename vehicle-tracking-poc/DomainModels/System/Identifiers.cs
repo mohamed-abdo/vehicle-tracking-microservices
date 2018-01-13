@@ -16,6 +16,7 @@ namespace DomainModels.System
         public const string MessagePublisherRoute = "middleware_info_publisher";
         public const string MessagesMiddlewareUsername = "middleware_username";
         public const string MessagesMiddlewarePassword = "middleware_password";
+        public const string EventDbConnection = "event_db_connection";
 
         #endregion
 

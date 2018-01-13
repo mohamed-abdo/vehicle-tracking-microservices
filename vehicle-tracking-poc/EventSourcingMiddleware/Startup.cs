@@ -3,11 +3,13 @@ using DomainModels.DataStructure;
 using DomainModels.System;
 using DomainModels.Types.Messages;
 using DomainModels.Vehicle;
+using EventSourceingSqlDb.DbModel;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -35,7 +37,7 @@ namespace EventSourcingMiddleware
                 {nameof(SystemLocalConfiguration.MessageSubscriberRoute),  Configuration.GetValue<string>(Identifiers.MessageSubscriberRoute)},
                 {nameof(SystemLocalConfiguration.MessagesMiddlewareUsername),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewareUsername)},
                 {nameof(SystemLocalConfiguration.MessagesMiddlewarePassword),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewarePassword)},
-
+                {nameof(SystemLocalConfiguration.EventDbConnection),    Configuration.GetValue<string>(Identifiers.EventDbConnection)},
             });
         }
 
@@ -48,6 +50,16 @@ namespace EventSourcingMiddleware
         public void ConfigureServices(IServiceCollection services)
         {
             var loggerFactorySrv = services.BuildServiceProvider().GetService<ILoggerFactory>();
+
+            services.AddDbContextPool<VehicleDbContext>(options => options.UseSqlServer(
+                SystemLocalConfiguration.EventDbConnection,
+                //enable connection resilience
+                connectOptions =>
+                {
+                    connectOptions.EnableRetryOnFailure();
+                    connectOptions.CommandTimeout(Identifiers.TimeoutInSec);
+                })
+            );
 
             ///
             /// Injecting message receiver background service
@@ -75,13 +87,19 @@ namespace EventSourcingMiddleware
                            Logger.LogCritical(ex, "de-serialize Object exceptions.");
                        }
                    });
-           });
+            });
         }
 
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddConsole();
+            // initialize InfoDbContext
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetService<VehicleDbContext>();
+                dbContext.Database.EnsureCreated();
+            }
 
+            loggerFactory.AddConsole();
             var serverAddressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>();
 
             app.Run(async (context) =>
