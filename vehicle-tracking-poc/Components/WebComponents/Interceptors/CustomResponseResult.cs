@@ -40,7 +40,7 @@ namespace WebComponents.Interceptors
             var messageFooter = new MessageFooter
             {
                 Sender = context.ActionDescriptor.DisplayName,
-                Environemnt = _operationalUnit.Environment,
+                Environment = _operationalUnit.Environment,
                 Assembly = _operationalUnit.Assembly,
                 FingerPrint = context.ActionDescriptor.Id,
                 Route = context.RouteData.Values.ToDictionary(key => key.Key, value => value.Value?.ToString()),

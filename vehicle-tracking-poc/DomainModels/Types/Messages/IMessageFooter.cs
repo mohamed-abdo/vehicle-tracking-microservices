@@ -8,7 +8,7 @@ namespace DomainModels.Types.Messages
     {
         string Sender { get; }
         string Assembly { get; }
-        string Environemnt { get; }
+        string Environment { get; }
         IDictionary<string, string> Route { get; }
         string FingerPrint { get; }
         ResponseHint Hint { get; }

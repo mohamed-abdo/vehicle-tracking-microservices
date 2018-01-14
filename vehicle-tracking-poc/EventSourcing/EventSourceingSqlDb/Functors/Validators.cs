@@ -5,10 +5,10 @@ using System.Text;
 
 namespace EventSourceingSqlDb.Functors
 {
-    public static class Validators
+    public static class Validators<T>
     {
         //TODO:we only validate the model, domain message (header / footer) validation should carry on a higher level.
-        public static Action<PingModel> EnshurePingModel = (pingModel) =>
+        public static Action<T> EnshureModel = (model) =>
         {
             //TODO:business validation
         };

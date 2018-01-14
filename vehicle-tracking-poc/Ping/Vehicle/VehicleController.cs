@@ -66,7 +66,7 @@ namespace Ping
                               Footer: new MessageFooter
                               {
                                   Sender = ControllerContext.ActionDescriptor.DisplayName,
-                                  Environemnt = _operationalUnit.Environment,
+                                  Environment = _operationalUnit.Environment,
                                   Assembly = _operationalUnit.Assembly,
                                   FingerPrint = ControllerContext.ActionDescriptor.Id,
                                   Route = new Dictionary<string, string> { { DomainModels.Types.Identifiers.MessagePublisherRoute, _localConfiguration.MessagePublisherRoute } },

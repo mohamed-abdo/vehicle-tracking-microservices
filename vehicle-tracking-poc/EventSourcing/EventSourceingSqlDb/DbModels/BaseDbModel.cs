@@ -1,14 +1,15 @@
 ﻿using BuildingAspects.Behaviors;
 using DomainModels.Types.Messages;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace EventSourceingSqlDb.DbModel
+namespace EventSourceingSqlDb.DbModels
 {
-    public abstract class BaseDbModel
+    public class DbModel
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -26,7 +27,7 @@ namespace EventSourceingSqlDb.DbModel
 
         public virtual string Assembly { get; set; }
 
-        public virtual string Environemnt { get; set; }
+        public virtual string Environment { get; set; }
 
         public virtual string FingerPrint { get; set; }
 
@@ -39,7 +40,14 @@ namespace EventSourceingSqlDb.DbModel
             get => JsonConvert.DeserializeObject<IDictionary<string, string>>(Raw_Route, Utilities.DefaultJsonSerializerSettings);
             set => JsonConvert.SerializeObject(value, Utilities.DefaultJsonSerializerSettings);
         }
+        [NotMapped]
+        public virtual JObject Data
+        {
+            get => JObject.Parse(Raw_Data, Utilities.DefaultJsonLoadSettings);
+            set => JsonConvert.SerializeObject(value, Utilities.DefaultJsonSerializerSettings);
+        }
 
+        public string Raw_Data { get; set; }
         public string Raw_Route { get; set; }
     }
 }

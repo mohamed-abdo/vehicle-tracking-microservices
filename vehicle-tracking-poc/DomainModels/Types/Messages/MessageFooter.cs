@@ -8,7 +8,7 @@ namespace DomainModels.Types.Messages
 
         public string Assembly { get; set; }
 
-        public string Environemnt { get; set; }
+        public string Environment { get; set; }
 
         public IDictionary<string, string> Route { get; set; }
 

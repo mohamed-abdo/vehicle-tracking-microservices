@@ -1,53 +1,41 @@
-﻿using DomainModels.Types;
-using DomainModels.Types.Messages;
-using DomainModels.Vehicle;
-using EventSourceingSqlDb.DbModel;
-using Newtonsoft.Json.Linq;
+﻿using DomainModels.Types.Messages;
+using EventSourceingSqlDb.DbModels;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace EventSourceingSqlDb.Functors
 {
-    public static class Mappers
+    public static class Mappers<T, R> where T : class where R : DbModel
     {
-        public static Action<MessageHeader, BaseDbModel> fillHeader = (header, model) =>
-        {
-            model.ExecutionId = header.ExecutionId;
-            model.CorrelateId = header.CorrelateId;
-            model.Timestamp = header.Timestamp;
-        };
 
-        public static Action<MessageFooter, BaseDbModel> fillFooter = (footer, model) =>
+        public static Func<Func<(MessageHeader header, T body, MessageFooter footer), bool>, Func<R, bool>> PredicateMapper = (pingPredicate) =>
         {
-            model.Sender = footer.Sender;
-            model.Route = footer.Route;
-            model.Environemnt = footer.Environemnt;
-            model.Assembly = footer.Assembly;
-            model.FingerPrint = footer.FingerPrint;
-            model.Hint = footer.Hint;
-        };
-
-        public static Func<(MessageHeader Header, PingModel Body, MessageFooter Footer), PingEventSource> FromPingModelToEnity = (pingMessage) =>
-        {
-            Validators.EnshurePingModel(pingMessage.Body);
-            var pingModel = new PingEventSource
+            return (pingDbContext) =>
             {
-                //    ExecutionId = pingMessage.Header.ExecutionId,
-                //    CorrelateId = pingMessage.Header.CorrelateId,
-                //    Timestamp = pingMessage.Header.Timestamp,
-
-                //    Sender = pingMessage.Footer.Sender,
-                //    Route = pingMessage.Footer.Route,
-                //    Environemnt = pingMessage.Footer.Environemnt,
-                //    Assembly = pingMessage.Footer.Assembly,
-                //    FingerPrint = pingMessage.Footer.FingerPrint,
-                //    Hint = pingMessage.Footer.Hint,
-                Data = JObject.FromObject(pingMessage.Body)
+                return pingPredicate(FromEnityToPingModel(pingDbContext));
             };
-            fillHeader(pingMessage.Header, pingModel);
-            fillFooter(pingMessage.Footer, pingModel);
-            return pingModel;
+        };
+
+        public static Func<(MessageHeader header, T body, MessageFooter footer), R> FromPingModelToEnity = (pingMessage) =>
+        {
+            Validators<T>.EnshureModel(pingMessage.body);
+
+            return (R)DbModelFactory.Create(pingMessage.header, pingMessage.footer, pingMessage.body);
+        };
+
+        public static Func<R, (MessageHeader Header, T Body, MessageFooter Footer)> FromEnityToPingModel = (pingEntity) =>
+        {
+            var header = new MessageHeader(executionId: pingEntity.ExecutionId, timestamp: pingEntity.Timestamp, isSucceed: true);
+            var body = pingEntity.Data.ToObject<T>();
+            var footer = new MessageFooter
+            {
+                Assembly = pingEntity.Assembly,
+                Environment = pingEntity.Environment,
+                FingerPrint = pingEntity.FingerPrint,
+                Hint = pingEntity.Hint,
+                Route = pingEntity.Route,
+                Sender = pingEntity.Sender
+            };
+            return (header, body, footer);
         };
     }
 }

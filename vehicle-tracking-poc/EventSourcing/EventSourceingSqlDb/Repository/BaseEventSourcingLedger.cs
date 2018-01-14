@@ -1,8 +1,5 @@
-﻿using EventSourceingSqlDb.DbModel;
+﻿using EventSourceingSqlDb.DbModels;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace EventSourceingSqlDb.Repository
 {
