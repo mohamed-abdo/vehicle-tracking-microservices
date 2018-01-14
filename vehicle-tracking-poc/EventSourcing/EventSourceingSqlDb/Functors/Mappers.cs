@@ -19,7 +19,7 @@ namespace EventSourceingSqlDb.Functors
         {
             Validators<T>.EnshureModel(pingMessage.body);
 
-            return (R)DbModelFactory.Create(pingMessage.header, pingMessage.footer, pingMessage.body);
+            return (R)DbModelFactory.Create(pingMessage.header, pingMessage.body, pingMessage.footer);
         };
 
         public static Func<R, (MessageHeader Header, T Body, MessageFooter Footer)> FromEnityToPingModel = (pingEntity) =>

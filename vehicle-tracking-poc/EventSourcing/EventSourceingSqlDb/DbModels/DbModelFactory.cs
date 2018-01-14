@@ -8,7 +8,7 @@ namespace EventSourceingSqlDb.DbModels
 {
     public static class DbModelFactory
     {
-        public static DbModel Create<T>(MessageHeader header, MessageFooter footer, T body)
+        public static DbModel Create<T>(MessageHeader header,T body, MessageFooter footer)
         {
             return new DbModel
             {

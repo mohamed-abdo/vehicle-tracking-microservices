@@ -20,7 +20,8 @@ namespace EventSourceingSqlDb.Adapters
         }
         public Task<int> Add((MessageHeader header, PingModel body, MessageFooter footer) pingEventSource)
         {
-            return _pingEventSourcingLedger
+            return 
+                _pingEventSourcingLedger
                 .Add(Functors.Mappers<PingModel, PingEventSourcing>.FromPingModelToEnity(pingEventSource));
         }
 
