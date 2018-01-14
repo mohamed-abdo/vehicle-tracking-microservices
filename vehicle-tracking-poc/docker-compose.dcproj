@@ -2,11 +2,13 @@
 <Project ToolsVersion="15.0" Sdk="Microsoft.Docker.Sdk">
   <PropertyGroup Label="Globals">
     <ProjectVersion>2.0</ProjectVersion>
-    <DockerTargetOS>Linux</DockerTargetOS>
     <ProjectGuid>aceb3273-6757-4282-bbf3-79ed7747f763</ProjectGuid>
     <DockerLaunchBrowser>True</DockerLaunchBrowser>
     <DockerServiceUrl>http://localhost:{ServicePort}/api/v1/vehicle/1010</DockerServiceUrl>
     <DockerServiceName>ping</DockerServiceName>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DockerTargetOS>Linux</DockerTargetOS>
   </PropertyGroup>
   <ItemGroup>
     <None Include="docker-compose.override.yml">

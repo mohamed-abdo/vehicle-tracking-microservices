@@ -10,23 +10,17 @@ using System.Threading.Tasks;
 
 namespace EventSourceingSqlDb.Repository
 {
-    public class PingEventSourceLedger : BaseEventSourceLedger, IEventSourceLedger<PingEventSourcing>
+    public class PingEventSourceLedger : BaseEventSourceLedger, IEventSourcingLedger<DbModel>
     {
-        public PingEventSourceLedger(ILogger logger, VehicleDbContext dbContext) : base(logger, dbContext) { }
+        public PingEventSourceLedger(ILoggerFactory loggerFactory, VehicleDbContext dbContext) : base(loggerFactory, dbContext) { }
 
-        public Task<int> Add((MessageHeader Header, PingModel Body, MessageFooter Footer) pingEventSource)
+        public Task<int> Add(DbModel pingEventSourcing)
         {
-            DbContext.PingEventSource.Add(Functors.Mappers<PingModel, PingEventSourcing>.FromPingModelToEnity(pingEventSource));
+            DbContext.PingEventSource.Add(new PingEventSourcing(pingEventSourcing));
             return DbContext.SaveChangesAsync();
         }
 
-        public Task<int> Add(PingEventSourcing pingEventSource)
-        {
-            DbContext.PingEventSource.Add(pingEventSource);
-            return DbContext.SaveChangesAsync();
-        }
-
-        public IQueryable<PingEventSourcing> Query(Func<PingEventSourcing, bool> predicate)
+        public IQueryable<DbModel> Query(Func<DbModel, bool> predicate)
         {
             return DbContext.PingEventSource.Where(predicate).AsQueryable();
         }

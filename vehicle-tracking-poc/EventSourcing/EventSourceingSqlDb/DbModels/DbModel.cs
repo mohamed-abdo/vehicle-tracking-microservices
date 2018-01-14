@@ -1,4 +1,5 @@
 ﻿using BuildingAspects.Behaviors;
+using DomainModels.System;
 using DomainModels.Types.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -11,10 +12,28 @@ namespace EventSourceingSqlDb.DbModels
 {
     public class DbModel
     {
+        public DbModel() { }
+
+        public DbModel(DbModel model)
+        {
+            ExecutionId = model.ExecutionId;
+            CorrelateId = model.CorrelateId;
+            Timestamp = model.Timestamp;
+
+            Data = model.Data;
+
+            Sender = model.Sender;
+            Route = model.Route;
+            Environment = model.Environment;
+            Assembly = model.Assembly;
+            FingerPrint = model.FingerPrint;
+            Hint = model.Hint;
+        }
+
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         //Header
-        public virtual Guid Id { get; set; }
+        public virtual long Id { get; set; }
 
         public virtual Guid ExecutionId { get; set; }
 
@@ -37,14 +56,14 @@ namespace EventSourceingSqlDb.DbModels
         [NotMapped]
         public IDictionary<string, string> Route
         {
-            get => JsonConvert.DeserializeObject<IDictionary<string, string>>(Raw_Route, Utilities.DefaultJsonSerializerSettings);
-            set => JsonConvert.SerializeObject(value, Utilities.DefaultJsonSerializerSettings);
+            get => JsonConvert.DeserializeObject<IDictionary<string, string>>(Raw_Route ?? string.Empty, Utilities.DefaultJsonSerializerSettings);
+            set => Raw_Route = JsonConvert.SerializeObject(value, Utilities.DefaultJsonSerializerSettings);
         }
         [NotMapped]
         public virtual JObject Data
         {
-            get => JObject.Parse(Raw_Data, Utilities.DefaultJsonLoadSettings);
-            set => JsonConvert.SerializeObject(value, Utilities.DefaultJsonSerializerSettings);
+            get => JObject.Parse(Raw_Data ?? Identifiers.DefaultJsonObject, Utilities.DefaultJsonLoadSettings);
+            set => Raw_Data = JsonConvert.SerializeObject(value, Utilities.DefaultJsonSerializerSettings);
         }
 
         public string Raw_Data { get; set; }

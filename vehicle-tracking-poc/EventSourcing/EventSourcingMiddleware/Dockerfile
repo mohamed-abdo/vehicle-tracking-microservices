@@ -6,8 +6,9 @@ WORKDIR /src
 COPY *.sln ./
 COPY EventSourcing/EventSourcingMiddleware/EventSourcingMiddleware.csproj EventSourcing/EventSourcingMiddleware/
 COPY DomainModels/DomainModels.csproj DomainModels/
-COPY Components/BackgroundMiddleware/BackgroundMiddleware.csproj Components/BackgroundMiddleware/
+COPY EventSourcing/EventSourceingSqlDb/EventSourceingSqlDb.csproj EventSourcing/EventSourceingSqlDb/
 COPY Components/BuildingAspects/BuildingAspects.csproj Components/BuildingAspects/
+COPY Components/BackgroundMiddleware/BackgroundMiddleware.csproj Components/BackgroundMiddleware/
 RUN dotnet restore
 COPY . .
 WORKDIR /src/EventSourcing/EventSourcingMiddleware

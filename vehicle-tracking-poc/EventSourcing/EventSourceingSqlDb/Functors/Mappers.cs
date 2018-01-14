@@ -4,10 +4,11 @@ using System;
 
 namespace EventSourceingSqlDb.Functors
 {
-    public static class Mappers<T, R> where T : class where R : DbModel
+
+    public class Mappers<T>  where T : new()
     {
 
-        public static Func<Func<(MessageHeader header, T body, MessageFooter footer), bool>, Func<R, bool>> PredicateMapper = (pingPredicate) =>
+        public static Func<Func<(MessageHeader header, T body, MessageFooter footer), bool>, Func<DbModel, bool>> PredicateMapper = (pingPredicate) =>
         {
             return (pingDbContext) =>
             {
@@ -15,14 +16,13 @@ namespace EventSourceingSqlDb.Functors
             };
         };
 
-        public static Func<(MessageHeader header, T body, MessageFooter footer), R> FromPingModelToEnity = (pingMessage) =>
+        public static Func<(MessageHeader header, T body, MessageFooter footer), DbModel> FromPingModelToEnity = (pingMessage) =>
         {
             Validators<T>.EnshureModel(pingMessage.body);
-
-            return (R)DbModelFactory.Create(pingMessage.header, pingMessage.body, pingMessage.footer);
+            return DbModelFactory.Create(pingMessage.header, pingMessage.body, pingMessage.footer);
         };
 
-        public static Func<R, (MessageHeader Header, T Body, MessageFooter Footer)> FromEnityToPingModel = (pingEntity) =>
+        public static Func<DbModel, (MessageHeader Header, T Body, MessageFooter Footer)> FromEnityToPingModel = (pingEntity) =>
         {
             var header = new MessageHeader(executionId: pingEntity.ExecutionId, timestamp: pingEntity.Timestamp, isSucceed: true);
             var body = pingEntity.Data.ToObject<T>();

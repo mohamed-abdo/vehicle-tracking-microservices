@@ -11,26 +11,26 @@ using System.Threading.Tasks;
 
 namespace EventSourceingSqlDb.Adapters
 {
-    public class PingEventSourcingLedger : IEventSourceLedger<(MessageHeader header, PingModel body, MessageFooter footer)>
+    public class PingEventSourcingLedger : IEventSourcingLedger<(MessageHeader header, PingModel body, MessageFooter footer)>
     {
         private readonly Repository.PingEventSourceLedger _pingEventSourcingLedger;
-        public PingEventSourcingLedger(ILogger logger, VehicleDbContext dbContext)
+        public PingEventSourcingLedger(ILoggerFactory loggerFactory, VehicleDbContext dbContext)
         {
-            _pingEventSourcingLedger = new Repository.PingEventSourceLedger(logger, dbContext);
+            _pingEventSourcingLedger = new Repository.PingEventSourceLedger(loggerFactory, dbContext);
         }
-        public Task<int> Add((MessageHeader header, PingModel body, MessageFooter footer) pingEventSource)
+        public Task<int> Add((MessageHeader header, PingModel body, MessageFooter footer) pingEventSourcing)
         {
             return 
                 _pingEventSourcingLedger
-                .Add(Functors.Mappers<PingModel, PingEventSourcing>.FromPingModelToEnity(pingEventSource));
+                .Add(Functors.Mappers<PingModel>.FromPingModelToEnity(pingEventSourcing));
         }
 
         public IQueryable<(MessageHeader header, PingModel body, MessageFooter footer)> Query(Func<(MessageHeader header, PingModel body, MessageFooter footer), bool> predicate)
         {
             return
                 _pingEventSourcingLedger
-                .Query(Functors.Mappers<PingModel, PingEventSourcing>.PredicateMapper(predicate))
-                .Select(Functors.Mappers<PingModel, PingEventSourcing>.FromEnityToPingModel)
+                .Query(Functors.Mappers<PingModel>.PredicateMapper(predicate))
+                .Select(Functors.Mappers<PingModel>.FromEnityToPingModel)
                 .AsQueryable();
         }
     }

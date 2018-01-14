@@ -17,7 +17,7 @@ services:
     - cache_db_vehicles=vehicles
     - messages_middleware=messages_middleware
     - middleware_exchange=platform
-    - middleware_info_publisher=info.ping.vehicle
+    - middleware_ping_publisher=*.ping.vehicle
     - middleware_username=guest
     - middleware_password=guest
     ports:
@@ -74,7 +74,8 @@ services:
       - cache_db_vehicles=vehicles
       - messages_middleware=messages_middleware
       - middleware_exchange=platform
-      - middleware_info_subscriber=info.ping.vehicle
+      - middleware_vehicle_subscriber=*.*.vehicle
       - middleware_username=guest
       - middleware_password=guest
       - event_db_connection=Server=database_sql;Database=vehicle_events;User Id=sa;Password=Pass@word
+

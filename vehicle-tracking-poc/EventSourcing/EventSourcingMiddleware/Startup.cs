@@ -3,7 +3,9 @@ using DomainModels.DataStructure;
 using DomainModels.System;
 using DomainModels.Types.Messages;
 using DomainModels.Vehicle;
-using EventSourceingSqlDb.DbModel;
+using EventSourceingSqlDb.Adapters;
+using EventSourceingSqlDb.DbModels;
+using EventSourceingSqlDb.Repository;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -60,26 +62,28 @@ namespace EventSourcingMiddleware
                     connectOptions.CommandTimeout(Identifiers.TimeoutInSec);
                 })
             );
-
-            ///
             /// Injecting message receiver background service
             ///
-            services.AddSingleton<IHostedService, RabbitMQSubscriber<(MessageHeader, DomainModels.Types.DomainModel<PingModel>, MessageFooter)>>(srv =>
+            services.AddSingleton<IHostedService, RabbitMQSubscriber<(MessageHeader, PingModel, MessageFooter)>>(srv =>
             {
-                return RabbitMQSubscriber<(MessageHeader header, DomainModels.Types.DomainModel<PingModel> body, MessageFooter footer)>.Create(loggerFactorySrv,
+                //get pingService
+                var pingSrv = new PingEventSourcingLedger(loggerFactorySrv, srv.GetService<VehicleDbContext>());
+
+                return RabbitMQSubscriber<(MessageHeader header, PingModel body, MessageFooter footer)>.Create(loggerFactorySrv,
                    new RabbitMQConfiguration
                    {
                        hostName = SystemLocalConfiguration.MessagesMiddleware,
                        exchange = SystemLocalConfiguration.MiddlewareExchange,
                        userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
                        password = SystemLocalConfiguration.MessagesMiddlewarePassword,
-                       routes = new string[] { SystemLocalConfiguration.MessageSubscriberRoute }
+                       routes = SystemLocalConfiguration.MessageSubscriberRoute.Split(',')
                    }
                    , (pingMessageCallback) =>
                    {
                        try
                        {
                            var message = pingMessageCallback();
+                           var addingResult = pingSrv.Add(message);
                            Logger.LogInformation($"[x] Event sourcing service receiving a message from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
                        }
                        catch (Exception ex)

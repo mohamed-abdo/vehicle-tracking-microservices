@@ -8,7 +8,7 @@ namespace EventSourceingSqlDb.DbModels
 {
     public static class DbModelFactory
     {
-        public static DbModel Create<T>(MessageHeader header,T body, MessageFooter footer)
+        public static DbModel Create<T>(MessageHeader header, T body, MessageFooter footer)
         {
             return new DbModel
             {
@@ -26,5 +26,6 @@ namespace EventSourceingSqlDb.DbModels
                 Hint = footer.Hint,
             };
         }
+      
     }
 }

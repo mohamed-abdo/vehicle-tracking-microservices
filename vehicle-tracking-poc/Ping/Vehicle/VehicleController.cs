@@ -59,10 +59,8 @@ namespace Ping
                               {
                                   CorrelateId = _operationalUnit.InstanceId
                               },
-                              Body: new DomainModel<PingModel>()
-                              {
-                                  Model = new PingModel() { ChassisNumber = Guid.NewGuid(), Message = "ping - pong!" }
-                              },
+                              Body: new PingModel() { ChassisNumber = Guid.NewGuid(), Message = "ping - pong!" }
+                              ,
                               Footer: new MessageFooter
                               {
                                   Sender = ControllerContext.ActionDescriptor.DisplayName,
