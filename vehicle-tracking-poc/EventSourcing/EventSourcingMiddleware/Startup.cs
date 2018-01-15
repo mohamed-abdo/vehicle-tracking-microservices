@@ -5,7 +5,6 @@ using DomainModels.Types.Messages;
 using DomainModels.Vehicle;
 using EventSourceingSqlDb.Adapters;
 using EventSourceingSqlDb.DbModels;
-using EventSourceingSqlDb.Repository;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -19,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace EventSourcingMiddleware
 {
@@ -64,34 +64,53 @@ namespace EventSourcingMiddleware
             );
             /// Injecting message receiver background service
             ///
+            #region worker background services
+
+            #region ping worker
+
             services.AddSingleton<IHostedService, RabbitMQSubscriber<(MessageHeader, PingModel, MessageFooter)>>(srv =>
             {
                 //get pingService
                 var pingSrv = new PingEventSourcingLedger(loggerFactorySrv, srv.GetService<VehicleDbContext>());
 
-                return RabbitMQSubscriber<(MessageHeader header, PingModel body, MessageFooter footer)>.Create(loggerFactorySrv,
-                   new RabbitMQConfiguration
-                   {
-                       hostName = SystemLocalConfiguration.MessagesMiddleware,
-                       exchange = SystemLocalConfiguration.MiddlewareExchange,
-                       userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
-                       password = SystemLocalConfiguration.MessagesMiddlewarePassword,
-                       routes = SystemLocalConfiguration.MessageSubscriberRoute.Split(',')
-                   }
-                   , (pingMessageCallback) =>
-                   {
-                       try
-                       {
-                           var message = pingMessageCallback();
-                           var addingResult = pingSrv.Add(message);
-                           Logger.LogInformation($"[x] Event sourcing service receiving a message from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
-                       }
-                       catch (Exception ex)
-                       {
-                           Logger.LogCritical(ex, "de-serialize Object exceptions.");
-                       }
-                   });
+                return RabbitMQSubscriber<(MessageHeader header, PingModel body, MessageFooter footer)>
+                .Create(loggerFactorySrv, new RabbitMQConfiguration
+                {
+                    hostName = SystemLocalConfiguration.MessagesMiddleware,
+                    exchange = SystemLocalConfiguration.MiddlewareExchange,
+                    userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
+                    password = SystemLocalConfiguration.MessagesMiddlewarePassword,
+                    routes = getRoutes("ping.vehicle")
+                }
+                , (pingMessageCallback) =>
+                {
+                    try
+                    {
+                        var message = pingMessageCallback();
+                        var addingResult = pingSrv.Add(message);
+                        Logger.LogInformation($"[x] Event sourcing service receiving a message from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogCritical(ex, "de-serialize Object exceptions.");
+                    }
+                });
             });
+
+            #endregion
+
+            #endregion
+
+            #region internal functions
+            string[] getRoutes(string endwithMatch)
+            {
+                return SystemLocalConfiguration.MessageSubscriberRoute
+                                 .Split(',')
+                                 .Where(route => route.ToLower()
+                                 .EndsWith(endwithMatch))
+                                 .ToArray();
+            }
+            #endregion
         }
 
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
