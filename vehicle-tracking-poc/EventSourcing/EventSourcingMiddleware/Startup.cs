@@ -36,7 +36,7 @@ namespace EventSourcingMiddleware
                 {nameof(SystemLocalConfiguration.CacheDBVehicles),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
                 {nameof(SystemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>(Identifiers.MessagesMiddleware)},
                 {nameof(SystemLocalConfiguration.MiddlewareExchange),  Configuration.GetValue<string>(Identifiers.MiddlewareExchange)},
-                {nameof(SystemLocalConfiguration.MessageSubscriberRoute),  Configuration.GetValue<string>(Identifiers.MessageSubscriberRoute)},
+                {nameof(SystemLocalConfiguration.MessageSubscriberRoute),  Configuration.GetValue<string>(Identifiers.MessageSubscriberRoutes)},
                 {nameof(SystemLocalConfiguration.MessagesMiddlewareUsername),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewareUsername)},
                 {nameof(SystemLocalConfiguration.MessagesMiddlewarePassword),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewarePassword)},
                 {nameof(SystemLocalConfiguration.EventDbConnection),    Configuration.GetValue<string>(Identifiers.EventDbConnection)},
@@ -106,8 +106,7 @@ namespace EventSourcingMiddleware
             {
                 return SystemLocalConfiguration.MessageSubscriberRoute
                                  .Split(',')
-                                 .Where(route => route.ToLower()
-                                 .EndsWith(endwithMatch))
+                                 .Where(route => route.ToLower().EndsWith(endwithMatch))
                                  .ToArray();
             }
             #endregion

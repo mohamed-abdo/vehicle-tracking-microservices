@@ -34,7 +34,7 @@ namespace BuildingAspects.Behaviors
                    .WaitAndRetry(_retryCount,
                                    sleepDurationProvider: (i, result, context) =>
                                    {
-                                       
+
                                        logInfo($"Info-Now: {DateTime.UtcNow}. System is waiting for {_waitTimeSpanInSec} seconds, then retry of {i} for {_retryCount}; Execution Id {context.ExecutionGuid}.");
                                        return TimeSpan.FromSeconds(_waitTimeSpanInSec);
                                    },
@@ -52,9 +52,9 @@ namespace BuildingAspects.Behaviors
 
         #endregion
 
-        public Task<T> Decorate<T>(Func<T> action, Func<Exception, bool> exceptionPredicate = null)
+        public async Task<T> Decorate<T>(Func<T> action, Func<Exception, bool> exceptionPredicate = null)
         {
-            return Task.FromResult(defaultPolicy(action).Execute(action));
+            return await Task.FromResult(defaultPolicy(action).Execute(action));
         }
 
     }

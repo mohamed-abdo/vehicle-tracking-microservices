@@ -60,9 +60,9 @@ namespace BackgroundMiddleware.Concrete
         /// </summary>
         /// <param name="stoppingToken"></param>
         /// <returns></returns>
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            return new Function(logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
+            await new Function(logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
              {
                  using (var connection = connectionFactory.CreateConnection())
                  using (var channel = connection.CreateModel())
@@ -84,33 +84,33 @@ namespace BackgroundMiddleware.Concrete
 
                      var consumer = new EventingBasicConsumer(channel);
 
-                     consumer.Received += (model, ea) =>
-                     {
-                         new Function(logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
-                         {
-                             var messageStr = Encoding.UTF8.GetString(ea.Body);
-                             if (string.IsNullOrEmpty(messageStr))
-                                 throw new TypeLoadException("Invalid message type");
- 
+                     consumer.Received += async (model, ea) =>
+                      {
+                          await new Function(logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
+                          {
+                              var messageStr = Encoding.UTF8.GetString(ea.Body);
+                              if (string.IsNullOrEmpty(messageStr))
+                                  throw new TypeLoadException("Invalid message type");
+
                              // callback action feeding 
-                                callback(()=> JsonConvert.DeserializeObject<T>(messageStr, Utilities.DefaultJsonSerializerSettings));
+                             callback(() => JsonConvert.DeserializeObject<T>(messageStr, Utilities.DefaultJsonSerializerSettings));
                              //send acknowledgment to publisher
 
                              channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
 
-                             logger.LogInformation($"[x] Event sourcing service receiving a messaged from exchange: {hostConfig.exchange}, route :{ea.RoutingKey}.");
-                             return true;
-                         }, (ex) =>
-                         {
-                             switch (ex)
-                             {
-                                 case TypeLoadException typeEx:
-                                     return true;
-                                 default:
-                                     return false;
-                             }
-                         });
-                     };
+                              logger.LogInformation($"[x] Event sourcing service receiving a messaged from exchange: {hostConfig.exchange}, route :{ea.RoutingKey}.");
+                              return true;
+                          }, (ex) =>
+                          {
+                              switch (ex)
+                              {
+                                  case TypeLoadException typeEx:
+                                      return true;
+                                  default:
+                                      return false;
+                              }
+                          });
+                      };
                      //bind event handler
                      channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
                      Console.ReadLine();

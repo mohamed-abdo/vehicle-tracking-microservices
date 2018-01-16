@@ -8,12 +8,11 @@ namespace BackgroundMiddleware.Abstract
     public abstract class BackgroundService : IHostedService
     {
         private Task _executingTask;
-        private readonly CancellationTokenSource _stoppingCts =
-                                                       new CancellationTokenSource();
+        private readonly CancellationTokenSource _stoppingCts = new CancellationTokenSource();
 
         protected abstract Task ExecuteAsync(CancellationToken stoppingToken);
 
-        public virtual Task StartAsync(CancellationToken cancellationToken)
+        public virtual async Task StartAsync(CancellationToken cancellationToken)
         {
             // Store the task we're executing
             _executingTask = ExecuteAsync(_stoppingCts.Token);
@@ -22,11 +21,10 @@ namespace BackgroundMiddleware.Abstract
             // this will bubble cancellation and failure to the caller
             if (_executingTask.IsCompleted)
             {
-                return _executingTask;
+                await _executingTask;
             }
-
             // Otherwise it's running
-            return Task.CompletedTask;
+            await Task.CompletedTask;
         }
 
         public virtual async Task StopAsync(CancellationToken cancellationToken)
@@ -45,8 +43,7 @@ namespace BackgroundMiddleware.Abstract
             finally
             {
                 // Wait until the task completes or the stop token triggers
-                await Task.WhenAny(_executingTask, Task.Delay(Timeout.Infinite,
-                                                              cancellationToken));
+                await Task.WhenAny(_executingTask, Task.Delay(Timeout.Infinite, cancellationToken));
             }
         }
 
