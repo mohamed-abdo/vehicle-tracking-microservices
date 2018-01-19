@@ -3,13 +3,13 @@ using Microsoft.Extensions.Logging;
 
 namespace EventSourceingSqlDb.Repository
 {
-    public abstract class BaseEventSourceLedger
+    public abstract class BaseEventSourcingLedger
     {
         private readonly VehicleDbContext _dbContext;
         private readonly ILogger _logger;
-        public BaseEventSourceLedger(ILoggerFactory loggerFactory, VehicleDbContext dbContext)
+        public BaseEventSourcingLedger(ILoggerFactory loggerFactory, VehicleDbContext dbContext)
         {
-            _logger = loggerFactory.CreateLogger(typeof(BaseEventSourceLedger));
+            _logger = loggerFactory.CreateLogger(typeof(BaseEventSourcingLedger));
             _dbContext = dbContext;
         }
         public VehicleDbContext DbContext => _dbContext;

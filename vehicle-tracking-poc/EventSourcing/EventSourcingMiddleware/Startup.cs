@@ -71,7 +71,7 @@ namespace EventSourcingMiddleware
             services.AddSingleton<IHostedService, RabbitMQSubscriber<(MessageHeader, PingModel, MessageFooter)>>(srv =>
             {
                 //get pingService
-                var pingSrv = new PingEventSourcingLedger(loggerFactorySrv, srv.GetService<VehicleDbContext>());
+                var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
 
                 return RabbitMQSubscriber<(MessageHeader header, PingModel body, MessageFooter footer)>
                 .Create(loggerFactorySrv, new RabbitMQConfiguration

@@ -14,7 +14,7 @@ namespace DomainModels.Vehicle
 
         public readonly long ReceivingTimestamp;
 
-        public Guid ChassisNumber { get; set; }
+        public string ChassisNumber { get; set; }
         public StatusModel Status { get; set; }
         public string Message { get; set; }
 

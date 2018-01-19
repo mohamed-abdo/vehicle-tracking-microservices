@@ -40,39 +40,38 @@ namespace Ping
         // GET api/v/<controller>/5
         [CustomHeader(Models.Identifiers.DomainModel, Models.Identifiers.PingDomainModel)]
         [HttpGet("{id}")]
-        public IActionResult Get(string id)
+        public async Task<IActionResult> Get(string id)
         {
             //TODO:in the future in case of correlated action, link them by correlation header, ....       
             //[CustomHeader(Models.Identifiers.CorrelationId, _operationalUnit.OperationId)]
 
             // message definition
             //(MessageHeader Header, DomainModel<PingRequest> Body, MessageFooter Footer)
-            Task.Run(() =>
-            {
-                new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
-                  {
-                      return _publisher.Publish(
-                          _localConfiguration.MiddlewareExchange,
-                          _localConfiguration.MessagePublisherRoute,
-                          (
-                              Header: new MessageHeader
-                              {
-                                  CorrelateId = _operationalUnit.InstanceId
-                              },
-                              Body: new PingModel() { ChassisNumber = Guid.NewGuid(), Message = "ping - pong!" }
-                              ,
-                              Footer: new MessageFooter
-                              {
-                                  Sender = ControllerContext.ActionDescriptor.DisplayName,
-                                  Environment = _operationalUnit.Environment,
-                                  Assembly = _operationalUnit.Assembly,
-                                  FingerPrint = ControllerContext.ActionDescriptor.Id,
-                                  Route = new Dictionary<string, string> { { DomainModels.Types.Identifiers.MessagePublisherRoute, _localConfiguration.MessagePublisherRoute } },
-                                  Hint = ResponseHint.OK
-                              }
-                          ));
-                  });
-            });
+
+            await new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
+               {
+                   return _publisher.Publish(
+                       _localConfiguration.MiddlewareExchange,
+                       _localConfiguration.MessagePublisherRoute,
+                       (
+                           Header: new MessageHeader
+                           {
+                               CorrelateId = _operationalUnit.InstanceId
+                           },
+                           Body: new PingModel() { Status = StatusModel.Active, ChassisNumber = "vehicle@123Xyz!", Message = "ping - pong!" }
+                           ,
+                           Footer: new MessageFooter
+                           {
+                               Sender = ControllerContext.ActionDescriptor.DisplayName,
+                               Environment = _operationalUnit.Environment,
+                               Assembly = _operationalUnit.Assembly,
+                               FingerPrint = ControllerContext.ActionDescriptor.Id,
+                               Route = new Dictionary<string, string> { { DomainModels.Types.Identifiers.MessagePublisherRoute, _localConfiguration.MessagePublisherRoute } },
+                               Hint = ResponseHint.OK
+                           }
+                       ));
+
+               });
             //throw new CustomException(code: ExceptionCodes.MessageMalformed);
             return Content(id);
         }

@@ -11,12 +11,12 @@ using System.Threading.Tasks;
 
 namespace EventSourceingSqlDb.Adapters
 {
-    public class PingEventSourcingLedger : IEventSourcingLedger<(MessageHeader header, PingModel body, MessageFooter footer)>
+    public class PingEventSourcingLedgerAdapter : IEventSourcingLedger<(MessageHeader header, PingModel body, MessageFooter footer)>
     {
-        private readonly Repository.PingEventSourceLedger _pingEventSourcingLedger;
-        public PingEventSourcingLedger(ILoggerFactory loggerFactory, VehicleDbContext dbContext)
+        private readonly PingEventSourcingLedger _pingEventSourcingLedger;
+        public PingEventSourcingLedgerAdapter(ILoggerFactory loggerFactory, VehicleDbContext dbContext)
         {
-            _pingEventSourcingLedger = new Repository.PingEventSourceLedger(loggerFactory, dbContext);
+            _pingEventSourcingLedger = new PingEventSourcingLedger(loggerFactory, dbContext);
         }
         public Task<int> Add((MessageHeader header, PingModel body, MessageFooter footer) pingEventSourcing)
         {

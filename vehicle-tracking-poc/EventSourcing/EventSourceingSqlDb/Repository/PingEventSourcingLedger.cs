@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace EventSourceingSqlDb.Repository
 {
-    public class PingEventSourceLedger : BaseEventSourceLedger, IEventSourcingLedger<DbModel>
+    public class PingEventSourcingLedger : BaseEventSourcingLedger, IEventSourcingLedger<DbModel>
     {
-        public PingEventSourceLedger(ILoggerFactory loggerFactory, VehicleDbContext dbContext) : base(loggerFactory, dbContext) { }
+        public PingEventSourcingLedger(ILoggerFactory loggerFactory, VehicleDbContext dbContext) : base(loggerFactory, dbContext) { }
 
         public Task<int> Add(DbModel pingEventSourcing)
         {
