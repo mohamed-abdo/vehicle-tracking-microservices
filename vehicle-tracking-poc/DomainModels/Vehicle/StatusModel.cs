@@ -4,6 +4,7 @@ using System.Text;
 
 namespace DomainModels.Vehicle
 {
+    [Serializable]
     [Flags]
     public enum StatusModel
     {

@@ -5,7 +5,8 @@ using System.Text;
 
 namespace DomainModels.Vehicle
 {
-    public class TrackingModel : IDescribe
+    [Serializable]
+    public class TrackingModel : DomainModel
     {
         public string ChassisNumber { get; set; }
         public string Vehicle { get; set; }
@@ -15,6 +16,6 @@ namespace DomainModels.Vehicle
         public DateTime LastUpdate { get; set; }
         public string Message { get; set; }
 
-        public string Descripition => $"vehicle:{ChassisNumber},status:{Status},last-update:{LastUpdate}";
+        public override string Descripition => $"vehicle:{ChassisNumber},status:{Status},last-update:{LastUpdate}";
     }
 }

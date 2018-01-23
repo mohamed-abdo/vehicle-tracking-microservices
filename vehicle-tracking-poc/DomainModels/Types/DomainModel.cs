@@ -1,15 +1,11 @@
 ﻿using System;
+using System.Runtime.Serialization;
 
 namespace DomainModels.Types
 {
-    public sealed class DomainModel<T> where T : IDescribe, new()
+    [Serializable]
+    public abstract class DomainModel : IDescribe
     {
-        public DomainModel()
-        {
-            ModelName = $"{default(T) as Type}";
-        }
-        public readonly string ModelName;
-
-        public T Model { get; set; }
+        public abstract string Descripition { get; }
     }
 }

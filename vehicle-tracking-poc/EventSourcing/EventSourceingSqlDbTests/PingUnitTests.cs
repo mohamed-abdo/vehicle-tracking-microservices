@@ -11,7 +11,9 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using System;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
 
 namespace EventSourceingSqlDbTests
@@ -74,7 +76,7 @@ namespace EventSourceingSqlDbTests
         public async Task TestQueryPingEventSourcing()
         {
             var execId = message.header.ExecutionId;
-            var messageBody = new PingModel() { ChassisNumber = "Xyz-Vehicle!"  };
+            var messageBody = new PingModel() { ChassisNumber = "Xyz-Vehicle!" };
             var pingMessage = (
                             header: message.header,
                             body: messageBody,
@@ -87,6 +89,30 @@ namespace EventSourceingSqlDbTests
             var messageRec = _eventSourcingLedger.Query(p => p.header.ExecutionId == execId).FirstOrDefault();
 
             Assert.IsTrue(pingMessage.body.EqualsByValue(messageRec.body), "query ping failed, message has been tempered.");
+        }
+
+        [Test]
+        public async Task TestQueryPingEventSourcingFullMessage()
+        {
+            var execId = message.header.ExecutionId;
+            var messageBody = new PingModel() { ChassisNumber = "Xyz-Vehicle!" };
+            var pingMessage = (
+                            header: message.header,
+                            body: messageBody,
+                            footer: message.footer
+                       );
+
+            byte[] binObjSource = Utilities.BinarySerialize(pingMessage);
+
+            var dbObjec = new PingEventSourcing(EventSourceingSqlDb.Functors.Mappers<PingModel>.FromPingModelToEnity(pingMessage));
+
+            _dbContext.PingEventSource.Add(dbObjec);
+            await _dbContext.SaveChangesAsync();
+            var messageRec = _eventSourcingLedger.Query(p => p.header.ExecutionId == execId).FirstOrDefault();
+
+            byte[] binObjDestination = Utilities.BinarySerialize(messageRec);
+
+            Assert.IsTrue(binObjSource.SequenceEqual(binObjDestination), "query ping failed,full message has been tempered.");
         }
     }
 }
