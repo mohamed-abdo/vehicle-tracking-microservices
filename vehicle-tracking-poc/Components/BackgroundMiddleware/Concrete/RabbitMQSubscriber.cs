@@ -2,6 +2,7 @@
 using BuildingAspects.Behaviors;
 using BuildingAspects.Functors;
 using DomainModels.DataStructure;
+using DomainModels.Types;
 using DomainModels.Types.Messages;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -51,7 +52,7 @@ namespace BackgroundMiddleware.Concrete
         /// </summary>
         /// <param name="logger">ILogger instance</param>
         /// <param name="hostConfig">rabbitMQ configuration</param>
-        public static RabbitMQSubscriber<T> Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Func<T>> callback)
+        public static RabbitMQSubscriber<T> Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Func<T>> callback) 
         {
             return new RabbitMQSubscriber<T>(logger, hostConfig, callback);
         }
@@ -67,7 +68,7 @@ namespace BackgroundMiddleware.Concrete
                  using (var connection = connectionFactory.CreateConnection())
                  using (var channel = connection.CreateModel())
                  {
-                     //TODO: in case scaling the middleware, runing multiple workers simultaneously. 
+                     //TODO: in case scaling the middleware, running multiple workers simultaneously. 
                      //channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
                      channel.ExchangeDeclare(exchange: hostConfig.exchange, type: ExchangeType.Topic, durable: true);
 
@@ -89,14 +90,14 @@ namespace BackgroundMiddleware.Concrete
                           await new Function(logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
                           {
                               var messageStr = Encoding.UTF8.GetString(ea.Body);
-                              if (string.IsNullOrEmpty(messageStr))
+                              if (ea.Body == null || ea.Body.Length == 0)
                                   throw new TypeLoadException("Invalid message type");
 
-                             // callback action feeding 
-                             callback(() => JsonConvert.DeserializeObject<T>(messageStr, Utilities.DefaultJsonSerializerSettings));
-                             //send acknowledgment to publisher
+                          // callback action feeding 
+                          callback(() => (T)Utilities.BinaryDeserialize(ea.Body));
+                              //send acknowledgment to publisher
 
-                             channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+                              channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
 
                               logger.LogInformation($"[x] Event sourcing service receiving a messaged from exchange: {hostConfig.exchange}, route :{ea.RoutingKey}.");
                               return true;

@@ -5,7 +5,8 @@ using System.Text;
 
 namespace DomainModels.Vehicle
 {
-    public class PingModel : IDescribe
+    [Serializable]
+    public class PingModel : DomainModel
     {
         public PingModel()
         {
@@ -18,6 +19,6 @@ namespace DomainModels.Vehicle
         public StatusModel Status { get; set; }
         public string Message { get; set; }
 
-        public string Descripition => $"vehicle:{ChassisNumber},status:{Status},received:{ReceivingTimestamp}";
+        public override string Descripition => $"vehicle:{ChassisNumber},status:{Status},received:{ReceivingTimestamp}";
     }
 }

@@ -4,8 +4,10 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace BuildingAspects.Behaviors
 {
@@ -87,6 +89,26 @@ namespace BuildingAspects.Behaviors
                     propsDic.Add(key, item.Value);
             }
             return propsDic;
+        }
+
+        public static byte[] BinarySerialize(object instance)
+        {
+            byte[] binObjSource;
+            var formatter = new BinaryFormatter();
+            using (var memory = new MemoryStream())
+            {
+                formatter.Serialize(memory, instance);
+                binObjSource = memory.ToArray();
+            }
+            return binObjSource;
+        }
+        public static object BinaryDeserialize(byte[] objAsBinary)
+        {
+            var formatter = new BinaryFormatter();
+            using (var memory = new MemoryStream(objAsBinary))
+            {
+                return formatter.Deserialize(memory);
+            }
         }
     }
 }

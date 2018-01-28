@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace DomainModels.Types.Messages
 {
-    public class MessageFooter : IMessageFooter
+    [Serializable]
+    public class MessageFooter : DomainModel, IMessageFooter
     {
         public string Sender { get; set; }
 
@@ -15,5 +17,7 @@ namespace DomainModels.Types.Messages
         public string FingerPrint { get; set; }
 
         public ResponseHint Hint { get; set; }
+
+        public override string Descripition => $"Sender:{Sender} Hint:{Hint}";
     }
 }

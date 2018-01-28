@@ -3,8 +3,9 @@ using System.Runtime.Serialization;
 
 namespace DomainModels.Types
 {
-    public interface IDomainModel<T> where T : IDescribe, ISerializable, new()
+    [Serializable]
+    public abstract class DomainModel : IDescribe
     {
-     
+        public abstract string Descripition { get; }
     }
 }
