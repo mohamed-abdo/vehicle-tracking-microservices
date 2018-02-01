@@ -5,12 +5,12 @@ using BackgroundMiddleware.Abstract;
 using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
 using DomainModels.System;
-using DomainModels.Types;
-using DomainModels.Types.Exceptions;
 using DomainModels.Types.Messages;
 using DomainModels.Vehicle;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Ping.Contracts;
+using Ping.Models;
 using WebComponents.Interceptors;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -19,7 +19,7 @@ namespace Ping
 {
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
-    public class VehicleController : Controller
+    public class VehicleController : Controller, IPing
     {
         private readonly ILogger _logger;
         private readonly IOperationalUnit _operationalUnit;
@@ -46,7 +46,7 @@ namespace Ping
             //[CustomHeader(Models.Identifiers.CorrelationId, _operationalUnit.OperationId)]
 
             // message definition
-            //(MessageHeader Header, DomainModel<PingRequest> Body, MessageFooter Footer)
+            //(MessageHeader Header,PingModel Body, MessageFooter Footer)
 
             await new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
                {
@@ -66,7 +66,9 @@ namespace Ping
                                Environment = _operationalUnit.Environment,
                                Assembly = _operationalUnit.Assembly,
                                FingerPrint = ControllerContext.ActionDescriptor.Id,
-                               Route = new Dictionary<string, string> { { DomainModels.Types.Identifiers.MessagePublisherRoute, _localConfiguration.MessagePublisherRoute } },
+                               Route = new Dictionary<string, string> {
+                                   { DomainModels.Types.Identifiers.MessagePublisherRoute,  _localConfiguration.MessagePublisherRoute }
+                               },
                                Hint = ResponseHint.OK
                            }
                        ));
@@ -74,6 +76,14 @@ namespace Ping
                });
             //throw new CustomException(code: ExceptionCodes.MessageMalformed);
             return Content(id);
+        }
+
+        // POST api/v/<controller>/vehicleId
+        [CustomHeader(Models.Identifiers.DomainModel, Models.Identifiers.PingDomainModel)]
+        [HttpPost("{vehicleId}")]
+        public IAsyncResult Post(string vehicleId, PingRequest pingRequest)
+        {
+            throw new NotImplementedException();
         }
     }
 }

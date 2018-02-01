@@ -7,28 +7,22 @@ using EventSourceingSqlDb.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using System;
-using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
 
 namespace EventSourceingSqlDbTests
 {
     [TestFixture]
-    public class PingUnitTests
+    public class PingTest
     {
+        private readonly Mock<ILoggerFactory> _loggerMoq;
+        private readonly VehicleDbContext _dbContext;
+        private readonly IEventSourcingLedger<(MessageHeader header, PingModel body, MessageFooter footer)> _eventSourcingLedger;
 
-        private Mock<ILoggerFactory> _loggerMoq;
-        private VehicleDbContext _dbContext;
-        private IEventSourcingLedger<(MessageHeader header, PingModel body, MessageFooter footer)> _eventSourcingLedger;
         private (MessageHeader header, PingModel body, MessageFooter footer) message;
-
-        [SetUp]
-        public void SetUp()
+        public PingTest()
         {
             _loggerMoq = new Mock<ILoggerFactory>(MockBehavior.Loose);
 
@@ -36,12 +30,16 @@ namespace EventSourceingSqlDbTests
                 .UseInMemoryDatabase(nameof(VehicleDbContext))
                 .Options);
             _eventSourcingLedger = new PingEventSourcingLedgerAdapter(_loggerMoq.Object, _dbContext);
+        }
 
+        [SetUp]
+        public void SetUp()
+        {
             message = (
-                header: new MessageHeader(executionId: Guid.NewGuid(), timestamp: new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds()),
-                body: new PingModel(),
-                footer: new MessageFooter()
-                );
+            header: new MessageHeader(executionId: Guid.NewGuid(), timestamp: new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds()),
+            body: new PingModel(),
+            footer: new MessageFooter()
+            );
         }
         [Test]
         public async Task TestAddPingEventSourcing()

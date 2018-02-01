@@ -3,7 +3,7 @@
 namespace DomainModels.Types.Messages
 {
     [Serializable]
-    public class MessageHeader : DomainModel, IMessageHeader
+    public class MessageHeader : IMessageHeader
     {
 
         private readonly Guid _executionId;
@@ -21,7 +21,5 @@ namespace DomainModels.Types.Messages
         public bool IsSucceed => _isSucceed;
         //TODO: utilize correlation id for building robust distributed messages.
         public Guid CorrelateId { get; set; }
-
-        public override string Descripition => $"ExecutionId:{_executionId} timeStamp:{_timestamp} IsSucceed:{_isSucceed}";
     }
 }

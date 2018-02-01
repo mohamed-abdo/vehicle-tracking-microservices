@@ -2,10 +2,9 @@
 
 namespace Ping.Models
 {
-    public class PingRequest
+    public struct PingRequest
     {
-        public Guid VehicelId { get; set; }
-        public string Name { get; set; }
-        public string StatusDescription { get; set; }
+        public VehicleStatus Status { get; set; }
+        public string Description { get; set; }
     }
 }

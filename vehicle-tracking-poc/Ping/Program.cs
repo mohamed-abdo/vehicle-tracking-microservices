@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace vehicleStatus
+namespace Ping
 {
     /// <summary>
     /// Developed   By: Mohamed Abdo

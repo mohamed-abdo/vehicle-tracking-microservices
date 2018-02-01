@@ -79,3 +79,4 @@ services:
       - middleware_password=guest
       - event_db_connection=Server=database_sql;Database=vehicle_events;User Id=sa;Password=Pass@word
 
+

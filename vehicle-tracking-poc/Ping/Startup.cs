@@ -13,7 +13,7 @@ using Swashbuckle.AspNetCore.Swagger;
 using System.Collections.Generic;
 using WebComponents.Interceptors;
 
-namespace vehicleStatus
+namespace Ping
 {
     public class Startup
     {

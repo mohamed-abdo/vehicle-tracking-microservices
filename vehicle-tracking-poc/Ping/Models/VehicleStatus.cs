@@ -5,9 +5,12 @@ using System.Threading.Tasks;
 
 namespace Ping.Models
 {
-    public struct VehicleStatus
+    [Flags]
+    public enum VehicleStatus
     {
-        public Guid VehicelId { get;}
-        public string StatusDescription { get; }
+        active = 1,
+        inactive = 2,
+        warning = 4,
+        critical = 8,
     }
 }
