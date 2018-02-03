@@ -3,25 +3,18 @@ using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
 using DomainModels.Types;
 using DomainModels.Types.Messages;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace WebComponents.Interceptors
 {
-    public class CustomAuthorizer : IAsyncAuthorizationFilter, IFilterFactory
+	public class CustomAuthorizer : IAsyncAuthorizationFilter, IFilterFactory
     {
         private readonly ILogger _logger;
         private readonly IOperationalUnit _operationalUnit;

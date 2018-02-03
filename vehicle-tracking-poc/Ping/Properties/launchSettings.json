@@ -16,7 +16,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "vehicleStatus": {
+    "ping": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "api/ping",

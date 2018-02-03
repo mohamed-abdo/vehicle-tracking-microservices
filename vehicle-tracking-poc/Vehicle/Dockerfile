@@ -6,6 +6,8 @@ FROM microsoft/aspnetcore-build:2.0 AS build
 WORKDIR /src
 COPY *.sln ./
 COPY Vehicle/Vehicle.csproj Vehicle/
+COPY Components/BuildingAspects/BuildingAspects.csproj Components/BuildingAspects/
+COPY DomainModels/DomainModels.csproj DomainModels/
 RUN dotnet restore
 COPY . .
 WORKDIR /src/Vehicle

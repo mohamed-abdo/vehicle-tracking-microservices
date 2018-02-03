@@ -23,10 +23,29 @@ services:
     ports:
       - "80"
 
-
   ping:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     ports:
       - "32777:80"
+    depends_on:
+    - distributed_cache
+    - messages_middleware
+    - event_sourcing_middleware
+    - database_sql
+    environment:
+    - distributed_cache=distributed_cache
+    - cache_db_vehicles=vehicles
+    - messages_middleware=messages_middleware
+    - middleware_exchange=platform
+    - middleware_ping_publisher=*.ping.vehicle
+    - middleware_username=guest
+    - middleware_password=guest
+
+
+  customer:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "80"
 

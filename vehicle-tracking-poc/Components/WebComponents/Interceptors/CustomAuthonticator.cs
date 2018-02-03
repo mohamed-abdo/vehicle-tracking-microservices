@@ -4,14 +4,12 @@ using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System;
-using System.Collections.Generic;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace WebComponents.Interceptors
 {
-    public class CustomAuthonticator : IFilterFactory, IPolicyEvaluator
+	public class CustomAuthonticator : IFilterFactory, IPolicyEvaluator
 
     {
         public bool IsReusable => false;

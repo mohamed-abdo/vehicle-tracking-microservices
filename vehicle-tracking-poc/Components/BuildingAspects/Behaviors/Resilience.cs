@@ -3,15 +3,12 @@ using Polly;
 using Polly.CircuitBreaker;
 using Polly.Fallback;
 using Polly.Timeout;
-using Polly.Wrap;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace BuildingAspects.Behaviors
 {
-    //TODO: build resilience profiles for normal, critical, ... behaviors
-    public static class Resilience
+	//TODO: build resilience profiles for normal, critical, ... behaviors
+	public static class Resilience
     {
         /// <summary>
         /// Define general policy "behavior" for complex types to be by default not nullable"

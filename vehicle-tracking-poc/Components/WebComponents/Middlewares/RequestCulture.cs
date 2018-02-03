@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System;
 using System.Globalization;
 using System.Threading.Tasks;
 
 namespace WebComponents.WebMiddlewares
 {
-    public class RequestCulture
+	public class RequestCulture
     {
         private readonly RequestDelegate _next;
 

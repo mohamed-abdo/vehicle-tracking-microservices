@@ -5,13 +5,12 @@ using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 namespace WebComponents.WebMiddlewares
 {
-    public class CustomResponse
+	public class CustomResponse
     {
         private readonly RequestDelegate _next;
         public CustomResponse(RequestDelegate next)

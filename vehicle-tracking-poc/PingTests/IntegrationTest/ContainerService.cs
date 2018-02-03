@@ -15,7 +15,7 @@ namespace PingTests.IntegrationTest
 		// Relative path to the root folder of the service project.
 		// The path is relative to the target folder for the test DLL,
 		// i.e. /test/bin/Debug
-		private const string ServicePath = "../../../";
+		private const string ServicePath = "../../../../";
 
 		// Tag used for ${TAG} in docker-compose.yml
 		private const string Tag = "test";
@@ -32,10 +32,13 @@ namespace PingTests.IntegrationTest
 		public ContainerService()
 		{
 			Build();
+			//temporary ignore building right now sine it take too much time to re-build containers.
+			//BuildDocker();
 			StartContainers();
 
 			void Build()
 			{
+				var ServicePath = "../../../";
 				var process = Process.Start(new ProcessStartInfo
 				{
 					FileName = "dotnet",
@@ -46,16 +49,13 @@ namespace PingTests.IntegrationTest
 				Assert.Equal(0, process.ExitCode);
 			}
 
-
-			void StartContainers()
+			//First build the Docker container image
+			void BuildDocker()
 			{
-				// First build the Docker container image
 				var processStartInfo = new ProcessStartInfo
 				{
 					FileName = "docker-compose",
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					Arguments = $"-f {ServicePath}../docker-compose.yml build"
+					Arguments = $"-f {ServicePath}docker-compose.yml build"
 				};
 
 				AddEnvironmentVariables(processStartInfo);
@@ -64,19 +64,21 @@ namespace PingTests.IntegrationTest
 
 				process.WaitForExit();
 				Assert.Equal(0, process.ExitCode);
+			}
 
+			void StartContainers()
+			{
 				// Now start the docker containers
-
-				processStartInfo = new ProcessStartInfo
+				var processStartInfo = new ProcessStartInfo
 				{
 					FileName = "docker-compose",
 					Arguments =
-						$"-f {ServicePath}../docker-compose.yml -f {ServicePath}../docker-compose.yml -p {ServiceName} up -d"
+						$"-f {ServicePath}docker-compose.yml up -d"
 				};
 
 				AddEnvironmentVariables(processStartInfo);
 
-				process = Process.Start(processStartInfo);
+				var process = Process.Start(processStartInfo);
 
 				process.WaitForExit();
 				Assert.Equal(0, process.ExitCode);
@@ -86,6 +88,7 @@ namespace PingTests.IntegrationTest
 		private void AddEnvironmentVariables(ProcessStartInfo processStartInfo)
 		{
 			processStartInfo.Environment["TAG"] = Tag;
+			processStartInfo.EnvironmentVariables["ASPNETCORE_ENVIRONMENT"] = "Development";
 			processStartInfo.Environment["CONFIGURATION"] = Configuration;
 			processStartInfo.Environment["COMPUTERNAME"] = Environment.MachineName;
 		}
@@ -104,7 +107,7 @@ namespace PingTests.IntegrationTest
 				{
 					FileName = "docker-compose",
 					Arguments =
-						$"-f {ServicePath}../docker-compose.yml -f {ServicePath}../docker-compose.yml -p {ServiceName} down --rmi local"
+						$"-f {ServicePath}docker-compose.yml down --rmi local"
 				};
 
 				AddEnvironmentVariables(processStartInfo);

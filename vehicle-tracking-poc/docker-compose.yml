@@ -59,24 +59,22 @@ services:
     build:
       context: .
       dockerfile: Customer/Dockerfile
-
   event_sourcing_middleware:
-      image: eventsourcingmiddleware
-      build:
-        context: .
-        dockerfile: EventSourcing/EventSourcingMiddleware/Dockerfile
-      ports:
-      - 32770:80
-      depends_on:
-      - messages_middleware
-      - database_sql
-      environment:
-      - cache_db_vehicles=vehicles
-      - messages_middleware=messages_middleware
-      - middleware_exchange=platform
-      - middleware_routes_subscriber=*.ping.vehicle
-      - middleware_username=guest
-      - middleware_password=guest
-      - event_db_connection=Server=database_sql;Database=vehicle_events;User Id=sa;Password=Pass@word
-
+    image: eventsourcingmiddleware
+    build:
+      context: .
+      dockerfile: EventSourcing/EventSourcingMiddleware/Dockerfile
+    ports:
+    - 32770:80
+    depends_on:
+    - messages_middleware
+    - database_sql
+    environment:
+    - cache_db_vehicles=vehicles
+    - messages_middleware=messages_middleware
+    - middleware_exchange=platform
+    - middleware_routes_subscriber=*.ping.vehicle
+    - middleware_username=guest
+    - middleware_password=guest
+    - event_db_connection=Server=database_sql;Database=vehicle_events;User Id=sa;Password=Pass@word
 

@@ -1,18 +1,11 @@
-﻿using DomainModels.Types;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Primitives;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace WebComponents.Interceptors
 {
-    public class CustomHeader : Attribute, IFilterFactory, IAsyncActionFilter
+	public class CustomHeader : Attribute, IFilterFactory, IAsyncActionFilter
     {
         private readonly string _name, _value;
 
