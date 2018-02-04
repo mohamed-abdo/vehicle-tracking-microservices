@@ -13,6 +13,7 @@ services:
     - event_sourcing_middleware
     - database_sql
     environment:
+    - ASPNETCORE_ENVIRONMENT=Development
     - distributed_cache=distributed_cache
     - cache_db_vehicles=vehicles
     - messages_middleware=messages_middleware
@@ -77,4 +78,3 @@ services:
     - middleware_username=guest
     - middleware_password=guest
     - event_db_connection=Server=database_sql;Database=vehicle_events;User Id=sa;Password=Pass@word
-

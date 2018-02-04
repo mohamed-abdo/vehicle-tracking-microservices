@@ -16,14 +16,14 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "ping": {
+    "Ping": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "api/ping",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "http://localhost:49983/"
+      "applicationUrl": "http://localhost:32777/"
     }
   }
 }

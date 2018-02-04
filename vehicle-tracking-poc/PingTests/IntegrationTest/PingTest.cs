@@ -26,7 +26,6 @@ namespace PingTests.IntegrationTest
 				.ConfigureAppConfiguration((hostingContext, config) =>
 				{
 					hostingEnvironment = hostingContext.HostingEnvironment;
-					config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 					config.AddEnvironmentVariables();
 				})
 				.ConfigureLogging((hostingContext, logging) =>
@@ -45,7 +44,7 @@ namespace PingTests.IntegrationTest
 		{
 			var result = await _client.GetAsync(_pingSrvUri);
 			result.EnsureSuccessStatusCode();
-			Assert.True(true, "ping post failed!");
+			Assert.True(true, "ping get failed!");
 		}
 
 		[Fact]

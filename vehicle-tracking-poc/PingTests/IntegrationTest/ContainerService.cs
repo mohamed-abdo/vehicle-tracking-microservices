@@ -31,9 +31,10 @@ namespace PingTests.IntegrationTest
 
 		public ContainerService()
 		{
-			Build();
+			//Build();
+            //RunForEnvironment();
 			//temporary ignore building right now sine it take too much time to re-build containers.
-			//BuildDocker();
+			BuildDocker();
 			StartContainers();
 
 			void Build()
@@ -42,15 +43,28 @@ namespace PingTests.IntegrationTest
 				var process = Process.Start(new ProcessStartInfo
 				{
 					FileName = "dotnet",
-					Arguments = $"publish {ServicePath} --configuration {Configuration}"
+					Arguments = $"publish {ServicePath} --configuration {"Debug"} "
 				});
 
 				process.WaitForExit();
 				Assert.Equal(0, process.ExitCode);
 			}
 
-			//First build the Docker container image
-			void BuildDocker()
+            void RunForEnvironment()
+            {
+                var ServicePath = "../../../";
+                var process = Process.Start(new ProcessStartInfo
+                {
+                    FileName = "dotnet",
+                    Arguments = $"run {ServicePath} --environment {"Development"} "
+                });
+
+                process.WaitForExit();
+                Assert.Equal(0, process.ExitCode);
+            }
+
+            //First build the Docker container image
+            void BuildDocker()
 			{
 				var processStartInfo = new ProcessStartInfo
 				{
