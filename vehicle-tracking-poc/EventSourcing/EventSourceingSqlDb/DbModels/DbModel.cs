@@ -17,7 +17,7 @@ namespace EventSourceingSqlDb.DbModels
         public DbModel(DbModel model)
         {
             ExecutionId = model.ExecutionId;
-            CorrelateId = model.CorrelateId;
+            CorrelationId = model.CorrelationId;
             Timestamp = model.Timestamp;
 
             Data = model.Data;
@@ -37,7 +37,7 @@ namespace EventSourceingSqlDb.DbModels
 
         public virtual Guid ExecutionId { get; set; }
 
-        public virtual Guid CorrelateId { get; set; }
+        public virtual Guid CorrelationId { get; set; }
 
         public virtual long Timestamp { get; set; }
 

@@ -13,7 +13,7 @@ namespace EventSourceingSqlDb.DbModels
             return new DbModel
             {
                 ExecutionId = header.ExecutionId,
-                CorrelateId = header.CorrelateId,
+                CorrelationId = header.CorrelationId,
                 Timestamp = header.Timestamp,
 
                 Data = JObject.FromObject(body),

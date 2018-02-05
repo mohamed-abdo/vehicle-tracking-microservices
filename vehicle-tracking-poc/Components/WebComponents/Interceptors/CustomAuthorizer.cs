@@ -41,7 +41,7 @@ namespace WebComponents.Interceptors
             //TODO: remove bypassing authorization
             if (false && string.IsNullOrEmpty(context.HttpContext.Request.Headers["authorization"]))
             {
-                var messageHeader = new MessageHeader { CorrelateId = correlationId };
+                var messageHeader = new MessageHeader { CorrelationId = correlationId };
 
                 var messageFooter = new MessageFooter
                 {

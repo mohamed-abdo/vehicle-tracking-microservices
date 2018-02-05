@@ -10,50 +10,41 @@ using System;
 
 namespace PingTests.IntegrationTest
 {
-	public class PingTest : IClassFixture<ContainerService>
-	{
-		private readonly TestServer _server;
-		private readonly HttpClient _client;
-		private readonly Uri _pingSrvUri;
-		private readonly IHostingEnvironment Environment;
+    public class PingTest : IClassFixture<ContainerService>
+    {
+        private readonly TestServer _server;
+        private readonly HttpClient _client;
+        private readonly string _pingSrvUri = "api/v1/Vehicle/1010";
+        private readonly IHostingEnvironment Environment;
 
-		public PingTest()
-		{
-			IHostingEnvironment hostingEnvironment = null;
-			_server = new TestServer(
-				new WebHostBuilder()
-				.UseKestrel()
-				.ConfigureAppConfiguration((hostingContext, config) =>
-				{
-					hostingEnvironment = hostingContext.HostingEnvironment;
-					config.AddEnvironmentVariables();
-				})
-				.ConfigureLogging((hostingContext, logging) =>
-				{
-					logging.AddConsole();
-					logging.AddDebug();
-				})
-				.UseStartup<Startup>()
-				);
-			Environment = hostingEnvironment;
-			_client = _server.CreateClient();
-			_pingSrvUri = new Uri("http://localhost:32777/api/v1/Vehicle/1010");
-		}
-		[Fact]
-		public async Task GetPing()
-		{
-			var result = await _client.GetAsync(_pingSrvUri);
-			result.EnsureSuccessStatusCode();
-			Assert.True(true, "ping get failed!");
-		}
+        public PingTest()
+        {
+            var hostBuilder = new WebHostBuilder()
+                .UseKestrel()
+                .UseEnvironment("Development")
+                .UseStartup<Startup>();
 
-		[Fact]
-		public async Task PostPing()
-		{
-			var result = await _client.GetAsync("api/v1/Vehicle/1010");
-			result.EnsureSuccessStatusCode();
-			Assert.True(true, "ping post failed!");
-		}
+            _server = new TestServer(hostBuilder);
+            //ping client service
+            _client = _server.CreateClient();
+            _client.BaseAddress = new Uri("http://localhost:32777/");
+        }
+        [Fact]
+        public async Task GetPing()
+        {
+            var result = await _client.GetAsync(_pingSrvUri);
 
-	}
+            result.EnsureSuccessStatusCode();
+            Assert.True(true, "ping get failed!");
+        }
+
+        [Fact]
+        public async Task PostPing()
+        {
+            var result = await _client.GetAsync("api/v1/Vehicle/1010");
+            result.EnsureSuccessStatusCode();
+            Assert.True(true, "ping post failed!");
+        }
+
+    }
 }

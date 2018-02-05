@@ -35,7 +35,7 @@ namespace WebComponents.Interceptors
             var correlationId = _operationalUnit.InstanceId;
             if (!string.IsNullOrEmpty(correlationHeader))
                 Guid.TryParse(correlationHeader, out correlationId);
-            var messageHeader = new MessageHeader(isSucceed: context.HttpContext.Response.StatusCode == 200) { CorrelateId = correlationId };
+            var messageHeader = new MessageHeader(isSucceed: context.HttpContext.Response.StatusCode == 200) { CorrelationId = correlationId };
 
             var messageFooter = new MessageFooter
             {

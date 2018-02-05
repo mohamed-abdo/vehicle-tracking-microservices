@@ -7,7 +7,7 @@ namespace DomainModels.Types.Messages
     public interface IMessageHeader
     {
         Guid ExecutionId { get; }
-        Guid CorrelateId { get; }
+        Guid CorrelationId { get; }
         long Timestamp { get; }
     }
 }

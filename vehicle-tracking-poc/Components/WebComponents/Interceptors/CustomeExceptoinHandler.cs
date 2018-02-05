@@ -51,7 +51,7 @@ namespace WebComponents.Interceptors
             var exception = context.Exception;
             (int code, string message, ResponseHint responseHint) = (exception is CustomException ex) ? ex.CustomMessage : (exception.HResult, exception.Message, ResponseHint.SystemError);
 
-            var messageHeader = new MessageHeader(isSucceed: false) { CorrelateId = correlationId };
+            var messageHeader = new MessageHeader(isSucceed: false) { CorrelationId = correlationId };
 
             var messageFooter = new MessageFooter
             {

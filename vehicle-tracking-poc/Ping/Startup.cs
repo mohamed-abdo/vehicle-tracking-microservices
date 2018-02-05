@@ -19,9 +19,22 @@ namespace Ping
     {
         public Startup(ILoggerFactory logger, IHostingEnvironment environemnt, IConfiguration configuration)
         {
-            Logger = logger.CreateLogger<Startup>();
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(environemnt.ContentRootPath) 
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile($"appsettings.Development.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables();
+
+            Configuration = builder.Build();
+
             Environemnt = environemnt;
-            Configuration = configuration;
+
+            logger
+                .AddConsole()
+                .AddDebug();
+
+            Logger = logger
+                .CreateLogger<Startup>();
             //local system configuration
             SystemLocalConfiguration = LocalConfiguration.Create(new Dictionary<string, string>() {
                 {nameof(SystemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},

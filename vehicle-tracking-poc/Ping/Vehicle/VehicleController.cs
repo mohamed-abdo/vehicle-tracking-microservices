@@ -56,7 +56,7 @@ namespace Ping
                        (
                            Header: new MessageHeader
                            {
-                               CorrelateId = _operationalUnit.InstanceId
+                               CorrelationId = _operationalUnit.InstanceId
                            },
                            Body: new PingModel() { Status = StatusModel.Active, ChassisNumber = "vehicle@123Xyz!", Message = "ping - pong!" }
                            ,

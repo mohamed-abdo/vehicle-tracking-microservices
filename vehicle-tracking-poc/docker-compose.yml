@@ -48,18 +48,25 @@ services:
     build:
       context: .
       dockerfile: Tracking/Dockerfile
+    ports:
+    - 32771:80
 
   vehicle:
     image: vehicle
     build:
       context: .
       dockerfile: Vehicle/Dockerfile
+    ports:
+    - 32772:80
 
   customer:
     image: customer
     build:
       context: .
       dockerfile: Customer/Dockerfile
+    ports:
+    - 32773:80
+
   event_sourcing_middleware:
     image: eventsourcingmiddleware
     build:

@@ -20,6 +20,6 @@ namespace DomainModels.Types.Messages
         public long Timestamp => _timestamp;
         public bool IsSucceed => _isSucceed;
         //TODO: utilize correlation id for building robust distributed messages.
-        public Guid CorrelateId { get; set; }
+        public Guid CorrelationId { get; set; }
     }
 }

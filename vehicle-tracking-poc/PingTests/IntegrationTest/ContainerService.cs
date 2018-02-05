@@ -34,7 +34,9 @@ namespace PingTests.IntegrationTest
 			//Build();
             //RunForEnvironment();
 			//temporary ignore building right now sine it take too much time to re-build containers.
-			BuildDocker();
+			//BuildDocker();
+            //try to stop any container if already running
+            StopContainers();
 			StartContainers();
 
 			void Build()
@@ -87,8 +89,10 @@ namespace PingTests.IntegrationTest
 				{
 					FileName = "docker-compose",
 					Arguments =
-						$"-f {ServicePath}docker-compose.yml up -d"
-				};
+						$"-f {ServicePath}docker-compose.yml -f {ServicePath}docker-compose.test.yml up -d"
+                       // $"-f {ServicePath}docker-compose.yml  run -d -p 32777:80 ping"
+
+                };
 
 				AddEnvironmentVariables(processStartInfo);
 
@@ -101,36 +105,35 @@ namespace PingTests.IntegrationTest
 
 		private void AddEnvironmentVariables(ProcessStartInfo processStartInfo)
 		{
-			processStartInfo.Environment["TAG"] = Tag;
-			processStartInfo.EnvironmentVariables["ASPNETCORE_ENVIRONMENT"] = "Development";
-			processStartInfo.Environment["CONFIGURATION"] = Configuration;
-			processStartInfo.Environment["COMPUTERNAME"] = Environment.MachineName;
-		}
+            processStartInfo.Environment["TAG"] = Tag;
+            processStartInfo.Environment["CONFIGURATION"] = Configuration;
+            processStartInfo.Environment["COMPUTERNAME"] = Environment.MachineName;
+        }
+        private void StopContainers()
+        {
+            // Run docker-compose down to stop the containers
+            // Note that "--rmi local" deletes the images as well to keep the machine clean
+            // But it does so by deleting all untagged images, which may not be desired in all cases
 
-		public void Dispose()
+            var processStartInfo = new ProcessStartInfo
+            {
+                FileName = "docker-compose",
+                Arguments =
+                    $"-f {ServicePath}docker-compose.yml down --rmi local"
+            };
+
+            AddEnvironmentVariables(processStartInfo);
+
+            var process = Process.Start(processStartInfo);
+
+            process.WaitForExit();
+            Assert.Equal(0, process.ExitCode);
+        }
+        public void Dispose()
 		{
 			StopContainers();
 
-			void StopContainers()
-			{
-				// Run docker-compose down to stop the containers
-				// Note that "--rmi local" deletes the images as well to keep the machine clean
-				// But it does so by deleting all untagged images, which may not be desired in all cases
-
-				var processStartInfo = new ProcessStartInfo
-				{
-					FileName = "docker-compose",
-					Arguments =
-						$"-f {ServicePath}docker-compose.yml down --rmi local"
-				};
-
-				AddEnvironmentVariables(processStartInfo);
-
-				var process = Process.Start(processStartInfo);
-
-				process.WaitForExit();
-				Assert.Equal(0, process.ExitCode);
-			}
+			
 		}
 	}
 }
