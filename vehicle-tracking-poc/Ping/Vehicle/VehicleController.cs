@@ -24,11 +24,11 @@ namespace Ping
         private readonly ILogger _logger;
         private readonly IOperationalUnit _operationalUnit;
         private readonly IMessagePublisher _publisher;
-        private readonly LocalConfiguration _localConfiguration;
+        private readonly InfrastructureConfiguration _localConfiguration;
         public VehicleController(
             ILogger<VehicleController> logger,
             IMessagePublisher publisher,
-            LocalConfiguration localConfiguration,
+            InfrastructureConfiguration localConfiguration,
             IOperationalUnit operationalUnit)
         {
             _logger = logger;

@@ -36,7 +36,7 @@ namespace Ping
             Logger = logger
                 .CreateLogger<Startup>();
             //local system configuration
-            SystemLocalConfiguration = LocalConfiguration.Create(new Dictionary<string, string>() {
+            SystemLocalConfiguration = new LocalConfiguration().Create(new Dictionary<string, string>() {
                 {nameof(SystemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},
                 {nameof(SystemLocalConfiguration.CacheDBVehicles),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
                 {nameof(SystemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>(Identifiers.MessagesMiddleware)},
@@ -47,7 +47,7 @@ namespace Ping
             });
         }
 
-        private LocalConfiguration SystemLocalConfiguration;
+        private InfrastructureConfiguration SystemLocalConfiguration;
         public IHostingEnvironment Environemnt { get; }
         public IConfiguration Configuration { get; }
         public ILogger Logger { get; }
@@ -72,7 +72,7 @@ namespace Ping
 
             services.AddSingleton<IOperationalUnit>(srv => _operationalUnit);
 
-            services.AddSingleton<LocalConfiguration, LocalConfiguration>(srv => SystemLocalConfiguration);
+            services.AddSingleton<InfrastructureConfiguration, InfrastructureConfiguration>(srv => SystemLocalConfiguration);
             services.AddSingleton<IMessagePublisher, RabbitMQPublisher>(srv =>
             {
                 return RabbitMQPublisher.Create(loggerFactorySrv, new RabbitMQConfiguration

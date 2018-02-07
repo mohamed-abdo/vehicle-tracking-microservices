@@ -5,12 +5,11 @@ using System.Text;
 
 namespace DomainModels.System
 {
-    public sealed class LocalConfiguration
+    public sealed class LocalConfiguration : InfrastructureConfiguration
     {
         private static volatile object _sync = new object();
-        private LocalConfiguration() { }
         //initialize read
-        public static LocalConfiguration Create(IDictionary<string, string> configuration)
+        public override InfrastructureConfiguration Create(IDictionary<string, string> configuration)
         {
             lock (_sync)
             {
@@ -25,17 +24,6 @@ namespace DomainModels.System
                 return _instance;
             }
         }
-
-        #region fields
-        public string CacheServer { get; private set; }
-        public string MessagesMiddleware { get; private set; }
-        public string CacheDBVehicles { get; private set; }
-        public string MiddlewareExchange { get; private set; }
-        public string MessageSubscriberRoute { get; private set; }
-        public string MessagePublisherRoute { get; private set; }
-        public string MessagesMiddlewareUsername { get; private set; }
-        public string MessagesMiddlewarePassword { get; private set; }
-        public string EventDbConnection { get;private set; }
-        #endregion
+        
     }
 }
