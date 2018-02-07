@@ -22,10 +22,10 @@ namespace DomainModels.System
 
         #region settings
 
-        public const int RetryCount = 3;
-        public const int TimeoutInSec = 30;
-        public const int BreakTimeoutInSec = 3;
-        public const int CircutBreakerExceptionsCount = 3;
+        public const int RetryCount = 5;
+        public const int TimeoutInSec = 60;
+        public const int BreakTimeoutInSec = 5;
+        public const int CircutBreakerExceptionsCount = 5;
         #endregion
     }
 }

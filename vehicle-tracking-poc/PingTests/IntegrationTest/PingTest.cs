@@ -33,7 +33,6 @@ namespace PingTests.IntegrationTest
         public async Task GetPing()
         {
             var result = await _client.GetAsync(_pingSrvUri);
-
             result.EnsureSuccessStatusCode();
             Assert.True(true, "ping get failed!");
         }

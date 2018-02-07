@@ -1,6 +1,7 @@
 ﻿using BackgroundMiddleware.Abstract;
 using BuildingAspects.Behaviors;
 using BuildingAspects.Functors;
+using BuildingAspects.Utilities;
 using DomainModels.DataStructure;
 using DomainModels.Types;
 using DomainModels.Types.Messages;
@@ -24,6 +25,7 @@ namespace BackgroundMiddleware.Concrete
     public class RabbitMQSubscriber<T> : BackgroundService
     {
         private readonly ILogger logger;
+        private int defaultMiddlewarePort = 5672;//default rabbitmq port
         private readonly RabbitMQConfiguration hostConfig;
         private readonly IConnectionFactory connectionFactory;
         //Design decision: keep/ delegate responsibility of translating and casting object to the target type, to receiver callback, even exception will be thrown in his execution thread.
@@ -44,7 +46,8 @@ namespace BackgroundMiddleware.Concrete
             Validators.EnsureHostConfig(hostConfig);
             this.hostConfig = hostConfig;
             this.callback = callback ?? throw new ArgumentNullException("Callback reference is invalid");
-            this.connectionFactory = new ConnectionFactory() { HostName = hostConfig.hostName, UserName = hostConfig.userName, Password = hostConfig.password };
+            var host = Helper.ExtractHostStructure(this.hostConfig.hostName);
+            connectionFactory = new ConnectionFactory() { HostName = host.hostName, Port = host.port ?? defaultMiddlewarePort, UserName = hostConfig.userName, Password = hostConfig.password, ContinuationTimeout = TimeSpan.FromSeconds(DomainModels.System.Identifiers.TimeoutInSec) };
         }
 
         /// <summary>
@@ -52,7 +55,7 @@ namespace BackgroundMiddleware.Concrete
         /// </summary>
         /// <param name="logger">ILogger instance</param>
         /// <param name="hostConfig">rabbitMQ configuration</param>
-        public static RabbitMQSubscriber<T> Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Func<T>> callback) 
+        public static RabbitMQSubscriber<T> Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Func<T>> callback)
         {
             return new RabbitMQSubscriber<T>(logger, hostConfig, callback);
         }
@@ -93,8 +96,8 @@ namespace BackgroundMiddleware.Concrete
                               if (ea.Body == null || ea.Body.Length == 0)
                                   throw new TypeLoadException("Invalid message type");
 
-                          // callback action feeding 
-                          callback(() => (T)Utilities.BinaryDeserialize(ea.Body));
+                              // callback action feeding 
+                              callback(() => (T)Utilities.BinaryDeserialize(ea.Body));
                               //send acknowledgment to publisher
 
                               channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);

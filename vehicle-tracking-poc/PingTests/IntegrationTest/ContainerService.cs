@@ -37,6 +37,7 @@ namespace PingTests.IntegrationTest
 			//BuildDocker();
             //try to stop any container if already running
             StopContainers();
+            // start targeted container => ping service
 			StartContainers();
 
 			void Build()
@@ -89,8 +90,8 @@ namespace PingTests.IntegrationTest
 				{
 					FileName = "docker-compose",
 					Arguments =
-						$"-f {ServicePath}docker-compose.yml -f {ServicePath}docker-compose.test.yml up -d"
-                       // $"-f {ServicePath}docker-compose.yml  run -d -p 32777:80 ping"
+						//$"-f {ServicePath}docker-compose.yml -f {ServicePath}docker-compose.test.yml up -d"
+                        $"-f {ServicePath}docker-compose.yml run -d -p 32777:80 ping"
 
                 };
 

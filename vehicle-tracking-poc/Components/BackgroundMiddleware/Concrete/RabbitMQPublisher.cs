@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BackgroundMiddleware.Abstract;
 using BuildingAspects.Behaviors;
 using BuildingAspects.Functors;
+using BuildingAspects.Utilities;
 using DomainModels.DataStructure;
 using DomainModels.System;
 using DomainModels.Types;
@@ -23,8 +24,10 @@ namespace BackgroundMiddleware.Concrete
     public class RabbitMQPublisher : IMessagePublisher
     {
         private readonly ILogger logger;
+        private int defaultMiddlewarePort = 5672;//default rabbitmq port
         private readonly RabbitMQConfiguration hostConfig;
         private readonly IConnectionFactory connectionFactory;
+        private IConnection connection;
         private RabbitMQPublisher(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
         {
             this.logger = logger?
@@ -35,7 +38,8 @@ namespace BackgroundMiddleware.Concrete
 
             Validators.EnsureHostConfig(hostConfig);
             this.hostConfig = hostConfig;
-            this.connectionFactory = new ConnectionFactory() { HostName = hostConfig.hostName, UserName = hostConfig.userName, Password = hostConfig.password };
+            var host = Helper.ExtractHostStructure(this.hostConfig.hostName);
+            connectionFactory = new ConnectionFactory() { HostName = host.hostName, Port = host.port ?? defaultMiddlewarePort, UserName = hostConfig.userName, Password = hostConfig.password, ContinuationTimeout = TimeSpan.FromSeconds(DomainModels.System.Identifiers.TimeoutInSec) };
         }
         public static RabbitMQPublisher Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
         {
@@ -46,7 +50,8 @@ namespace BackgroundMiddleware.Concrete
         {
             await new Function(logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
                 {
-                    using (var connection = connectionFactory.CreateConnection())
+                    if (connection == null || !connection.IsOpen)
+                        connection = connectionFactory.CreateConnection();
                     using (var channel = connection.CreateModel())
                     {
                         channel.ExchangeDeclare(exchange: exchange, type: ExchangeType.Topic, durable: true);
