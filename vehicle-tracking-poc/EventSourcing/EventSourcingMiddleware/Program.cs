@@ -17,6 +17,7 @@ namespace EventSourcingMiddleware
 
             ILogger mainLogger = new LoggerFactory()
                                         .AddConsole()
+										.AddFile("Logs/ProgramMain-{Date}.txt", isJson: true)
                                         .AddDebug()
                                         .CreateLogger<Program>();
             try
@@ -26,17 +27,12 @@ namespace EventSourcingMiddleware
                      var config = new ConfigurationBuilder()
                          .AddCommandLine(args)
                          .AddEnvironmentVariables()
-                         .Build();
+						 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+						 .Build();
 
                      var builder = new WebHostBuilder()
                             .UseConfiguration(config)
-                            .ConfigureLogging((hostingContext, logging) =>
-                            {
-                                logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-                                logging.AddConsole();
-                                logging.AddDebug();
-                            })
-                            .UseStartup<Startup>()
+							.UseStartup<Startup>()
                             .UseKestrel(options =>
                             {
                                 // TODO: support end-point for self checking, monitoring, administration, service / task cancellation.... 

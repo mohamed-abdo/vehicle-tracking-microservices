@@ -23,7 +23,8 @@ namespace Ping
             ILogger mainLogger = new LoggerFactory()
                                         .AddConsole()
                                         .AddDebug()
-                                        .CreateLogger<Program>();
+										.AddFile("Logs/ProgramMain-{Date}.txt", isJson: true)
+										.CreateLogger<Program>();
             try
             {
                 new Function(mainLogger, Identifiers.RetryCount).Decorate(() =>

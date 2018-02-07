@@ -26,9 +26,17 @@ namespace EventSourcingMiddleware
     {
         public Startup(ILoggerFactory logger, IHostingEnvironment environemnt, IConfiguration configuration)
         {
-            Logger = logger.CreateLogger<Startup>();
-            Environemnt = environemnt;
-            Configuration = configuration;
+			Configuration = configuration;
+
+			Environemnt = environemnt;
+
+			logger
+				.AddConsole()
+				.AddDebug()
+				.AddFile(configuration.GetSection("Logging"));
+
+			Logger = logger
+				.CreateLogger<Startup>();
             //local system configuration
             SystemLocalConfiguration =new LocalConfiguration().Create(new Dictionary<string, string>() {
 

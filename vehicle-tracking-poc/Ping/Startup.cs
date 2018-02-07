@@ -22,7 +22,6 @@ namespace Ping
             var builder = new ConfigurationBuilder()
                 .SetBasePath(environemnt.ContentRootPath) 
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.Development.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables();
 
             Configuration = builder.Build();
@@ -31,7 +30,8 @@ namespace Ping
 
             logger
                 .AddConsole()
-                .AddDebug();
+                .AddDebug()
+				.AddFile(configuration.GetSection("Logging"));
 
             Logger = logger
                 .CreateLogger<Startup>();
