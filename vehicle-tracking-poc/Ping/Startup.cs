@@ -3,6 +3,7 @@ using BackgroundMiddleware.Concrete;
 using BuildingAspects.Services;
 using DomainModels.DataStructure;
 using DomainModels.System;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Distributed;
@@ -106,6 +107,8 @@ namespace Ping
             {
                 c.SwaggerDoc("v1", new Info { Title = _operationalUnit.Assembly, Version = "v1" });
             });
+
+            services.AddMediatR();
 
             services.AddMvc(options =>
             {

@@ -1,6 +1,7 @@
 ﻿using BackgroundMiddleware.Abstract;
 using BuildingAspects.Services;
 using DomainModels.System;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Ping;
@@ -12,7 +13,7 @@ using Xunit;
 
 namespace PingTests.UnitTest
 {
-	public class PingTest
+    public class PingTest
     {
         private IPing _ping;
         private string _vehicleId;
@@ -21,7 +22,7 @@ namespace PingTests.UnitTest
         private readonly IOperationalUnit _operationalUnit;
         private readonly InfrastructureConfiguration _localConfigurationMock;
         private readonly IMessagePublisher _publisherMock;
-
+        private readonly IMediator _mediatorMock;
         public PingTest()
         {
             var loggerFactortMoq = new Mock<ILoggerFactory>().Object;
@@ -35,15 +36,17 @@ namespace PingTests.UnitTest
 
             _publisherMock = new Mock<IMessagePublisher>().Object;
 
-			_ping = new VehicleController(_logger, _publisherMock, _localConfigurationMock, _operationalUnit);
-			_vehicleId = Guid.NewGuid().ToString();
-			_pingRequest = new PingRequest { Status = VehicleStatus.active, Description = "new vehicle!" };
-		}
+            _mediatorMock = new Mock<IMediator>().Object;
+
+            _ping = new VehicleController(_logger, _publisherMock, _localConfigurationMock, _operationalUnit, _mediatorMock);
+            _vehicleId = Guid.NewGuid().ToString();
+            _pingRequest = new PingRequest { Status = VehicleStatus.active, Description = "new vehicle!" };
+        }
 
         [Fact]
         public void PostPing()
         {
-            var result = _ping.Post(_vehicleId, _pingRequest);
+            var result = _ping.Post(_vehicleId, _pingRequest, new System.Threading.CancellationToken());
             Assert.NotNull(result);
         }
     }

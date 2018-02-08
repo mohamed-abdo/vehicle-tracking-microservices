@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using BackgroundMiddleware.Abstract;
 using BuildingAspects.Behaviors;
@@ -7,10 +8,12 @@ using BuildingAspects.Services;
 using DomainModels.System;
 using DomainModels.Types.Messages;
 using DomainModels.Vehicle;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Ping.Contracts;
 using Ping.Models;
+using Ping.Vehicle.Mediator;
 using WebComponents.Interceptors;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -25,16 +28,19 @@ namespace Ping
         private readonly IOperationalUnit _operationalUnit;
         private readonly IMessagePublisher _publisher;
         private readonly InfrastructureConfiguration _localConfiguration;
+        private readonly IMediator _mediator;
         public VehicleController(
             ILogger<VehicleController> logger,
             IMessagePublisher publisher,
             InfrastructureConfiguration localConfiguration,
-            IOperationalUnit operationalUnit)
+            IOperationalUnit operationalUnit,
+            IMediator mediator)
         {
             _logger = logger;
             _operationalUnit = operationalUnit;
             _publisher = publisher;
             _localConfiguration = localConfiguration;
+            _mediator = mediator;
         }
 
         // GET api/v/<controller>/5
@@ -81,9 +87,10 @@ namespace Ping
         // POST api/v/<controller>/vehicleId
         [CustomHeader(Models.Identifiers.DomainModel, Models.Identifiers.PingDomainModel)]
         [HttpPost("{vehicleId}")]
-        public IAsyncResult Post(string vehicleId, PingRequest pingRequest)
+        public async Task<IAsyncResult> Post(string vehicleId, PingRequest pingRequest, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            await _mediator.Publish(new Publisher(new PingModel() { Message = "Hello world => vehicle" }), cancellationToken);
+            return Task.FromResult(Content("Ok"));
         }
     }
 }
