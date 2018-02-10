@@ -38,7 +38,7 @@ namespace EventSourcingMiddleware
 			Logger = logger
 				.CreateLogger<Startup>();
             //local system configuration
-            SystemLocalConfiguration =new LocalConfiguration().Create(new Dictionary<string, string>() {
+            SystemLocalConfiguration =new ServiceConfiguration().Create(new Dictionary<string, string>() {
 
                 {nameof(SystemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},
                 {nameof(SystemLocalConfiguration.CacheDBVehicles),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
@@ -51,7 +51,7 @@ namespace EventSourcingMiddleware
             });
         }
 
-        private InfrastructureConfiguration SystemLocalConfiguration;
+        private MiddlewareConfiguration SystemLocalConfiguration;
         public IHostingEnvironment Environemnt { get; }
         public IConfiguration Configuration { get; }
         public ILogger Logger { get; }

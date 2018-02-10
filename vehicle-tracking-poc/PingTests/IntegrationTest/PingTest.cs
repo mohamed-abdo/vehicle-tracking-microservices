@@ -40,7 +40,7 @@ namespace PingTests.IntegrationTest
         [Fact]
         public async Task PostPing()
         {
-            var result = await _client.GetAsync("api/v1/Vehicle/1010");
+            var result = await _client.PostAsync(_pingSrvUri, new StringContent(string.Empty));
             result.EnsureSuccessStatusCode();
             Assert.True(true, "ping post failed!");
         }

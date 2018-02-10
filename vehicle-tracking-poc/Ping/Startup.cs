@@ -1,5 +1,5 @@
-﻿using BackgroundMiddleware.Abstract;
-using BackgroundMiddleware.Concrete;
+﻿using BackgroundMiddleware.Concrete;
+using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
 using DomainModels.DataStructure;
 using DomainModels.System;
@@ -10,6 +10,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Ping.Vehicle.Mediator;
 using Swashbuckle.AspNetCore.Swagger;
 using System.Collections.Generic;
 using WebComponents.Interceptors;
@@ -21,7 +22,7 @@ namespace Ping
         public Startup(ILoggerFactory logger, IHostingEnvironment environemnt, IConfiguration configuration)
         {
             var builder = new ConfigurationBuilder()
-                .SetBasePath(environemnt.ContentRootPath) 
+                .SetBasePath(environemnt.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables();
 
@@ -32,12 +33,12 @@ namespace Ping
             logger
                 .AddConsole()
                 .AddDebug()
-				.AddFile(configuration.GetSection("Logging"));
+                .AddFile(configuration.GetSection("Logging"));
 
             Logger = logger
                 .CreateLogger<Startup>();
             //local system configuration
-            SystemLocalConfiguration = new LocalConfiguration().Create(new Dictionary<string, string>() {
+            SystemLocalConfiguration = new ServiceConfiguration().Create(new Dictionary<string, string>() {
                 {nameof(SystemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},
                 {nameof(SystemLocalConfiguration.CacheDBVehicles),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
                 {nameof(SystemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>(Identifiers.MessagesMiddleware)},
@@ -48,7 +49,10 @@ namespace Ping
             });
         }
 
-        private InfrastructureConfiguration SystemLocalConfiguration;
+        private MiddlewareConfiguration SystemLocalConfiguration;
+        private RabbitMQPublisher MessagePublisher;
+        private IOperationalUnit OperationalUnit;
+        private ServiceMediator PingMediator;
         public IHostingEnvironment Environemnt { get; }
         public IConfiguration Configuration { get; }
         public ILogger Logger { get; }
@@ -57,8 +61,10 @@ namespace Ping
         // Inject background service, for receiving message
         public void ConfigureServices(IServiceCollection services)
         {
-            var loggerFactorySrv = services.BuildServiceProvider().GetService<ILoggerFactory>();
-            
+            var loggerFactorySrv = services
+                                    .BuildServiceProvider()
+                                    .GetService<ILoggerFactory>();
+
             //add application insights information, could be used to monitor the performance, and more analytics when application moved to the cloud.
             loggerFactorySrv.AddApplicationInsights(services.BuildServiceProvider(), LogLevel.Information);
 
@@ -67,24 +73,25 @@ namespace Ping
                 .AddDebug()
                 .CreateLogger<Startup>();
 
-            var _operationalUnit = new OperationalUnit(
+            OperationalUnit = new OperationalUnit(
                 environment: Environemnt.EnvironmentName,
                 assembly: AssemblyName);
-
-            services.AddSingleton<IOperationalUnit>(srv => _operationalUnit);
-
-            services.AddSingleton<InfrastructureConfiguration, InfrastructureConfiguration>(srv => SystemLocalConfiguration);
-            services.AddSingleton<IMessagePublisher, RabbitMQPublisher>(srv =>
+            MessagePublisher = RabbitMQPublisher.Create(loggerFactorySrv, new RabbitMQConfiguration
             {
-                return RabbitMQPublisher.Create(loggerFactorySrv, new RabbitMQConfiguration
-                {
-                    hostName = SystemLocalConfiguration.MessagesMiddleware,
-                    exchange = SystemLocalConfiguration.MiddlewareExchange,
-                    userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
-                    password = SystemLocalConfiguration.MessagesMiddlewarePassword,
-                    routes = new string[] { SystemLocalConfiguration.MessagePublisherRoute }
-                });
+                hostName = SystemLocalConfiguration.MessagesMiddleware,
+                exchange = SystemLocalConfiguration.MiddlewareExchange,
+                userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
+                password = SystemLocalConfiguration.MessagesMiddlewarePassword,
+                routes = new string[] { SystemLocalConfiguration.MessagePublisherRoute }
             });
+            services.AddOptions();
+
+            // no need to inject the following service since, currently they are injected for the mediator.
+            //services.AddTransient<IOperationalUnit>(srv => OperationalUnit);
+            //services.AddSingleton<MiddlewareConfiguration, MiddlewareConfiguration>(srv => SystemLocalConfiguration);
+            //services.AddSingleton<IMessagePublisher, RabbitMQPublisher>(srv => MessagePublisher);
+
+            services.AddSingleton<IServiceMediator, ServiceMediator>(srv => new ServiceMediator(_logger, MessagePublisher, SystemLocalConfiguration, OperationalUnit));
 
             ///
             /// Injecting message receiver background service
@@ -105,7 +112,7 @@ namespace Ping
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Info { Title = _operationalUnit.Assembly, Version = "v1" });
+                c.SwaggerDoc("v1", new Info { Title = OperationalUnit.Assembly, Version = "v1" });
             });
 
             services.AddMediatR();
@@ -113,9 +120,9 @@ namespace Ping
             services.AddMvc(options =>
             {
                 //TODO: add practical policy instead of empty policy for authentication / authorization .
-                options.Filters.Add(new CustomAuthorizer(_logger, _operationalUnit));
-                options.Filters.Add(new CustomeExceptoinHandler(_logger, _operationalUnit, Environemnt));
-                options.Filters.Add(new CustomResponseResult(_logger, _operationalUnit));
+                options.Filters.Add(new CustomAuthorizer(_logger, OperationalUnit));
+                options.Filters.Add(new CustomeExceptoinHandler(_logger, OperationalUnit, Environemnt));
+                options.Filters.Add(new CustomResponseResult(_logger, OperationalUnit));
             });
         }
 

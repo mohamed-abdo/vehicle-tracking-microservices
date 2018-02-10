@@ -2,7 +2,7 @@
 using DomainModels.Types.Messages;
 using System.Threading.Tasks;
 
-namespace BackgroundMiddleware.Abstract
+namespace BuildingAspects.Services
 {
     public interface IMessagePublisher
     {

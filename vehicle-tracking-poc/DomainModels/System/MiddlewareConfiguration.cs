@@ -4,9 +4,9 @@ using System.Text;
 
 namespace DomainModels.System
 {
-    public abstract class InfrastructureConfiguration
+    public abstract class MiddlewareConfiguration
     {
-        public abstract InfrastructureConfiguration Create(IDictionary<string, string> configuration);
+        public abstract MiddlewareConfiguration Create(IDictionary<string, string> configuration);
         #region fields
         public string CacheServer { get; protected set; }
         public string MessagesMiddleware { get; protected set; }

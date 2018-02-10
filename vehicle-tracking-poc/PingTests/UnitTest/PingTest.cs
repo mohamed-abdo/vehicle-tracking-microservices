@@ -1,4 +1,5 @@
 ﻿using BackgroundMiddleware.Abstract;
+using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
 using DomainModels.System;
 using MediatR;
@@ -9,8 +10,9 @@ using Ping.Contracts;
 using Ping.Models;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Xunit;
-
+using Microsoft.AspNetCore.Mvc;
 namespace PingTests.UnitTest
 {
     public class PingTest
@@ -19,34 +21,26 @@ namespace PingTests.UnitTest
         private string _vehicleId;
         private PingRequest _pingRequest;
         private readonly ILogger<VehicleController> _logger;
-        private readonly IOperationalUnit _operationalUnit;
-        private readonly InfrastructureConfiguration _localConfigurationMock;
-        private readonly IMessagePublisher _publisherMock;
         private readonly IMediator _mediatorMock;
+        private readonly IServiceMediator _serviceMediatorMock;
         public PingTest()
         {
             var loggerFactortMoq = new Mock<ILoggerFactory>().Object;
             _logger = loggerFactortMoq.CreateLogger<VehicleController>();
 
-            _operationalUnit = new OperationalUnit(
-                environment: "Mock",
-                assembly: $"{Environment.MachineName} {this.GetType().Assembly.FullName} V{this.GetType().Assembly.GetName().Version}");
-
-            _localConfigurationMock = new Mock<InfrastructureConfiguration>().Object;
-
-            _publisherMock = new Mock<IMessagePublisher>().Object;
-
             _mediatorMock = new Mock<IMediator>().Object;
 
-            _ping = new VehicleController(_logger, _publisherMock, _localConfigurationMock, _operationalUnit, _mediatorMock);
+            _serviceMediatorMock = new Mock<IServiceMediator>().Object;
+
+            _ping = new VehicleController(_logger, _mediatorMock, _serviceMediatorMock);
             _vehicleId = Guid.NewGuid().ToString();
             _pingRequest = new PingRequest { Status = VehicleStatus.active, Description = "new vehicle!" };
         }
 
         [Fact]
-        public void PostPing()
+        public async Task PostPing()
         {
-            var result = _ping.Post(_vehicleId, _pingRequest, new System.Threading.CancellationToken());
+            var result = await _ping.Post(_vehicleId, _pingRequest, new System.Threading.CancellationToken());
             Assert.NotNull(result);
         }
     }

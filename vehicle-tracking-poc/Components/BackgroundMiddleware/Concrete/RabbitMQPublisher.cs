@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using BackgroundMiddleware.Abstract;
 using BuildingAspects.Behaviors;
 using BuildingAspects.Functors;
+using BuildingAspects.Services;
 using BuildingAspects.Utilities;
 using DomainModels.DataStructure;
-using DomainModels.System;
 using DomainModels.Types;
 using DomainModels.Types.Messages;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
 

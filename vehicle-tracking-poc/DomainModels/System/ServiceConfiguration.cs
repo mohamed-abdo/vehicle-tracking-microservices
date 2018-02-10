@@ -5,15 +5,15 @@ using System.Text;
 
 namespace DomainModels.System
 {
-    public sealed class LocalConfiguration : InfrastructureConfiguration
+    public sealed class ServiceConfiguration : MiddlewareConfiguration
     {
         private static volatile object _sync = new object();
         //initialize read
-        public override InfrastructureConfiguration Create(IDictionary<string, string> configuration)
+        public override MiddlewareConfiguration Create(IDictionary<string, string> configuration)
         {
             lock (_sync)
             {
-                var _instance = new LocalConfiguration();
+                var _instance = new ServiceConfiguration();
                 //TODO: runtime metadata filling configuration for this object.
                 foreach (var item in configuration ?? throw new ArgumentNullException($"configuration is required."))
                 {
