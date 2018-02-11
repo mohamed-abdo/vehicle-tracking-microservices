@@ -10,14 +10,13 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Ping.Vehicle.Mediator;
 using Swashbuckle.AspNetCore.Swagger;
 using System.Collections.Generic;
 using WebComponents.Interceptors;
 
 namespace Ping
 {
-    public class Startup
+	public class Startup
     {
         public Startup(ILoggerFactory logger, IHostingEnvironment environemnt, IConfiguration configuration)
         {

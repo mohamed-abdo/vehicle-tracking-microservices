@@ -48,6 +48,19 @@ services:
     build:
       context: .
       dockerfile: Tracking/Dockerfile
+    depends_on:
+    - distributed_cache
+    - messages_middleware
+    - event_sourcing_middleware
+    environment:
+    - ASPNETCORE_ENVIRONMENT=Development
+    - distributed_cache=distributed_cache
+    - cache_db_vehicles=vehicles
+    - messages_middleware=messages_middleware
+    - middleware_exchange=platform
+    - middleware_routes_subscriber=*.ping.vehicle
+    - middleware_username=guest
+    - middleware_password=guest
     ports:
     - 32771:80
 
