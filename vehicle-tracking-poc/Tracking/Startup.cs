@@ -13,6 +13,12 @@ using System.Collections.Generic;
 using WebComponents.Interceptors;
 using Swashbuckle.AspNetCore.Swagger;
 using MediatR;
+using Microsoft.Extensions.Hosting;
+using DomainModels.Types.Messages;
+using DomainModels.Vehicle;
+using System;
+using System.Linq;
+using Newtonsoft.Json;
 
 namespace Tracking
 {
@@ -84,11 +90,51 @@ namespace Tracking
 			});
 			services.AddOptions();
 
-			// no need to inject the following service since, currently they are injected for the mediator.
-			//services.AddTransient<IOperationalUnit>(srv => OperationalUnit);
-			//services.AddSingleton<MiddlewareConfiguration, MiddlewareConfiguration>(srv => SystemLocalConfiguration);
-			//services.AddSingleton<IMessagePublisher, RabbitMQPublisher>(srv => MessagePublisher);
+			#region worker background services
 
+			#region ping worker
+
+			services.AddSingleton<IHostedService, RabbitMQSubscriber<(MessageHeader, PingModel, MessageFooter)>>(srv =>
+			{
+				//get pingService
+				//var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
+
+				return RabbitMQSubscriber<(MessageHeader header, PingModel body, MessageFooter footer)>
+				.Create(loggerFactorySrv, new RabbitMQConfiguration
+				{
+					hostName = SystemLocalConfiguration.MessagesMiddleware,
+					exchange = SystemLocalConfiguration.MiddlewareExchange,
+					userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
+					password = SystemLocalConfiguration.MessagesMiddlewarePassword,
+					routes = getRoutes("ping.vehicle")
+				}
+				, (pingMessageCallback) =>
+				{
+					try
+					{
+						var message = pingMessageCallback();
+						//var addingResult = pingSrv.Add(message);
+						Logger.LogInformation($"[x] Tracking service received a message from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
+					}
+					catch (Exception ex)
+					{
+						Logger.LogCritical(ex, "de-serialize Object exceptions.");
+					}
+				});
+			});
+
+			#region internal functions
+			string[] getRoutes(string endwithMatch)
+			{
+				return SystemLocalConfiguration.MessageSubscriberRoute
+								 .Split(',')
+								 .Where(route => route.ToLower().EndsWith(endwithMatch))
+								 .ToArray();
+			}
+			#endregion
+			#endregion
+
+			#endregion
 			services.AddSingleton<IServiceMediator, ServiceMediator>(srv => new ServiceMediator(_logger, MessagePublisher, SystemLocalConfiguration, OperationalUnit));
 
 			///

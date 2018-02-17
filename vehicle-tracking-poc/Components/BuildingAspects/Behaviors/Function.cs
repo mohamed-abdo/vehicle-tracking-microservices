@@ -56,6 +56,5 @@ namespace BuildingAspects.Behaviors
         {
             return await Task.FromResult(defaultPolicy(action).Execute(action));
         }
-
     }
 }
