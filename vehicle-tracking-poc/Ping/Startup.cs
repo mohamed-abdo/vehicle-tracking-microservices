@@ -51,7 +51,6 @@ namespace Ping
         private MiddlewareConfiguration SystemLocalConfiguration;
         private RabbitMQPublisher MessagePublisher;
         private IOperationalUnit OperationalUnit;
-        private ServiceMediator PingMediator;
         public IHostingEnvironment Environemnt { get; }
         public IConfiguration Configuration { get; }
         public ILogger Logger { get; }
@@ -90,7 +89,8 @@ namespace Ping
             //services.AddSingleton<MiddlewareConfiguration, MiddlewareConfiguration>(srv => SystemLocalConfiguration);
             //services.AddSingleton<IMessagePublisher, RabbitMQPublisher>(srv => MessagePublisher);
 
-            services.AddSingleton<IServiceMediator, ServiceMediator>(srv => new ServiceMediator(_logger, MessagePublisher, SystemLocalConfiguration, OperationalUnit));
+            services.AddSingleton<IServiceMediator, ServiceMediator>(srv => 
+                                                                     new ServiceMediator(_logger, MessagePublisher, SystemLocalConfiguration, OperationalUnit));
 
             ///
             /// Injecting message receiver background service

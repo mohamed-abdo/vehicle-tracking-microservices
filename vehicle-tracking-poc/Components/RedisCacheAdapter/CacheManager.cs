@@ -9,13 +9,14 @@ namespace RedisCacheAdapter
 {
 	public class CacheManager
 	{
-		private readonly string _redisConnectionStr;
+        private const string _redisConnMSG = "redis cache connection is required.";
+        private readonly string _redisConnectionStr;
 		private readonly ILogger _logger;
 		private ConnectionMultiplexer _redisConnection;
 		public CacheManager(ILogger logger, string redisConnectionStr)
 		{
 			_logger = logger;
-			_redisConnectionStr = redisConnectionStr ?? throw new ArgumentNullException("redis cache connection is required.");
+            _redisConnectionStr = redisConnectionStr ?? throw new ArgumentNullException(_redisConnMSG);
 			_redisConnection = Redis;
 		}
 		private ConnectionMultiplexer Redis =>
@@ -32,14 +33,14 @@ namespace RedisCacheAdapter
 			 //Ref:https://stackexchange.github.io/StackExchange.Redis/Basics
 			 Redis?.GetDatabase();
 
-		public byte[] GetKey(byte[] key)
+        public async Task<byte[]> GetKey(byte[] key)
 		{
-			return CacheDB.StringGetAsync(key)?.Result;
+            return await CacheDB.StringGetAsync(key);
 		}
 
-		public bool SetKey(byte[] key, byte[] value)
+		public async Task<bool> SetKey(byte[] key, byte[] value)
 		{
-			return CacheDB.StringSetAsync(key, value).Result;
+			return await CacheDB.StringSetAsync(key, value);
 		}
 	}
 }

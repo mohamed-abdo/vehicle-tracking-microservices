@@ -10,20 +10,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MediatR" Version="4.0.1" />
-    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="4.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.5" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="2.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="2.0.2" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="1.1.0" />
-    <PackageReference Include="Microsoft.AspNet.WebApi.Cors" Version="5.2.4" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="2.2.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="2.2.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUi" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="2.3.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="2.3.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUi" Version="2.3.0" />
+    <PackageReference Include="MediatR" Version="4.1.0" />
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="4.1.0" />
   </ItemGroup>
 
   <ItemGroup>
