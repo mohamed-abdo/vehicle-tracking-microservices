@@ -1,0 +1,63 @@
+{
+	"info": {
+		"_postman_id": "f60a3934-5293-430b-9537-49e6af13845b",
+		"name": "vehicle-tracking-Microservices",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Ping service",
+			"description": "",
+			"item": [
+				{
+					"name": "Ping",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic user:password"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\"status\":1,\n\"description\":\"vehicle active status\"\n}"
+						},
+						"url": {
+							"raw": "{{pingSrv}}/api/v1/vehicle/mohamed-abdo-vehicle",
+							"host": [
+								"{{pingSrv}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"vehicle",
+								"mohamed-abdo-vehicle"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "P@ssw0rd",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "iot",
+				"type": "string"
+			}
+		]
+	}
+}
