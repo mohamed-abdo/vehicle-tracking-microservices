@@ -14,7 +14,7 @@ namespace PingTests.IntegrationTest
     {
         private readonly TestServer _server;
         private readonly HttpClient _client;
-        private readonly string _pingSrvUri = "api/v1/Vehicle/1010";
+        private readonly string _pingSrvUri = "/api/v1/Vehicle/1010";
         private readonly IHostingEnvironment Environment;
 
         public PingTest()
@@ -27,7 +27,7 @@ namespace PingTests.IntegrationTest
             _server = new TestServer(hostBuilder);
             //ping client service
             _client = _server.CreateClient();
-            _client.BaseAddress = new Uri("http://localhost:32777/");
+            _client.BaseAddress = new Uri("http://localhost:32777");
         }
         [Fact]
         public async Task GetPing()

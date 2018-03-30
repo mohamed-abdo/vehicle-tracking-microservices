@@ -19,15 +19,15 @@ namespace Ping
     {
         private readonly ILogger _logger;
         private readonly IMediator _mediator;
-        private readonly IServiceMediator _serviceMediator;
+        private readonly IServiceLocator _servicesLocator;
         public VehicleController(
             ILogger<VehicleController> logger,
             IMediator mediator,
-            IServiceMediator serviceMediator)
+            IServiceLocator servicesLocator)
         {
             _logger = logger;
             _mediator = mediator;
-            _serviceMediator = serviceMediator;
+            _servicesLocator = servicesLocator;
         }
 
         // GET api/v/<controller>/5
@@ -40,8 +40,9 @@ namespace Ping
 
             // message definition
             //(MessageHeader Header,PingModel Body, MessageFooter Footer)
-            await _mediator.Publish(new PingPublisher(_serviceMediator, ControllerContext, new PingModel()
+            await _mediator.Publish(new PingPublisher(_servicesLocator, ControllerContext, new PingModel()
             {
+                ChassisNumber = id,
                 Message = "Hello world => vehicle"
             }
             ), cancellationToken);
@@ -54,7 +55,7 @@ namespace Ping
         [HttpPost("{vehicleId}")]
         public async Task<IActionResult> Post(string vehicleId, PingRequest pingRequest, CancellationToken cancellationToken)
         {
-            await _mediator.Publish(new PingPublisher(_serviceMediator, ControllerContext, new PingModel() { Message = "Hello world => vehicle" }), cancellationToken);
+            await _mediator.Publish(new PingPublisher(_servicesLocator, ControllerContext, new PingModel() { Message = "Hello world => vehicle" }), cancellationToken);
             return Ok();
         }
     }

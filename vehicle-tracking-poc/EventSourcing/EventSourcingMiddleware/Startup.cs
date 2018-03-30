@@ -114,7 +114,7 @@ namespace EventSourcingMiddleware
             {
                 return SystemLocalConfiguration.MessageSubscriberRoute
                                  .Split(',')
-                                 .Where(route => route.ToLower().EndsWith(endwithMatch))
+                                               .Where(route => route.ToLower().EndsWith(endwithMatch, StringComparison.InvariantCultureIgnoreCase))
                                  .ToArray();
             }
             #endregion

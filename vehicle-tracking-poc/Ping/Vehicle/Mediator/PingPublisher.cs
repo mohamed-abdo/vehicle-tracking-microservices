@@ -1,30 +1,25 @@
 ﻿using BuildingAspects.Behaviors;
-using BuildingAspects.Services;
-using DomainModels.System;
 using DomainModels.Vehicle;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Ping.Vehicle.Mediator
 {
-    public class PingPublisher : ServiceMediator, INotification
+    public class PingPublisher : ServiceLocator, INotification
     {
-        private readonly IServiceMediator _mediator;
+        private readonly IServiceLocator _services;
         private readonly ControllerContext _controller;
         private readonly PingModel _model;
         public PingPublisher(
-            IServiceMediator mediator,
+            IServiceLocator services,
             ControllerContext controller,
-            PingModel model) : base(mediator.Logger, mediator.MessagePublisher, mediator.MiddlewareConfiguration, mediator.OperationalUnit)
+            PingModel model) : base(services.Logger, services.MessagePublisher, services.MiddlewareConfiguration, services.OperationalUnit)
         {
-            _mediator = mediator;
+            _services = services;
             _controller = controller;
             _model = model;
         }
-        public IServiceMediator Mediator => _mediator;
+        public IServiceLocator Servcies => _services;
         public ControllerContext Controller => _controller;
         public PingModel Model => _model;
     }

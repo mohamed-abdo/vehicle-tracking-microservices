@@ -1,9 +1,9 @@
-﻿using BuildingAspects.Behaviors;
+﻿using System;
+using System.Threading.Tasks;
+using BuildingAspects.Behaviors;
 using DomainModels.System;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
-using System;
-using System.Threading.Tasks;
 
 namespace RedisCacheAdapter
 {
@@ -40,7 +40,17 @@ namespace RedisCacheAdapter
 
 		public async Task<bool> SetKey(byte[] key, byte[] value)
 		{
-			return await CacheDB.StringSetAsync(key, value);
+            return await CacheDB.StringSetAsync(key, value);
 		}
+
+        public async Task<byte[]> GetKey(string key)
+        {
+            return await CacheDB.StringGetAsync(key);
+        }
+
+        public async Task<bool> SetKey(string key, byte[] value)
+        {
+            return await CacheDB.StringSetAsync(key, value);
+        }
 	}
 }

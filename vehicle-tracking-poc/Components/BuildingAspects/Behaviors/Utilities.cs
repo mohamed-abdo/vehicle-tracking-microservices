@@ -13,6 +13,8 @@ namespace BuildingAspects.Behaviors
 {
     public static class Utilities
     {
+        private const string MadatoryParam = "Parameter is manadatory!";
+
         public static JsonSerializerSettings DefaultJsonSerializerSettings =>
             new JsonSerializerSettings()
             {
@@ -93,6 +95,7 @@ namespace BuildingAspects.Behaviors
 
         public static byte[] BinarySerialize(object instance)
         {
+            if (instance == null) throw new ArgumentNullException(MadatoryParam);
             byte[] binObjSource;
             var formatter = new BinaryFormatter();
             using (var memory = new MemoryStream())
@@ -104,6 +107,8 @@ namespace BuildingAspects.Behaviors
         }
         public static object BinaryDeserialize(byte[] objAsBinary)
         {
+            if(objAsBinary ==null)throw new ArgumentNullException(MadatoryParam);
+                
             var formatter = new BinaryFormatter();
             using (var memory = new MemoryStream(objAsBinary))
             {

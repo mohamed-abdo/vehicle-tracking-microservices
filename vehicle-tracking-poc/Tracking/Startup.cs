@@ -96,9 +96,8 @@ namespace Tracking
 
 			services.AddSingleton<IHostedService, RabbitMQSubscriber<(MessageHeader, PingModel, MessageFooter)>>(srv =>
 			{
-				//get pingService
-				//var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
-
+                // get cache service
+                var cacheSrv = new RedisCacheAdapter.CacheManager(Logger, SystemLocalConfiguration.CacheServer);
 				return RabbitMQSubscriber<(MessageHeader header, PingModel body, MessageFooter footer)>
 				.Create(loggerFactorySrv, new RabbitMQConfiguration
 				{
@@ -113,7 +112,10 @@ namespace Tracking
 					try
 					{
 						var message = pingMessageCallback();
-						//var addingResult = pingSrv.Add(message);
+                        //cache model body by veihcle chassis as key
+                        if(message.body!=null)
+                            cacheSrv.SetKey(message.body.ChassisNumber, Utilities.BinarySerialize(message.body))
+                                .Wait();
 						Logger.LogInformation($"[x] Tracking service received a message from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
 					}
 					catch (Exception ex)
@@ -135,7 +137,7 @@ namespace Tracking
 			#endregion
 
 			#endregion
-			services.AddSingleton<IServiceMediator, ServiceMediator>(srv => new ServiceMediator(_logger, MessagePublisher, SystemLocalConfiguration, OperationalUnit));
+			services.AddSingleton<IServiceLocator, ServiceLocator>(srv => new ServiceLocator(_logger, MessagePublisher, SystemLocalConfiguration, OperationalUnit));
 
 			///
 			/// Injecting message receiver background service
@@ -144,7 +146,7 @@ namespace Tracking
 			services.AddDistributedRedisCache(redisOptions =>
 			{
 				redisOptions.Configuration = SystemLocalConfiguration.CacheServer;
-				redisOptions.Configuration = SystemLocalConfiguration.CacheDBVehicles;
+                redisOptions.InstanceName = SystemLocalConfiguration.CacheDBVehicles;
 			});
 
 			services.AddApiVersioning(options =>
