@@ -22,7 +22,7 @@ namespace PingTests.UnitTest
         private PingRequest _pingRequest;
         private readonly ILogger<VehicleController> _logger;
         private readonly IMediator _mediatorMock;
-        private readonly IServiceMediator _serviceMediatorMock;
+        private readonly IServiceLocator _serviceMediatorMock;
         public PingTest()
         {
             var loggerFactortMoq = new Mock<ILoggerFactory>().Object;
@@ -30,7 +30,7 @@ namespace PingTests.UnitTest
 
             _mediatorMock = new Mock<IMediator>().Object;
 
-            _serviceMediatorMock = new Mock<IServiceMediator>().Object;
+            _serviceMediatorMock = new Mock<IServiceLocator>().Object;
 
             _ping = new VehicleController(_logger, _mediatorMock, _serviceMediatorMock);
             _vehicleId = Guid.NewGuid().ToString();
