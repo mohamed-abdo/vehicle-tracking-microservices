@@ -51,6 +51,7 @@ namespace Ping
         private MiddlewareConfiguration SystemLocalConfiguration;
         private RabbitMQPublisher MessagePublisher;
         private IOperationalUnit OperationalUnit;
+        private ServiceLocator PingMediator;
         public IHostingEnvironment Environemnt { get; }
         public IConfiguration Configuration { get; }
         public ILogger Logger { get; }
@@ -89,8 +90,7 @@ namespace Ping
             //services.AddSingleton<MiddlewareConfiguration, MiddlewareConfiguration>(srv => SystemLocalConfiguration);
             //services.AddSingleton<IMessagePublisher, RabbitMQPublisher>(srv => MessagePublisher);
 
-            services.AddSingleton<IServiceLocator, ServiceLocator>(srv => 
-                                                                     new ServiceLocator(_logger, MessagePublisher, SystemLocalConfiguration, OperationalUnit));
+            services.AddSingleton<IServiceLocator, ServiceLocator>(srv => new ServiceLocator(_logger, MessagePublisher, SystemLocalConfiguration, OperationalUnit));
 
             ///
             /// Injecting message receiver background service
@@ -99,7 +99,7 @@ namespace Ping
             services.AddDistributedRedisCache(redisOptions =>
             {
                 redisOptions.Configuration = SystemLocalConfiguration.CacheServer;
-                redisOptions.InstanceName = SystemLocalConfiguration.CacheDBVehicles;
+                redisOptions.Configuration = SystemLocalConfiguration.CacheDBVehicles;
             });
 
             services.AddApiVersioning(options =>
