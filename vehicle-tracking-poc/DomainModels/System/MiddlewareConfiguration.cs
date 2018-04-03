@@ -10,7 +10,7 @@ namespace DomainModels.System
         #region fields
         public string CacheServer { get; protected set; }
         public string MessagesMiddleware { get; protected set; }
-        public string CacheDBVehicles { get; protected set; }
+        public string VehiclesCacheDB { get; protected set; }
         public string MiddlewareExchange { get; protected set; }
         public string MessageSubscriberRoute { get; protected set; }
         public string MessagePublisherRoute { get; protected set; }

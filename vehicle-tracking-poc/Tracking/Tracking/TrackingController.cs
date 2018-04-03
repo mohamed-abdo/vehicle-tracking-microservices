@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Redis;
 using Microsoft.Extensions.Logging;
+using RedisCacheAdapter;
 
 namespace Tracking.Controllers
 {
@@ -14,12 +15,12 @@ namespace Tracking.Controllers
     public class TrackingController : Controller
     {
         private readonly ILogger _logger;
-        private IDistributedCache _redisCache;
+        private ICacheProvider _redisCache;
         //private readonly IMediator _mediator;
         //private readonly IServiceLocator _servicesLocator;
         public TrackingController(
             ILogger<TrackingController> logger,
-            IDistributedCache redisCache)
+            ICacheProvider redisCache)
         {
             _logger = logger;
             _redisCache = redisCache;
@@ -36,9 +37,10 @@ namespace Tracking.Controllers
         public string Get(string id)
         {
             //sample
-            _redisCache.SetAsync(id, System.Text.Encoding.UTF8.GetBytes("hello world"));
-            var message = _redisCache.GetAsync(id).Result;
-            return System.Text.Encoding.UTF8.GetString(message);
+            _redisCache.SetKey(id, System.Text.Encoding.UTF8.GetBytes("hello world"));
+            var message = _redisCache.GetKey(id).Result;
+            var txt= System.Text.Encoding.UTF8.GetString(message);
+            return txt;
         }
 
         // POST api/values

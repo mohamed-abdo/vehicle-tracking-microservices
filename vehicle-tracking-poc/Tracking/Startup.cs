@@ -19,6 +19,7 @@ using DomainModels.Vehicle;
 using System;
 using System.Linq;
 using Newtonsoft.Json;
+using RedisCacheAdapter;
 
 namespace Tracking
 {
@@ -45,7 +46,7 @@ namespace Tracking
 			//local system configuration
 			SystemLocalConfiguration = new ServiceConfiguration().Create(new Dictionary<string, string>() {
 				{nameof(SystemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},
-				{nameof(SystemLocalConfiguration.CacheDBVehicles),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
+				{nameof(SystemLocalConfiguration.VehiclesCacheDB),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
 				{nameof(SystemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>(Identifiers.MessagesMiddleware)},
 				{nameof(SystemLocalConfiguration.MiddlewareExchange),  Configuration.GetValue<string>(Identifiers.MiddlewareExchange)},
 				{nameof(SystemLocalConfiguration.MessageSubscriberRoute),  Configuration.GetValue<string>(Identifiers.MessageSubscriberRoutes)},
@@ -93,7 +94,10 @@ namespace Tracking
 			#region worker background services
 
 			#region ping worker
-
+            services.AddSingleton<ICacheProvider, CacheManager>(srv => new CacheManager(
+                _logger,
+                SystemLocalConfiguration.CacheServer));
+            
 			services.AddSingleton<IHostedService, RabbitMQSubscriber<(MessageHeader, PingModel, MessageFooter)>>(srv =>
 			{
                 // get cache service
@@ -146,7 +150,7 @@ namespace Tracking
 			services.AddDistributedRedisCache(redisOptions =>
 			{
 				redisOptions.Configuration = SystemLocalConfiguration.CacheServer;
-                redisOptions.InstanceName = SystemLocalConfiguration.CacheDBVehicles;
+                redisOptions.InstanceName = SystemLocalConfiguration.VehiclesCacheDB;
 			});
 
 			services.AddApiVersioning(options =>
