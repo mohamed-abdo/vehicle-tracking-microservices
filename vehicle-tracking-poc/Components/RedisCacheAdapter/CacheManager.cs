@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using BuildingAspects.Behaviors;
 using DomainModels.System;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
-
+using System.Linq;
 namespace RedisCacheAdapter
 {
     public class CacheManager : ICacheProvider
@@ -52,5 +53,16 @@ namespace RedisCacheAdapter
         {
             return await CacheDB.StringSetAsync(key, value);
         }
+        public Dictionary<string, string> GetHashKey(string key)
+        {
+            return CacheDB.HashGetAll(key, CommandFlags.HighPriority).ToStringDictionary();
+        }
+
+        public void SetHashKey(string key, Dictionary<string, string> value)
+        {
+            var data = value.Select(d => new HashEntry(d.Key, d.Value));
+            CacheDB.HashSet(key, data?.ToArray(), CommandFlags.FireAndForget);
+        }
+
     }
 }

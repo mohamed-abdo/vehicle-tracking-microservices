@@ -119,10 +119,11 @@ namespace Tracking
                             var message = pingMessageCallback();
                             //cache model body by vehicle chassis as a key
                             if (message.body != null)
+                            {
                                 Cache
                                     .SetKey(message.body.ChassisNumber, Utilities.BinarySerialize(message.body))
                                     .Wait();
-
+                            }
                             Logger.LogInformation($"[x] Tracking service received a message from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
                         }
                         catch (Exception ex)
