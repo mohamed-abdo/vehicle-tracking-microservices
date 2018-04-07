@@ -19,6 +19,6 @@ namespace DomainModels.Vehicle
         public StatusModel Status { get; set; }
         public string Message { get; set; }
 
-        public override string Descripition => $"vehicle:{ChassisNumber},status:{Status},received:{ReceivingTimestamp}";
+        public override string Description => $"vehicle:{ChassisNumber},status:{Status},received:{ReceivingTimestamp}";
     }
 }

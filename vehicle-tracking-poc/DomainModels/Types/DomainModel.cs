@@ -6,6 +6,6 @@ namespace DomainModels.Types
     [Serializable]
     public abstract class DomainModel : IDescribe
     {
-        public abstract string Descripition { get; }
+        public abstract string Description { get; }
     }
 }

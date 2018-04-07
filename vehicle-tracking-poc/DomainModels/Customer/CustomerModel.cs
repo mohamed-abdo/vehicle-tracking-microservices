@@ -17,6 +17,6 @@ namespace DomainModels.Customer
         public string Notes { get; set; }
 
         public IList<(string ChassisNumber, string Model)> Vehicles { get; set; }
-        public string Descripition => Name;
+        public string Description => Name;
     }
 }

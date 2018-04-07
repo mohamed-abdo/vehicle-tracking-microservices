@@ -37,9 +37,8 @@ namespace Tracking.Controllers
         public string Get(string id)
         {
             //sample
-            _redisCache.SetKey(id, System.Text.Encoding.UTF8.GetBytes("hello world"));
-            var message = _redisCache.GetKey(id).Result;
-            var txt= System.Text.Encoding.UTF8.GetString(message);
+            var message = _redisCache.GetHashKey(id);
+            var txt = message.ToString();
             return txt;
         }
 

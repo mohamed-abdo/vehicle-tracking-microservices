@@ -9,6 +9,6 @@ namespace DomainModels.Types
     /// </summary>
     public interface IDescribe
     {
-        string Descripition { get; }
+        string Description { get; }
     }
 }

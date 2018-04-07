@@ -16,6 +16,6 @@ namespace DomainModels.Vehicle
         public DateTime LastUpdate { get; set; }
         public string Message { get; set; }
 
-        public override string Descripition => $"vehicle:{ChassisNumber},status:{Status},last-update:{LastUpdate}";
+        public override string Description => $"vehicle:{ChassisNumber},status:{Status},last-update:{LastUpdate}";
     }
 }

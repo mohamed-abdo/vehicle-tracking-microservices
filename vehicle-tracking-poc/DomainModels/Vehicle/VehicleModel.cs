@@ -14,6 +14,6 @@ namespace DomainModels.Vehicle
         public string ProductoinFactory { get; set; }
         public IDictionary Features { get; set; }
 
-        public override string Descripition => $"model:{Model},color{Color},year:{ProductionYear},chassis:{ChassisNumber}";
+        public override string Description => $"model:{Model},color{Color},year:{ProductionYear},chassis:{ChassisNumber}";
     }
 }
