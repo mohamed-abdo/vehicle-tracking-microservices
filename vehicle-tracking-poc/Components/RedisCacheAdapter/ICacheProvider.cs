@@ -6,9 +6,13 @@ namespace RedisCacheAdapter
 {
     public interface ICacheProvider
     {
-        Task<byte[]> GetKey(string key);
-        Task<bool> SetKey(string key, byte[] value);
-        Dictionary<string, string> GetHashKey(string key);
-        void SetHashKey(string key, Dictionary<string, string> value);
+        Task<byte[]> Get(byte[] key);
+        void Set(byte[] key, byte[] value, TimeSpan? timeout);
+        Task<string> Get(string key);
+        void Set(string key, byte[] value, TimeSpan? timeout);
+        Task<IEnumerable<string>> GetMembers(string key);
+        void SetMembers(string key, IEnumerable<string> values);
+        Task<Dictionary<string, string>> GetHash(string key);
+        void SetHash(string key, Dictionary<string, string> value);
     }
 }

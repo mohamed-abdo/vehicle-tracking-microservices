@@ -14,11 +14,13 @@ namespace RedisCacheAdapter
         private readonly string _redisConnectionStr;
         private readonly ILogger _logger;
         private ConnectionMultiplexer _redisConnection;
-        public CacheManager(ILogger logger, string redisConnectionStr)
+        private readonly int _dbIndex;
+        public CacheManager(ILogger logger, string redisConnectionStr, int dbIndex = 0)
         {
             _logger = logger;
             _redisConnectionStr = redisConnectionStr ?? throw new ArgumentNullException(_redisConnMSG);
             _redisConnection = Redis;
+            _dbIndex = dbIndex;
         }
         private ConnectionMultiplexer Redis =>
              _redisConnection == null || !_redisConnection.IsConnected ?
@@ -32,33 +34,43 @@ namespace RedisCacheAdapter
 
              //The object returned from GetDatabase is a cheap pass-thru object
              //Ref:https://stackexchange.github.io/StackExchange.Redis/Basics
-             Redis?.GetDatabase();
+             Redis?.GetDatabase(_dbIndex);
 
-        public async Task<byte[]> GetKey(byte[] key)
+        public async Task<byte[]> Get(byte[] key)
         {
-            return await CacheDB.StringGetAsync(key);
+            return await CacheDB.StringGetAsync(key, CommandFlags.HighPriority);
         }
 
-        public async Task<bool> SetKey(byte[] key, byte[] value)
+        public void Set(byte[] key, byte[] value, TimeSpan? timeout)
         {
-            return await CacheDB.StringSetAsync(key, value);
+            CacheDB.StringSetAsync(key, value, timeout, When.Always, CommandFlags.FireAndForget);
         }
 
-        public async Task<byte[]> GetKey(string key)
+        public async Task<string> Get(string key)
         {
-            return await CacheDB.StringGetAsync(key);
+            return await CacheDB.StringGetAsync(key, CommandFlags.HighPriority);
         }
 
-        public async Task<bool> SetKey(string key, byte[] value)
+        public void Set(string key, byte[] value, TimeSpan? timeout)
         {
-            return await CacheDB.StringSetAsync(key, value);
-        }
-        public Dictionary<string, string> GetHashKey(string key)
-        {
-            return CacheDB.HashGetAll(key, CommandFlags.HighPriority).ToStringDictionary();
+            CacheDB.StringSetAsync(key, value, timeout, When.Always, CommandFlags.FireAndForget);
         }
 
-        public void SetHashKey(string key, Dictionary<string, string> value)
+        public async Task<IEnumerable<string>> GetMembers(string key)
+        {
+            return (Array.ConvertAll(await CacheDB.SetMembersAsync(key, CommandFlags.HighPriority), m => (string)m));
+        }
+
+        public void SetMembers(string key, IEnumerable<string> values)
+        {
+            CacheDB.SetAdd(key, Array.ConvertAll(values?.ToArray(), m => (RedisValue)m), CommandFlags.FireAndForget);
+        }
+        public async Task<Dictionary<string, string>> GetHash(string key)
+        {
+            return (await CacheDB.HashGetAllAsync(key, CommandFlags.HighPriority))?.ToStringDictionary();
+        }
+
+        public void SetHash(string key, Dictionary<string, string> value)
         {
             var data = value.Select(d => new HashEntry(d.Key, d.Value));
             CacheDB.HashSet(key, data?.ToArray(), CommandFlags.FireAndForget);

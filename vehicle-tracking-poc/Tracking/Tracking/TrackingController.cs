@@ -11,7 +11,8 @@ using RedisCacheAdapter;
 
 namespace Tracking.Controllers
 {
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public class TrackingController : Controller
     {
         private readonly ILogger _logger;
@@ -37,8 +38,8 @@ namespace Tracking.Controllers
         public string Get(string id)
         {
             //sample
-            var message = _redisCache.GetHashKey(id);
-            var txt = message.ToString();
+            var message = _redisCache.GetMembers(BuildingAspects.Formatters.Fields.Vehicle(id)).Result;
+            var txt = string.Concat(message);
             return txt;
         }
 

@@ -20,6 +20,7 @@ using System;
 using System.Linq;
 using Newtonsoft.Json;
 using RedisCacheAdapter;
+using BuildingAspects.Formatters;
 
 namespace Tracking
 {
@@ -121,11 +122,11 @@ namespace Tracking
                             if (message.body != null)
                             {
                                 Cache
-                                    .SetHashKey(message.body.ChassisNumber, new Dictionary<string, string> {
-                                        { nameof (message.header.Timestamp),   message.header.Timestamp.ToString() },
-                                        { nameof (message.body.Status), Enum.GetName(typeof(StatusModel), message.body.Status) } ,
-                                        { nameof (message.body.Message),  message.body.Message } ,
-                                    });
+                                    .SetMembers(Fields.Vehicle(message.body.ChassisNumber), new string[]{
+                                         Fields.TimeStamp(message.header.Timestamp.ToString()) ,
+                                         Fields.Status(Enum.GetName(typeof(StatusModel), message.body.Status) ),
+                                         Fields.Message(  message.body.Message) }
+                                    );
                             }
                             Logger.LogInformation($"[x] Tracking service received a message from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
                         }

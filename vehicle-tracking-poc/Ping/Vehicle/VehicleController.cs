@@ -42,6 +42,8 @@ namespace Ping
             //(MessageHeader Header,PingModel Body, MessageFooter Footer)
             await _mediator.Publish(new PingPublisher(_serviceMediator, ControllerContext, new PingModel()
             {
+                ChassisNumber = id,
+                Status = StatusModel.Active,
                 Message = "Hello world => vehicle"
             }
             ), cancellationToken);
@@ -54,7 +56,12 @@ namespace Ping
         [HttpPost("{vehicleId}")]
         public async Task<IActionResult> Post(string vehicleId, PingRequest pingRequest, CancellationToken cancellationToken)
         {
-            await _mediator.Publish(new PingPublisher(_serviceMediator, ControllerContext, new PingModel() { Message = "Hello world => vehicle" }), cancellationToken);
+            await _mediator.Publish(new PingPublisher(_serviceMediator, ControllerContext, new PingModel()
+            {
+                ChassisNumber = vehicleId,
+                Status = StatusModel.Active,
+                Message = "Hello world => vehicle"
+            }), cancellationToken);
             return Ok();
         }
     }
