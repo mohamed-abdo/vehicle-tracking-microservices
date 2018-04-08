@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using System;
 using System.Linq;
@@ -46,12 +47,12 @@ namespace WebComponents.Interceptors
             //TODO:replace the following correlation id, since it's correlating all operation from this assembly instance.
             var correlationId = _operationalUnit.InstanceId;
             if (!string.IsNullOrEmpty(correlationHeader))
-                Guid.TryParse(correlationHeader, out correlationId);
+                correlationId = correlationHeader;
 
             var exception = context.Exception;
             (int code, string message, ResponseHint responseHint) = (exception is CustomException ex) ? ex.CustomMessage : (exception.HResult, exception.Message, ResponseHint.SystemError);
 
-            var messageHeader = new MessageHeader(isSucceed: false) { CorrelationId = correlationId };
+            var messageHeader = new MessageHeader(isSucceed: false) { CorrelationId = correlationId.ToString() };
 
             var messageFooter = new MessageFooter
             {
@@ -59,35 +60,40 @@ namespace WebComponents.Interceptors
                 Environment = _operationalUnit.Environment,
                 Assembly = _operationalUnit.Assembly,
                 FingerPrint = context.ActionDescriptor.Id,
-                Route = context.RouteData.Values.ToDictionary(key => key.Key, value => value.Value?.ToString()),
-                Hint = responseHint
+                Route = JsonConvert.SerializeObject(context.RouteData.Values.ToDictionary(key => key.Key, value => value.Value?.ToString()), Defaults.JsonSerializerSettings),
+                Hint = Enum.GetName(typeof(ResponseHint), responseHint)
             };
             context.ExceptionHandled = true;
+            messageHeader.GetType().GetProperties()
+                 .ToList().ForEach(prop =>
+                 {
+                     context.HttpContext.Response.Headers.Add(prop.Name, new StringValues(prop.GetValue(messageHeader)?.ToString()));
+                 });
+            messageFooter.GetType().GetProperties()
+                   .ToList().ForEach(prop =>
+                   {
+                       context.HttpContext.Response.Headers.Add(prop.Name, new StringValues(prop.GetValue(messageFooter)?.ToString()));
+                   });
+
             context.Result = new ContentResult()
             {
                 StatusCode = StatusCodes.Status500InternalServerError,
                 ContentType = Identifiers.ApplicationJson,
-                Content = JsonConvert.SerializeObject(closureGenerateErrorMessage(), Utilities.DefaultJsonSerializerSettings)
+                Content = JsonConvert.SerializeObject(closureGenerateErrorMessage(), Defaults.JsonSerializerSettings)
             };
 
+            _logger.LogInformation("Override response!");
             return Task.CompletedTask;
-
             object closureGenerateErrorMessage()
             {
                 return new
                 {
-                    header = messageHeader,
                     //TODO: system message only should share user friendly messages for system messages, as well to not break system security.
-                    body = new
-                    {
-                        code,
-                        message,
-                        systemMessage = exception.Message
-                    },
-                    footer = messageFooter
+                    code,
+                    message,
+                    systemMessage = exception.Message
                 };
             }
-
         }
 
     }

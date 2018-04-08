@@ -2,6 +2,8 @@
 using DomainModels.Types.Messages;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,10 +40,10 @@ namespace Ping.Vehicle.Mediator
                             FingerPrint = notification.Controller.ActionDescriptor.Id,
                             Environment = notification.OperationalUnit.Environment,
                             Assembly = notification.OperationalUnit.Assembly,
-                            Route = new Dictionary<string, string> {
+                            Route = JsonConvert.SerializeObject(new Dictionary<string, string> {
                                    { DomainModels.Types.Identifiers.MessagePublisherRoute,  notification.MiddlewareConfiguration.MessagePublisherRoute }
-                            },
-                            Hint = ResponseHint.OK
+                            }, Defaults.JsonSerializerSettings),
+                            Hint = Enum.GetName(typeof(ResponseHint), ResponseHint.OK)
                         }
                     ));
 

@@ -14,26 +14,7 @@ namespace BuildingAspects.Behaviors
     public static class Utilities
     {
         private const string MadatoryParam = "Parameter is manadatory!";
-
-        public static JsonSerializerSettings DefaultJsonSerializerSettings =>
-            new JsonSerializerSettings()
-            {
-                DateFormatHandling = DateFormatHandling.IsoDateFormat,
-                DateParseHandling = DateParseHandling.DateTimeOffset,
-                DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-                NullValueHandling = NullValueHandling.Include,
-                ConstructorHandling = ConstructorHandling.Default,
-                FloatFormatHandling = FloatFormatHandling.DefaultValue,
-                ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                Converters = new List<JsonConverter> { new StringEnumConverter(camelCaseText: true) }
-            };
-
-        public static JsonLoadSettings DefaultJsonLoadSettings =>
-            new JsonLoadSettings()
-            {
-                LineInfoHandling = LineInfoHandling.Ignore,
-                CommentHandling = CommentHandling.Ignore
-            };
+      
         public static IDictionary<string, object> ToDictionary(this object source)
         {
             var fields = source.GetType().GetFields(

@@ -1,4 +1,6 @@
-﻿using DomainModels.Types.Messages;
+﻿using BuildingAspects.Behaviors;
+using DomainModels.Types.Messages;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -19,13 +21,13 @@ namespace EventSourceingSqlDb.DbModels
                 Data = JObject.FromObject(body),
 
                 Sender = footer.Sender,
-                Route = footer.Route,
                 Environment = footer.Environment,
                 Assembly = footer.Assembly,
                 FingerPrint = footer.FingerPrint,
-                Hint = footer.Hint,
+                Hint = Enum.GetName(typeof(ResponseHint), footer.Hint),
+                Route = JsonConvert.DeserializeObject<IDictionary<string, string>>(footer.Route, Defaults.JsonSerializerSettings)
             };
         }
-      
+
     }
 }

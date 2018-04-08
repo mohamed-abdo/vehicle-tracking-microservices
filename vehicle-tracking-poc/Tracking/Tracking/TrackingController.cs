@@ -38,9 +38,8 @@ namespace Tracking.Controllers
         public string Get(string id)
         {
             //sample
-            var message = _redisCache.GetMembers(BuildingAspects.Formatters.Fields.Vehicle(id)).Result;
-            var txt = string.Concat(message);
-            return txt;
+            var message = _redisCache.Get(id)?.Result;
+            return message;
         }
 
         // POST api/values

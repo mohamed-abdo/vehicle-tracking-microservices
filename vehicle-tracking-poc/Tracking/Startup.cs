@@ -91,16 +91,15 @@ namespace Tracking
                 password = SystemLocalConfiguration.MessagesMiddlewarePassword,
                 routes = new string[] { SystemLocalConfiguration.MessageSubscriberRoute }
             });
-            // set cache service
-            Cache = new CacheManager(Logger, SystemLocalConfiguration.CacheServer);
+            // set cache service for db index 1
+            Cache = new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1);
             services.AddOptions();
 
             #region worker background services
 
             #region ping worker
-            services.AddSingleton<ICacheProvider, CacheManager>(srv => new CacheManager(
-                _logger,
-                SystemLocalConfiguration.CacheServer));
+            //you may get a different cache db, by passing db index parameter.
+            services.AddSingleton<ICacheProvider, CacheManager>(srv => new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1));
 
             services.AddSingleton<IHostedService, RabbitMQSubscriber<(MessageHeader, PingModel, MessageFooter)>>(srv =>
             {
@@ -121,12 +120,7 @@ namespace Tracking
                             //cache model body by vehicle chassis as a key
                             if (message.body != null)
                             {
-                                Cache
-                                    .SetMembers(Fields.Vehicle(message.body.ChassisNumber), new string[]{
-                                         Fields.TimeStamp(message.header.Timestamp.ToString()) ,
-                                         Fields.Status(Enum.GetName(typeof(StatusModel), message.body.Status) ),
-                                         Fields.Message(  message.body.Message) }
-                                    );
+                                Cache.Set(message.body.ChassisNumber, message.header.Timestamp.ToString(), Defaults.CacheTimeout);
                             }
                             Logger.LogInformation($"[x] Tracking service received a message from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
                         }

@@ -3,6 +3,7 @@ using DomainModels.Types;
 using DomainModels.Types.Messages;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace WebComponents.WebMiddlewares
 {
-	public class CustomResponse
+    public class CustomResponse
     {
         private readonly RequestDelegate _next;
         public CustomResponse(RequestDelegate next)
@@ -26,14 +27,14 @@ namespace WebComponents.WebMiddlewares
                 Sender = context.Request.Path,
                 //TODO: get request finger print
                 FingerPrint = context.Request.Path,
-                Route = context.Request.Query.ToDictionary(key => key.Key, vallue => vallue.Value.FirstOrDefault()),
-                Hint = ResponseHint.Custom
+                Route = JsonConvert.SerializeObject(context.Request.Query.ToDictionary(key => key.Key, vallue => vallue.Value.FirstOrDefault()), Defaults.JsonSerializerSettings),
+                Hint = Enum.GetName(typeof(ResponseHint), ResponseHint.Custom)
             };
 
             context.Response.ContentType = new MediaTypeHeaderValue(Identifiers.ApplicationJson)?.MediaType;
             using (var writer = new StreamWriter(context.Response.Body))
             {
-                var content = JsonConvert.SerializeObject(closureGenerateResponseMessage(), Utilities.DefaultJsonSerializerSettings);
+                var content = JsonConvert.SerializeObject(closureGenerateResponseMessage(), Defaults.JsonSerializerSettings);
                 await writer.WriteAsync(content);
             }
             await _next(context);

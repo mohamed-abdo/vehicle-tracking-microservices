@@ -35,9 +35,9 @@ namespace EventSourceingSqlDb.DbModels
         //Header
         public virtual long Id { get; set; }
 
-        public virtual Guid ExecutionId { get; set; }
+        public virtual string ExecutionId { get; set; }
 
-        public virtual Guid CorrelationId { get; set; }
+        public virtual string CorrelationId { get; set; }
 
         public virtual long Timestamp { get; set; }
 
@@ -50,20 +50,20 @@ namespace EventSourceingSqlDb.DbModels
 
         public virtual string FingerPrint { get; set; }
 
-        public virtual ResponseHint Hint { get; set; }
+        public virtual string Hint { get; set; }
 
         //TODO: add try catch to make it safe for getter and setter, by use lambda Func
         [NotMapped]
         public IDictionary<string, string> Route
         {
-            get => JsonConvert.DeserializeObject<IDictionary<string, string>>(Raw_Route ?? string.Empty, Utilities.DefaultJsonSerializerSettings);
-            set => Raw_Route = JsonConvert.SerializeObject(value, Utilities.DefaultJsonSerializerSettings);
+            get => JsonConvert.DeserializeObject<IDictionary<string, string>>(Raw_Route ?? string.Empty, Defaults.JsonSerializerSettings);
+            set => Raw_Route = JsonConvert.SerializeObject(value, Defaults.JsonSerializerSettings);
         }
         [NotMapped]
         public virtual JObject Data
         {
-            get => JObject.Parse(Raw_Data ?? Identifiers.DefaultJsonObject, Utilities.DefaultJsonLoadSettings);
-            set => Raw_Data = JsonConvert.SerializeObject(value, Utilities.DefaultJsonSerializerSettings);
+            get => JObject.Parse(Raw_Data ?? Identifiers.DefaultJsonObject, Defaults.JsonLoadSettings);
+            set => Raw_Data = JsonConvert.SerializeObject(value, Defaults.JsonSerializerSettings);
         }
 
         public string Raw_Data { get; set; }

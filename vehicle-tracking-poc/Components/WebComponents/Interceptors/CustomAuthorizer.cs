@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using System;
 using System.Linq;
@@ -14,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace WebComponents.Interceptors
 {
-	public class CustomAuthorizer : IAsyncAuthorizationFilter, IFilterFactory
+    public class CustomAuthorizer : IAsyncAuthorizationFilter, IFilterFactory
     {
         private readonly ILogger _logger;
         private readonly IOperationalUnit _operationalUnit;
@@ -36,12 +37,12 @@ namespace WebComponents.Interceptors
             //TODO:replace the following correlation id, since it's correlating all operation from this assembly instance.
             var correlationId = _operationalUnit.InstanceId;
             if (!string.IsNullOrEmpty(correlationHeader))
-                Guid.TryParse(correlationHeader, out correlationId);
+                correlationId = correlationHeader;
 
             //TODO: remove bypassing authorization
             if (false && string.IsNullOrEmpty(context.HttpContext.Request.Headers["authorization"]))
             {
-                var messageHeader = new MessageHeader { CorrelationId = correlationId };
+                var messageHeader = new MessageHeader { CorrelationId = correlationId.ToString() };
 
                 var messageFooter = new MessageFooter
                 {
@@ -49,32 +50,30 @@ namespace WebComponents.Interceptors
                     Environment = _operationalUnit.Environment,
                     Assembly = _operationalUnit.Assembly,
                     FingerPrint = context.ActionDescriptor.Id,
-                    Route = context.RouteData.Values.ToDictionary(key => key.Key, value => value.Value?.ToString()),
-                    Hint = ResponseHint.UnAuthorized
+                    Route = JsonConvert.SerializeObject(context.RouteData.Values.ToDictionary(key => key.Key, value => value.Value?.ToString()), Defaults.JsonSerializerSettings),
+                    Hint = Enum.GetName(typeof(ResponseHint), ResponseHint.UnAuthorized)
                 };
+                messageHeader.GetType().GetProperties()
+                   .ToList().ForEach(prop =>
+                   {
+                       context.HttpContext.Response.Headers.Add(prop.Name, new StringValues(prop.GetValue(messageHeader)?.ToString()));
+                   });
+                messageFooter.GetType().GetProperties()
+                       .ToList().ForEach(prop =>
+                       {
+                           context.HttpContext.Response.Headers.Add(prop.Name, new StringValues(prop.GetValue(messageFooter)?.ToString()));
+                       });
 
-                //reject the request
                 context.Result = new ContentResult()
                 {
-                    StatusCode = StatusCodes.Status401Unauthorized,
+                    StatusCode = context.HttpContext.Response.StatusCode,
                     ContentType = Identifiers.ApplicationJson,
-                    Content = JsonConvert.SerializeObject(closureGenerateResponseMessage(), Utilities.DefaultJsonSerializerSettings)
+                    Content = JsonConvert.SerializeObject(Enum.GetName(typeof(ResponseHint), ResponseHint.UnAuthorized), Defaults.JsonSerializerSettings)
                 };
+                _logger.LogInformation("Override response!");
                 return Task.CompletedTask;
-
-                object closureGenerateResponseMessage()
-                {
-                    return new
-                    {
-                        header = messageHeader,
-                        body = string.Empty,
-                        footer = messageFooter
-                    };
-                }
             }
-            //continue the pipeline
             return Task.CompletedTask;
-
         }
     }
 }

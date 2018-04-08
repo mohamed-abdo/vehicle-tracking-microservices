@@ -12,10 +12,10 @@ namespace DomainModels.Types.Messages
 
         public string Environment { get; set; }
 
-        public IDictionary<string, string> Route { get; set; }
+        public string Route { get; set; }
 
         public string FingerPrint { get; set; }
 
-        public ResponseHint Hint { get; set; }
+        public string Hint { get; set; }
     }
 }

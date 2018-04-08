@@ -1,11 +1,13 @@
-﻿using DomainModels.Types.Messages;
+﻿using BuildingAspects.Behaviors;
+using DomainModels.Types.Messages;
 using EventSourceingSqlDb.DbModels;
+using Newtonsoft.Json;
 using System;
 
 namespace EventSourceingSqlDb.Functors
 {
 
-    public class Mappers<T>  where T : new()
+    public class Mappers<T> where T : new()
     {
 
         public static Func<Func<(MessageHeader header, T body, MessageFooter footer), bool>, Func<DbModel, bool>> PredicateMapper = (pingPredicate) =>
@@ -31,8 +33,8 @@ namespace EventSourceingSqlDb.Functors
                 Assembly = pingEntity.Assembly,
                 Environment = pingEntity.Environment,
                 FingerPrint = pingEntity.FingerPrint,
-                Hint = pingEntity.Hint,
-                Route = pingEntity.Route,
+                Hint = Enum.GetName(typeof(ResponseHint), pingEntity.Hint),
+                Route = JsonConvert.SerializeObject(pingEntity.Route, Defaults.JsonSerializerSettings),
                 Sender = pingEntity.Sender
             };
             return (header, body, footer);

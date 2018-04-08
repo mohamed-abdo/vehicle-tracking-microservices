@@ -36,7 +36,7 @@ namespace EventSourceingSqlDbTests
         public void SetUp()
         {
             message = (
-            header: new MessageHeader(executionId: Guid.NewGuid(), timestamp: new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds()),
+            header: new MessageHeader(executionId: Guid.NewGuid().ToString(), timestamp: new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds()),
             body: new PingModel(),
             footer: new MessageFooter()
             );

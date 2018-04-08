@@ -5,6 +5,7 @@ using DomainModels.Types.Messages;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using System;
 using System.Linq;
@@ -34,8 +35,8 @@ namespace WebComponents.Interceptors
             //TODO:replace the following correlation id, since it's correlating all operation from this assembly instance.
             var correlationId = _operationalUnit.InstanceId;
             if (!string.IsNullOrEmpty(correlationHeader))
-                Guid.TryParse(correlationHeader, out correlationId);
-            var messageHeader = new MessageHeader(isSucceed: context.HttpContext.Response.StatusCode == 200) { CorrelationId = correlationId };
+                correlationId = correlationHeader;
+            var messageHeader = new MessageHeader(isSucceed: context.HttpContext.Response.StatusCode == 200) { CorrelationId = correlationId.ToString() };
 
             var messageFooter = new MessageFooter
             {
@@ -43,31 +44,49 @@ namespace WebComponents.Interceptors
                 Environment = _operationalUnit.Environment,
                 Assembly = _operationalUnit.Assembly,
                 FingerPrint = context.ActionDescriptor.Id,
-                Route = context.RouteData.Values.ToDictionary(key => key.Key, value => value.Value?.ToString()),
+                Route = JsonConvert.SerializeObject(context.RouteData.Values.ToDictionary(key => key.Key, value => value.Value?.ToString()), Defaults.JsonSerializerSettings),
+                Hint = Enum.GetName(typeof(ResponseHint), ResponseHint.OK)
                 //TODO: infer the hint from HTTP status code
-                Hint = ResponseHint.OK
             };
 
+            messageHeader.GetType().GetProperties()
+                .ToList().ForEach(prop =>
+                {
+                    context.HttpContext.Response.Headers.Add(prop.Name, new StringValues(prop.GetValue(messageHeader)?.ToString()));
+                });
+            messageFooter.GetType().GetProperties()
+              .ToList().ForEach(prop =>
+              {
+                  context.HttpContext.Response.Headers.Add(prop.Name, new StringValues(prop.GetValue(messageFooter)?.ToString()));
+              });
 
-            var rawContent = (context.Result as ContentResult)?.Content;
             context.Result = new ContentResult()
             {
                 StatusCode = context.HttpContext.Response.StatusCode,
                 ContentType = Identifiers.ApplicationJson,
-                Content = JsonConvert.SerializeObject(closureGenerateResponseMessage(), Utilities.DefaultJsonSerializerSettings)
+                Content = JsonConvert.SerializeObject(getContentResult(context.Result), Defaults.JsonSerializerSettings)
             };
-            _logger.LogInformation("Overriding response!");
+            _logger.LogInformation("Override response!");
             return next.Invoke();
 
-            object closureGenerateResponseMessage()
+            object getContentResult(IActionResult result)
             {
-                return new
+                switch (result)
                 {
-                    header = messageHeader,
-                    body = rawContent,
-                    footer = messageFooter
-                };
-            }
+                    case ContentResult cr:
+                        {
+                            return cr?.Content;
+                        }
+                    case ObjectResult or:
+                        {
+                            return or?.Value;
+                        }
+                    default:
+                        {
+                            return result?.ToString();
+                        }
+                }
+            };
         }
 
     }

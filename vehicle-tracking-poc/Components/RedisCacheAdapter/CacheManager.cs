@@ -41,9 +41,9 @@ namespace RedisCacheAdapter
             return await CacheDB.StringGetAsync(key, CommandFlags.HighPriority);
         }
 
-        public void Set(byte[] key, byte[] value, TimeSpan? timeout)
+        public async Task Set(byte[] key, byte[] value, TimeSpan? timeout)
         {
-            CacheDB.StringSetAsync(key, value, timeout, When.Always, CommandFlags.FireAndForget);
+            await CacheDB.StringSetAsync(key, value, timeout, When.Always, CommandFlags.FireAndForget);
         }
 
         public async Task<string> Get(string key)
@@ -51,9 +51,9 @@ namespace RedisCacheAdapter
             return await CacheDB.StringGetAsync(key, CommandFlags.HighPriority);
         }
 
-        public void Set(string key, byte[] value, TimeSpan? timeout)
+        public async Task Set(string key, string value, TimeSpan? timeout)
         {
-            CacheDB.StringSetAsync(key, value, timeout, When.Always, CommandFlags.FireAndForget);
+            await CacheDB.StringSetAsync(key, value, timeout, When.Always, CommandFlags.FireAndForget);
         }
 
         public async Task<IEnumerable<string>> GetMembers(string key)
@@ -61,19 +61,19 @@ namespace RedisCacheAdapter
             return (Array.ConvertAll(await CacheDB.SetMembersAsync(key, CommandFlags.HighPriority), m => (string)m));
         }
 
-        public void SetMembers(string key, IEnumerable<string> values)
+        public async Task SetMembers(string key, IEnumerable<string> values)
         {
-            CacheDB.SetAdd(key, Array.ConvertAll(values?.ToArray(), m => (RedisValue)m), CommandFlags.FireAndForget);
+            await CacheDB.SetAddAsync(key, Array.ConvertAll(values?.ToArray(), m => (RedisValue)m), CommandFlags.FireAndForget);
         }
         public async Task<Dictionary<string, string>> GetHash(string key)
         {
             return (await CacheDB.HashGetAllAsync(key, CommandFlags.HighPriority))?.ToStringDictionary();
         }
 
-        public void SetHash(string key, Dictionary<string, string> value)
+        public async Task SetHash(string key, Dictionary<string, string> value)
         {
             var data = value.Select(d => new HashEntry(d.Key, d.Value));
-            CacheDB.HashSet(key, data?.ToArray(), CommandFlags.FireAndForget);
+            await CacheDB.HashSetAsync(key, data?.ToArray(), CommandFlags.FireAndForget);
         }
 
     }
