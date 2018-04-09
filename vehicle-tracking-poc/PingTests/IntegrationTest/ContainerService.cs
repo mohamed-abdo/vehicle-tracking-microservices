@@ -133,8 +133,6 @@ namespace PingTests.IntegrationTest
         public void Dispose()
 		{
 			StopContainers();
-
-			
 		}
 	}
 }

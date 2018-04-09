@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Customer\Customer.csproj" />
     <ProjectReference Include="..\DomainModels\DomainModels.csproj" />
   </ItemGroup>
