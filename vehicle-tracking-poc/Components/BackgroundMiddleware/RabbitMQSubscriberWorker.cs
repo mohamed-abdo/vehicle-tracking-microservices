@@ -8,6 +8,7 @@ using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 using System;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,7 +44,14 @@ namespace BackgroundMiddleware
             this.hostConfig = hostConfig;
             this.callback = callback ?? throw new ArgumentNullException("Callback reference is invalid");
             var host = Helper.ExtractHostStructure(this.hostConfig.hostName);
-            connectionFactory = new ConnectionFactory() { HostName = host.hostName, Port = host.port ?? defaultMiddlewarePort, UserName = hostConfig.userName, Password = hostConfig.password, ContinuationTimeout = TimeSpan.FromSeconds(DomainModels.System.Identifiers.TimeoutInSec) };
+            connectionFactory = new ConnectionFactory()
+            {
+                HostName = host.hostName,
+                Port = host.port ?? defaultMiddlewarePort,
+                UserName = hostConfig.userName,
+                Password = hostConfig.password,
+                ContinuationTimeout = TimeSpan.FromSeconds(DomainModels.System.Identifiers.TimeoutInSec)
+            };
         }
 
         /// <summary>

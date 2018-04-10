@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 
 namespace BackgroundMiddleware
 {
-    public abstract class BackgroundService : IHostedService
+    public abstract class BackgroundService : IHostedService, IDisposable
     {
         private Task _executingTask;
         private readonly CancellationTokenSource _stoppingCts = new CancellationTokenSource();
 
         protected abstract Task ExecuteAsync(CancellationToken stoppingToken);
 
-        public virtual async Task StartAsync(CancellationToken cancellationToken)
+        public virtual Task StartAsync(CancellationToken cancellationToken)
         {
             // Store the task we're executing
             _executingTask = ExecuteAsync(_stoppingCts.Token);
@@ -21,10 +21,10 @@ namespace BackgroundMiddleware
             // this will bubble cancellation and failure to the caller
             if (_executingTask.IsCompleted)
             {
-                await _executingTask;
+                return _executingTask;
             }
             // Otherwise it's running
-            await Task.CompletedTask;
+            return Task.CompletedTask;
         }
 
         public virtual async Task StopAsync(CancellationToken cancellationToken)

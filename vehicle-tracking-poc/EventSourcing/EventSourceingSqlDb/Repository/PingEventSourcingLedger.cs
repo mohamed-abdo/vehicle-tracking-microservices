@@ -10,7 +10,8 @@ using System.Threading.Tasks;
 
 namespace EventSourceingSqlDb.Repository
 {
-    public class PingEventSourcingLedger : BaseEventSourcingLedger, IEventSourcingLedger<DbModel>
+    public class PingEventSourcingLedger : BaseEventSourcingLedger, ICommandEventSourcingLedger<DbModel>
+        , IQueryEventSourcingLedger<DbModel>
     {
         public PingEventSourcingLedger(ILoggerFactory loggerFactory, VehicleDbContext dbContext) : base(loggerFactory, dbContext) { }
 
@@ -20,7 +21,7 @@ namespace EventSourceingSqlDb.Repository
             return DbContext.SaveChangesAsync();
         }
 
-        public IQueryable<DbModel> Query(Func<DbModel, bool> predicate)
+        public IEnumerable<DbModel> Query(Func<DbModel, bool> predicate)
         {
             return DbContext.PingEventSource.Where(predicate).AsQueryable();
         }

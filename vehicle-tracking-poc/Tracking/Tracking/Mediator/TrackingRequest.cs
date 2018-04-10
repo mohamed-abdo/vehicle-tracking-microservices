@@ -1,24 +1,45 @@
 ﻿using BuildingAspects.Services;
+using DomainModels.System;
+using DomainModels.Types.Messages;
 using DomainModels.Vehicle;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using RedisCacheAdapter;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Tracking.Tracking.Mediator
 {
-    public class TrackingRequest : IRequest<TrackingModel>
+    public class TrackingRequest : IRequest<IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>>
     {
         private readonly ICacheProvider _cache;
         private readonly ControllerContext _controller;
-        private readonly IFilter _filter;
-        public TrackingRequest(ICacheProvider cache, ControllerContext controller, IFilter filter)
+        private readonly TrackingModel _model;
+        private readonly IMessageQuery<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>> _messageQuery;
+        private readonly IOperationalUnit _oprtationalUnit;
+        private readonly MiddlewareConfiguration _middlewareConfiguration;
+        public TrackingRequest(
+            ControllerContext controller,
+            TrackingModel model,
+            ICacheProvider cache,
+            IMessageQuery<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>> messageQuery,
+            IOperationalUnit oprtationalUnit,
+            MiddlewareConfiguration middlewareConfiguration
+            )
         {
             _cache = cache;
             _controller = controller;
-            _filter = filter;
+            _model = model;
+            _messageQuery = messageQuery;
+            _oprtationalUnit = oprtationalUnit;
+            _middlewareConfiguration = middlewareConfiguration;
         }
         public ICacheProvider Locator => _cache;
         public ControllerContext Controller => _controller;
-        public IFilter Filter => _filter;
+        public TrackingModel Model => _model;
+        public IMessageQuery<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>> MessageQuery => _messageQuery;
+        public IOperationalUnit OperationalUnit => _oprtationalUnit;
+        public MiddlewareConfiguration MiddlewareConfiguration => _middlewareConfiguration;
+
     }
 }

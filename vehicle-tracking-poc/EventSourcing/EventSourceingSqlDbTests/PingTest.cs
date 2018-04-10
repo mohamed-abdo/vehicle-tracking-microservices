@@ -19,8 +19,8 @@ namespace EventSourceingSqlDbTests
     {
         private readonly Mock<ILoggerFactory> _loggerMoq;
         private readonly VehicleDbContext _dbContext;
-        private readonly IEventSourcingLedger<(MessageHeader header, PingModel body, MessageFooter footer)> _eventSourcingLedger;
-
+        private readonly ICommandEventSourcingLedger<(MessageHeader header, PingModel body, MessageFooter footer)> _eventSourcingLedger;
+        private readonly IQueryEventSourcingLedger<(MessageHeader header, PingModel body, MessageFooter footer)> _eventSourcingLedgerQuery;
         private (MessageHeader header, PingModel body, MessageFooter footer) message;
         public PingTest()
         {
@@ -30,6 +30,7 @@ namespace EventSourceingSqlDbTests
                 .UseInMemoryDatabase(nameof(VehicleDbContext))
                 .Options);
             _eventSourcingLedger = new PingEventSourcingLedgerAdapter(_loggerMoq.Object, _dbContext);
+            _eventSourcingLedgerQuery = new PingEventSourcingLedgerAdapter(_loggerMoq.Object, _dbContext);
         }
 
         [SetUp]
@@ -84,7 +85,7 @@ namespace EventSourceingSqlDbTests
 
             _dbContext.PingEventSource.Add(dbObjec);
             await _dbContext.SaveChangesAsync();
-            var messageRec = _eventSourcingLedger.Query(p => p.header.ExecutionId == execId).FirstOrDefault();
+            var messageRec = _eventSourcingLedgerQuery.Query(p => p.header.ExecutionId == execId).FirstOrDefault();
 
             Assert.IsTrue(pingMessage.body.EqualsByValue(messageRec.body), "query ping failed, message has been tempered.");
         }
@@ -106,7 +107,7 @@ namespace EventSourceingSqlDbTests
 
             _dbContext.PingEventSource.Add(dbObjec);
             await _dbContext.SaveChangesAsync();
-            var messageRec = _eventSourcingLedger.Query(p => p.header.ExecutionId == execId).FirstOrDefault();
+            var messageRec = _eventSourcingLedgerQuery.Query(p => p.header.ExecutionId == execId).FirstOrDefault();
 
             byte[] binObjDestination = Utilities.BinarySerialize(messageRec);
 

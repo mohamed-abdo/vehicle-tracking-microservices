@@ -1,4 +1,5 @@
 ﻿using BackgroundMiddleware;
+using BuildingAspects.Services;
 using DomainModels.DataStructure;
 using DomainModels.System;
 using DomainModels.Types.Messages;
@@ -26,19 +27,19 @@ namespace EventSourcingMiddleware
     {
         public Startup(ILoggerFactory logger, IHostingEnvironment environemnt, IConfiguration configuration)
         {
-			Configuration = configuration;
+            Configuration = configuration;
 
-			Environemnt = environemnt;
+            Environemnt = environemnt;
 
-			logger
-				.AddConsole()
-				.AddDebug()
-				.AddFile(configuration.GetSection("Logging"));
+            logger
+                .AddConsole()
+                .AddDebug()
+                .AddFile(configuration.GetSection("Logging"));
 
-			Logger = logger
-				.CreateLogger<Startup>();
+            Logger = logger
+                .CreateLogger<Startup>();
             //local system configuration
-            SystemLocalConfiguration =new ServiceConfiguration().Create(new Dictionary<string, string>() {
+            SystemLocalConfiguration = new ServiceConfiguration().Create(new Dictionary<string, string>() {
 
                 {nameof(SystemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},
                 {nameof(SystemLocalConfiguration.VehiclesCacheDB),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
@@ -57,7 +58,7 @@ namespace EventSourcingMiddleware
         public ILogger Logger { get; }
 
         // Inject background service, for receiving message
-        public void ConfigureServices(IServiceCollection services)
+        public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             var loggerFactorySrv = services.BuildServiceProvider().GetService<ILoggerFactory>();
 
@@ -74,11 +75,42 @@ namespace EventSourcingMiddleware
             ///
             #region worker background services
 
+            #region tracking query worker
+            // business logic
+            services.AddSingleton<IHostedService, RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, TrackingModel body, MessageFooter footer)>>>(srv =>
+           {
+               //get pingService
+               var trackingSrv = new TrackingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
+
+               return RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, TrackingModel body, MessageFooter footer)>>
+               .Create(loggerFactorySrv, new RabbitMQConfiguration
+               {
+                   hostName = SystemLocalConfiguration.MessagesMiddleware,
+                   userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
+                   password = SystemLocalConfiguration.MessagesMiddlewarePassword,
+               }
+               , (trackingMessageRequest) =>
+               {
+                   try
+                   {
+                       //TODO: add business logic, result should be serializable
+                       Logger.LogInformation($"[x] callback of RabbitMQQueryWorker=>, message: {JsonConvert.SerializeObject(trackingMessageRequest)}");
+                       return trackingSrv.Query((request) => request.body != null)?.ToList();
+                   }
+                   catch (Exception ex)
+                   {
+                       Logger.LogCritical(ex, "de-serialize Object exceptions.");
+                       return null;
+                   }
+               });
+           });
+            #endregion
+
             #region ping worker
 
             services.AddSingleton<IHostedService, RabbitMQSubscriberWorker<(MessageHeader, PingModel, MessageFooter)>>(srv =>
             {
-                //get pingService
+                //get pingServicek
                 var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
 
                 return RabbitMQSubscriberWorker<(MessageHeader header, PingModel body, MessageFooter footer)>
@@ -118,6 +150,8 @@ namespace EventSourcingMiddleware
                                  .ToArray();
             }
             #endregion
+
+            return services.BuildServiceProvider();
         }
 
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)

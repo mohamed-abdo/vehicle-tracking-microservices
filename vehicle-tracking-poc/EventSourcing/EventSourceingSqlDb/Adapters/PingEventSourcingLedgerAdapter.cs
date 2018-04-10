@@ -11,7 +11,8 @@ using System.Threading.Tasks;
 
 namespace EventSourceingSqlDb.Adapters
 {
-    public class PingEventSourcingLedgerAdapter : IEventSourcingLedger<(MessageHeader header, PingModel body, MessageFooter footer)>
+    public class PingEventSourcingLedgerAdapter : ICommandEventSourcingLedger<(MessageHeader header, PingModel body, MessageFooter footer)>
+        , IQueryEventSourcingLedger<(MessageHeader header, PingModel body, MessageFooter footer)>
     {
         private readonly PingEventSourcingLedger _pingEventSourcingLedger;
         public PingEventSourcingLedgerAdapter(ILoggerFactory loggerFactory, VehicleDbContext dbContext)
@@ -20,12 +21,12 @@ namespace EventSourceingSqlDb.Adapters
         }
         public Task<int> Add((MessageHeader header, PingModel body, MessageFooter footer) pingEventSourcing)
         {
-            return 
+            return
                 _pingEventSourcingLedger
                 .Add(Functors.Mappers<PingModel>.FromPingModelToEnity(pingEventSourcing));
         }
 
-        public IQueryable<(MessageHeader header, PingModel body, MessageFooter footer)> Query(Func<(MessageHeader header, PingModel body, MessageFooter footer), bool> predicate)
+        public IEnumerable<(MessageHeader header, PingModel body, MessageFooter footer)> Query(Func<(MessageHeader header, PingModel body, MessageFooter footer), bool> predicate)
         {
             return
                 _pingEventSourcingLedger

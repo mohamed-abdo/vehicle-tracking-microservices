@@ -81,6 +81,10 @@ namespace WebComponents.Interceptors
                         {
                             return or?.Value;
                         }
+                    case JsonResult jr:
+                        {
+                            return jr?.Value;
+                        }
                     default:
                         {
                             return result?.ToString();

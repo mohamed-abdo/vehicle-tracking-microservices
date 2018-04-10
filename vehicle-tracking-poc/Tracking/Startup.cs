@@ -20,7 +20,6 @@ using System;
 using System.Linq;
 using Newtonsoft.Json;
 using RedisCacheAdapter;
-
 namespace Tracking
 {
     public class Startup
@@ -70,7 +69,7 @@ namespace Tracking
             var loggerFactorySrv = services
                                     .BuildServiceProvider()
                                     .GetService<ILoggerFactory>();
-
+            
             //add application insights information, could be used to monitor the performance, and more analytics when application moved to the cloud.
             loggerFactorySrv.AddApplicationInsights(services.BuildServiceProvider(), LogLevel.Information);
 
@@ -90,30 +89,26 @@ namespace Tracking
                 exchange = SystemLocalConfiguration.MiddlewareExchange,
                 userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
                 password = SystemLocalConfiguration.MessagesMiddlewarePassword,
-                routes = new string[] { SystemLocalConfiguration.MessagePublisherRoute }
+                routes = new string[] { SystemLocalConfiguration.MessageSubscriberRoute }
             };
 
             // set cache service for db index 1
             Cache = new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1);
+            services.AddSingleton<ICacheProvider, CacheManager>(srv => new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1));
+            services.AddTransient<IOperationalUnit, IOperationalUnit>(srv => OperationalUnit);
+           
+            services.AddSingleton<MiddlewareConfiguration, MiddlewareConfiguration>(srv => SystemLocalConfiguration);
             services.AddOptions();
 
             #region worker background services
 
             #region ping worker
             //you may get a different cache db, by passing db index parameter.
-            services.AddSingleton<ICacheProvider, CacheManager>(srv => new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1));
 
             services.AddSingleton<IHostedService, RabbitMQSubscriberWorker<(MessageHeader, PingModel, MessageFooter)>>(srv =>
             {
                 return RabbitMQSubscriberWorker<(MessageHeader header, PingModel body, MessageFooter footer)>
-                    .Create(loggerFactorySrv, new RabbitMQConfiguration
-                    {
-                        hostName = SystemLocalConfiguration.MessagesMiddleware,
-                        exchange = SystemLocalConfiguration.MiddlewareExchange,
-                        userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
-                        password = SystemLocalConfiguration.MessagesMiddlewarePassword,
-                        routes = getRoutes("ping.vehicle")
-                    }
+                    .Create(loggerFactorySrv, rabbitMQConfiguration
                     , (pingMessageCallback) =>
                     {
                         try
@@ -134,24 +129,26 @@ namespace Tracking
             });
 
             #region internal functions
-            string[] getRoutes(string endwithMatch)
-            {
-                return SystemLocalConfiguration.MessageSubscriberRoute
-                                 .Split(',')
-                                               .Where(route => route.ToLower().EndsWith(endwithMatch, StringComparison.InvariantCultureIgnoreCase))
-                                 .ToArray();
-            }
-            #endregion
 
             #endregion
 
             #endregion
 
-            services.AddTransient<IServiceLocator, ServiceLocator>(srv => new ServiceLocator(
-                _logger,
-                RabbitMQPublisher.Create(loggerFactorySrv, rabbitMQConfiguration),
-                SystemLocalConfiguration,
-                OperationalUnit));
+            
+
+            #region tracking vehicle query client
+
+            services.AddTransient<IMessageQuery<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>>, 
+                RabbitMQQueryClient<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>>>(
+                srv =>
+                {
+                    return RabbitMQQueryClient<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>>
+                            .Create(loggerFactorySrv, rabbitMQConfiguration);
+                });
+
+            #endregion
+
+            #endregion
 
             ///
             /// Injecting message receiver background service
