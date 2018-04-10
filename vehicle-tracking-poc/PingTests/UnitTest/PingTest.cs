@@ -1,4 +1,4 @@
-﻿using BackgroundMiddleware.Abstract;
+﻿using BackgroundMiddleware;
 using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
 using DomainModels.System;

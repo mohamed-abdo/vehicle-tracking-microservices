@@ -1,4 +1,4 @@
-﻿using BackgroundMiddleware.Concrete;
+﻿using BackgroundMiddleware;
 using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
 using DomainModels.DataStructure;
@@ -20,7 +20,6 @@ using System;
 using System.Linq;
 using Newtonsoft.Json;
 using RedisCacheAdapter;
-using BuildingAspects.Formatters;
 
 namespace Tracking
 {
@@ -40,7 +39,7 @@ namespace Tracking
             logger
                 .AddConsole()
                 .AddDebug()
-                .AddFile(configuration.GetSection("Logging"));
+                .AddFile("Logs/Startup-{Date}.txt", isJson: true);
 
             Logger = logger
                 .CreateLogger<Startup>();
@@ -78,6 +77,7 @@ namespace Tracking
             ILogger _logger = loggerFactorySrv
                 .AddConsole()
                 .AddDebug()
+                .AddFile(Configuration.GetSection("Logging"))
                 .CreateLogger<Startup>();
 
             OperationalUnit = new OperationalUnit(
@@ -99,7 +99,7 @@ namespace Tracking
 
             #region ping worker
             //you may get a different cache db, by passing db index parameter.
-            services.AddSingleton<ICacheProvider, CacheManager>(srv => new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1));
+            services.AddSingleton<RedisCacheAdapter.ICacheProvider, CacheManager>(srv => new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1));
 
             services.AddSingleton<IHostedService, RabbitMQSubscriber<(MessageHeader, PingModel, MessageFooter)>>(srv =>
             {

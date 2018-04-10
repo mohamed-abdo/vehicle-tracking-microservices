@@ -1,12 +1,8 @@
-﻿using BackgroundMiddleware.Abstract;
-using BuildingAspects.Behaviors;
+﻿using BuildingAspects.Behaviors;
 using BuildingAspects.Functors;
 using BuildingAspects.Utilities;
 using DomainModels.DataStructure;
-using DomainModels.Types;
-using DomainModels.Types.Messages;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
@@ -16,7 +12,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace BackgroundMiddleware.Concrete
+namespace BackgroundMiddleware
 {
     /// <summary>
     /// rabbitMQ worker listener background service. 

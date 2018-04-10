@@ -13,11 +13,12 @@ namespace Customer
     {
         public static int Main(string[] args)
         {
-            Console.WriteLine("Running vehicle service with Kestrel.");
+            Console.WriteLine("Running customer service with Kestrel.");
 
             ILogger mainLogger = new LoggerFactory()
                                         .AddConsole()
                                         .AddDebug()
+                                        .AddFile("Logs/ProgramMain-{Date}.txt", isJson: true)
                                         .CreateLogger<Program>();
             try
             {

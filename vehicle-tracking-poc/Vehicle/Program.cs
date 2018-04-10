@@ -3,11 +3,9 @@ using System.IO;
 using System.Threading.Tasks;
 using BuildingAspects.Behaviors;
 using DomainModels.System;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-
 namespace Vehicle
 {
     public class Program
@@ -19,6 +17,7 @@ namespace Vehicle
             ILogger mainLogger = new LoggerFactory()
                                         .AddConsole()
                                         .AddDebug()
+                                        .AddFile("Logs/ProgramMain-{Date}.txt", isJson: true)
                                         .CreateLogger<Program>();
             try
             {

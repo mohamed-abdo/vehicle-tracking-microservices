@@ -24,7 +24,7 @@ namespace Ping.Vehicle.Mediator
 
             await new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
             {
-                return notification.MessagePublisher.Publish(
+                return notification.MessagePublisher.Command(
                     notification.MiddlewareConfiguration.MiddlewareExchange,
                     notification.MiddlewareConfiguration.MessagePublisherRoute,
                     (

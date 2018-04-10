@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Services\IMessagePublisher.cs~RF494771f.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Polly" Version="5.8.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.1" />

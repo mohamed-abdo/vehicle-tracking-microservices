@@ -260,3 +260,5 @@ paket-files/
 __pycache__/
 *.pyc
 /vehicle-tracking-poc/EventSourcing/EventSourcingMiddleware/Logs
+/vehicle-tracking-poc/Tracking/Logs
+/vehicle-tracking-poc/Ping/Logs

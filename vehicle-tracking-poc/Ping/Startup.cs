@@ -1,4 +1,4 @@
-﻿using BackgroundMiddleware.Concrete;
+﻿using BackgroundMiddleware;
 using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
 using DomainModels.DataStructure;
@@ -32,7 +32,7 @@ namespace Ping
             logger
                 .AddConsole()
                 .AddDebug()
-                .AddFile(configuration.GetSection("Logging"));
+                .AddFile("Logs/Startup-{Date}.txt", isJson: true);
 
             Logger = logger
                 .CreateLogger<Startup>();
@@ -69,6 +69,7 @@ namespace Ping
             ILogger _logger = loggerFactorySrv
                 .AddConsole()
                 .AddDebug()
+                .AddFile(Configuration.GetSection("Logging"))
                 .CreateLogger<Startup>();
 
             OperationalUnit = new OperationalUnit(

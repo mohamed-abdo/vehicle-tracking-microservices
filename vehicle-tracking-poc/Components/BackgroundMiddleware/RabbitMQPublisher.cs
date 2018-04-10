@@ -12,12 +12,12 @@ using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
 
-namespace BackgroundMiddleware.Concrete
+namespace BackgroundMiddleware
 {
     /// <summary>
     /// rabbitMQ publisher manager
     /// </summary>
-    public class RabbitMQPublisher : IMessagePublisher
+    public class RabbitMQPublisher : IMessageCommand
     {
         private readonly ILogger logger;
         private int defaultMiddlewarePort = 5672;//default rabbitmq port
@@ -42,7 +42,7 @@ namespace BackgroundMiddleware.Concrete
             return new RabbitMQPublisher(logger, hostConfig);
         }
 
-        public async Task Publish<T>(string exchange, string route, (MessageHeader Header, T Body, MessageFooter Footer) message) where T : DomainModel
+        public async Task Command<T>(string exchange, string route, (MessageHeader Header, T Body, MessageFooter Footer) message) where T : DomainModel
         {
             await new Function(logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
                 {

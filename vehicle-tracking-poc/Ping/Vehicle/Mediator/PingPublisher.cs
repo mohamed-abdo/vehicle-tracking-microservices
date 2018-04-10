@@ -1,12 +1,8 @@
 ﻿using BuildingAspects.Behaviors;
-using BuildingAspects.Services;
-using DomainModels.System;
 using DomainModels.Vehicle;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System.Linq;
-using System.Threading.Tasks;
+using RedisCacheAdapter;
 
 namespace Ping.Vehicle.Mediator
 {

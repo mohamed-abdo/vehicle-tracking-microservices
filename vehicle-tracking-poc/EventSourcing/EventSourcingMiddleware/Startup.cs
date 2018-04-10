@@ -1,4 +1,4 @@
-﻿using BackgroundMiddleware.Concrete;
+﻿using BackgroundMiddleware;
 using DomainModels.DataStructure;
 using DomainModels.System;
 using DomainModels.Types.Messages;
