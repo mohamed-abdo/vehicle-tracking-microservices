@@ -76,12 +76,12 @@ namespace EventSourcingMiddleware
 
             #region ping worker
 
-            services.AddSingleton<IHostedService, RabbitMQSubscriber<(MessageHeader, PingModel, MessageFooter)>>(srv =>
+            services.AddSingleton<IHostedService, RabbitMQSubscriberWorker<(MessageHeader, PingModel, MessageFooter)>>(srv =>
             {
                 //get pingService
                 var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
 
-                return RabbitMQSubscriber<(MessageHeader header, PingModel body, MessageFooter footer)>
+                return RabbitMQSubscriberWorker<(MessageHeader header, PingModel body, MessageFooter footer)>
                 .Create(loggerFactorySrv, new RabbitMQConfiguration
                 {
                     hostName = SystemLocalConfiguration.MessagesMiddleware,

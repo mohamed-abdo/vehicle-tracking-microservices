@@ -17,21 +17,21 @@ namespace BackgroundMiddleware
     /// <summary>
     /// rabbitMQ worker listener background service. 
     /// </summary>
-    /// <typeparam name="T">Expected structure coming from the publisher to the subscriber.</typeparam>
-    public class RabbitMQSubscriber<T> : BackgroundService
+    /// <typeparam name="TRequest">Expected structure coming from the publisher to the subscriber.</typeparam>
+    public class RabbitMQSubscriberWorker<TRequest> : BackgroundService
     {
         private readonly ILogger logger;
         private int defaultMiddlewarePort = 5672;//default rabbitmq port
         private readonly RabbitMQConfiguration hostConfig;
         private readonly IConnectionFactory connectionFactory;
         //Design decision: keep/ delegate responsibility of translating and casting object to the target type, to receiver callback, even exception will be thrown in his execution thread.
-        private readonly Action<Func<T>> callback;
+        private readonly Action<Func<TRequest>> callback;
         /// <summary>
         /// internal construct subscriber object
         /// </summary>
         /// <param name="logger">ILogger instance</param>
         /// <param name="hostConfig">rabbitMQ configuration</param>
-        private RabbitMQSubscriber(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Func<T>> callback)
+        private RabbitMQSubscriberWorker(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Func<TRequest>> callback)
         {
             this.logger = logger?
                             .AddConsole()
@@ -51,9 +51,9 @@ namespace BackgroundMiddleware
         /// </summary>
         /// <param name="logger">ILogger instance</param>
         /// <param name="hostConfig">rabbitMQ configuration</param>
-        public static RabbitMQSubscriber<T> Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Func<T>> callback)
+        public static RabbitMQSubscriberWorker<TRequest> Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Func<TRequest>> callback)
         {
-            return new RabbitMQSubscriber<T>(logger, hostConfig, callback);
+            return new RabbitMQSubscriberWorker<TRequest>(logger, hostConfig, callback);
         }
         /// <summary>
         /// 
@@ -67,10 +67,9 @@ namespace BackgroundMiddleware
                  using (var connection = connectionFactory.CreateConnection())
                  using (var channel = connection.CreateModel())
                  {
-                     //TODO: in case scaling the middleware, running multiple workers simultaneously. 
-                     //channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
                      channel.ExchangeDeclare(exchange: hostConfig.exchange, type: ExchangeType.Topic, durable: true);
-
+                     //TODO: in case scaling the middleware, running multiple workers simultaneously. 
+                     channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
                      var queueName = channel.QueueDeclare().QueueName;
 
                      foreach (var bindingKey in hostConfig.routes)
@@ -88,12 +87,14 @@ namespace BackgroundMiddleware
                       {
                           await new Function(logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
                           {
-                              var messageStr = Encoding.UTF8.GetString(ea.Body);
                               if (ea.Body == null || ea.Body.Length == 0)
                                   throw new TypeLoadException("Invalid message type");
 
                               // callback action feeding 
-                              callback(() => (T)Utilities.BinaryDeserialize(ea.Body));
+                              if (Utilities.BinaryDeserialize(ea.Body) is TRequest request)
+                                  callback(() => request);
+                              else
+                                  throw new InvalidCastException("Invalid message cast");
                               //send acknowledgment to publisher
 
                               channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);

@@ -6,10 +6,10 @@ namespace BuildingAspects.Services
 {
     public interface IMessageCommand
     {
-        Task Command<TResponse>(string exchange, string route, (MessageHeader Header, TResponse Body, MessageFooter Footer) message) where TResponse : DomainModel;
+        Task Command<TResponse>(string exchange, string route, (MessageHeader Header, TResponse Body, MessageFooter Footer) message);
     }
-    public interface IMessageQuery
+    public interface IMessageQuery<TRequset, TResponse>
     {
-        Task<TRequset> Query<TRequset, TResponse>(string exchange, string route, (MessageHeader Header, TRequset Body, MessageFooter Footer) message) where TResponse : DomainModel;
+        Task<TResponse> Query(string exchange, string route, (MessageHeader Header, TRequset Body, MessageFooter Footer) message);
     }
 }

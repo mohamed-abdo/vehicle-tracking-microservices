@@ -17,13 +17,15 @@ namespace BackgroundMiddleware
     /// <summary>
     /// rabbitMQ publisher manager
     /// </summary>
-    public class RabbitMQPublisher : IMessageCommand
+    public class RabbitMQPublisher : IMessageCommand, IDisposable
     {
         private readonly ILogger logger;
         private int defaultMiddlewarePort = 5672;//default rabbitmq port
         private readonly RabbitMQConfiguration hostConfig;
         private readonly IConnectionFactory connectionFactory;
-        private IConnection connection;
+        private readonly IConnection connection;
+        private readonly IModel channel;
+        private readonly string replyQueueName;
         private RabbitMQPublisher(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
         {
             this.logger = logger?
@@ -35,35 +37,40 @@ namespace BackgroundMiddleware
             Validators.EnsureHostConfig(hostConfig);
             this.hostConfig = hostConfig;
             var host = Helper.ExtractHostStructure(this.hostConfig.hostName);
-            connectionFactory = new ConnectionFactory() { HostName = host.hostName, Port = host.port ?? defaultMiddlewarePort, UserName = hostConfig.userName, Password = hostConfig.password, ContinuationTimeout = TimeSpan.FromSeconds(DomainModels.System.Identifiers.TimeoutInSec) };
+            connectionFactory = new ConnectionFactory()
+            {
+                HostName = host.hostName,
+                Port = host.port ?? defaultMiddlewarePort,
+                UserName = hostConfig.userName,
+                Password = hostConfig.password,
+                ContinuationTimeout = TimeSpan.FromSeconds(DomainModels.System.Identifiers.TimeoutInSec)
+            };
+            connection = connectionFactory.CreateConnection();
+            channel = connection.CreateModel();
+            replyQueueName = channel.QueueDeclare().QueueName;
         }
         public static RabbitMQPublisher Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
         {
             return new RabbitMQPublisher(logger, hostConfig);
         }
 
-        public async Task Command<T>(string exchange, string route, (MessageHeader Header, T Body, MessageFooter Footer) message) where T : DomainModel
+        public async Task Command<TRequest>(string exchange, string route, (MessageHeader Header, TRequest Body, MessageFooter Footer) message)
         {
             await new Function(logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
                 {
-                    if (connection == null || !connection.IsOpen)
-                        connection = connectionFactory.CreateConnection();
-                    using (var channel = connection.CreateModel())
-                    {
-                        channel.ExchangeDeclare(exchange: exchange, type: ExchangeType.Topic, durable: true);
+                    channel.ExchangeDeclare(exchange: exchange, type: ExchangeType.Topic, durable: true);
 
-                        var properties = channel.CreateBasicProperties();
-                        properties.Persistent = true;
+                    var properties = channel.CreateBasicProperties();
+                    properties.Persistent = true;
 
-                        var body = Utilities.BinarySerialize(message);
-                        channel.BasicPublish(exchange: exchange,
-                                             routingKey: route,
-                                             basicProperties: properties,
-                                             body: body);
-                        logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", message.Header.ExecutionId, exchange, route);
-
-                        return Task.CompletedTask;
-                    }
+                    var body = Utilities.BinarySerialize(message);
+                    channel.BasicPublish(exchange: exchange,
+                                         routingKey: route,
+                                         basicProperties: properties,
+                                         body: body);
+                    logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", message.Header.ExecutionId, exchange, route);
+                    connection.Close();
+                    return Task.CompletedTask;
                 }, (ex) =>
                 {
                     switch (ex)
@@ -78,6 +85,12 @@ namespace BackgroundMiddleware
                             return false;
                     }
                 });
+        }
+
+        public void Dispose()
+        {
+            if (connection != null && connection.IsOpen)
+                connection.Close();
         }
     }
 }

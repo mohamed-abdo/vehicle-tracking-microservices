@@ -56,7 +56,7 @@ namespace Tracking
         }
 
         private MiddlewareConfiguration SystemLocalConfiguration;
-        private RabbitMQPublisher MessagePublisher;
+        private RabbitMQConfiguration rabbitMQConfiguration;
         private IOperationalUnit OperationalUnit;
         public IHostingEnvironment Environemnt { get; }
         public IConfiguration Configuration { get; }
@@ -83,14 +83,16 @@ namespace Tracking
             OperationalUnit = new OperationalUnit(
                 environment: Environemnt.EnvironmentName,
                 assembly: AssemblyName);
-            MessagePublisher = RabbitMQPublisher.Create(loggerFactorySrv, new RabbitMQConfiguration
+
+            rabbitMQConfiguration = new RabbitMQConfiguration
             {
                 hostName = SystemLocalConfiguration.MessagesMiddleware,
                 exchange = SystemLocalConfiguration.MiddlewareExchange,
                 userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
                 password = SystemLocalConfiguration.MessagesMiddlewarePassword,
-                routes = new string[] { SystemLocalConfiguration.MessageSubscriberRoute }
-            });
+                routes = new string[] { SystemLocalConfiguration.MessagePublisherRoute }
+            };
+
             // set cache service for db index 1
             Cache = new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1);
             services.AddOptions();
@@ -99,11 +101,11 @@ namespace Tracking
 
             #region ping worker
             //you may get a different cache db, by passing db index parameter.
-            services.AddSingleton<RedisCacheAdapter.ICacheProvider, CacheManager>(srv => new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1));
+            services.AddSingleton<ICacheProvider, CacheManager>(srv => new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1));
 
-            services.AddSingleton<IHostedService, RabbitMQSubscriber<(MessageHeader, PingModel, MessageFooter)>>(srv =>
+            services.AddSingleton<IHostedService, RabbitMQSubscriberWorker<(MessageHeader, PingModel, MessageFooter)>>(srv =>
             {
-                return RabbitMQSubscriber<(MessageHeader header, PingModel body, MessageFooter footer)>
+                return RabbitMQSubscriberWorker<(MessageHeader header, PingModel body, MessageFooter footer)>
                     .Create(loggerFactorySrv, new RabbitMQConfiguration
                     {
                         hostName = SystemLocalConfiguration.MessagesMiddleware,
@@ -145,7 +147,11 @@ namespace Tracking
 
             #endregion
 
-            services.AddSingleton<IServiceLocator, ServiceLocator>(srv => new ServiceLocator(_logger, MessagePublisher, SystemLocalConfiguration, OperationalUnit));
+            services.AddTransient<IServiceLocator, ServiceLocator>(srv => new ServiceLocator(
+                _logger,
+                RabbitMQPublisher.Create(loggerFactorySrv, rabbitMQConfiguration),
+                SystemLocalConfiguration,
+                OperationalUnit));
 
             ///
             /// Injecting message receiver background service

@@ -49,7 +49,7 @@ namespace Ping
         }
 
         private MiddlewareConfiguration SystemLocalConfiguration;
-        private RabbitMQPublisher MessagePublisher;
+        private RabbitMQConfiguration rabbitMQConfiguration;
         private IOperationalUnit OperationalUnit;
         public IHostingEnvironment Environemnt { get; }
         public IConfiguration Configuration { get; }
@@ -75,28 +75,26 @@ namespace Ping
             OperationalUnit = new OperationalUnit(
                 environment: Environemnt.EnvironmentName,
                 assembly: AssemblyName);
-            MessagePublisher = RabbitMQPublisher.Create(loggerFactorySrv, new RabbitMQConfiguration
+
+            services.AddOptions();
+
+            rabbitMQConfiguration = new RabbitMQConfiguration
             {
                 hostName = SystemLocalConfiguration.MessagesMiddleware,
                 exchange = SystemLocalConfiguration.MiddlewareExchange,
                 userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
                 password = SystemLocalConfiguration.MessagesMiddlewarePassword,
                 routes = new string[] { SystemLocalConfiguration.MessagePublisherRoute }
-            });
-            services.AddOptions();
+            };
 
             // no need to inject the following service since, currently they are injected for the mediator.
 
-            //services.AddTransient<IOperationalUnit>(srv => OperationalUnit);
-            //services.AddSingleton<MiddlewareConfiguration, MiddlewareConfiguration>(srv => SystemLocalConfiguration);
-            //services.AddSingleton<IMessagePublisher, RabbitMQPublisher>(srv => MessagePublisher);
-
-            services.AddSingleton<IServiceLocator, ServiceLocator>(srv => new ServiceLocator(
+            services.AddTransient<IServiceLocator, ServiceLocator>(srv => new ServiceLocator(
                 _logger,
-                MessagePublisher,
+                RabbitMQPublisher.Create(loggerFactorySrv, rabbitMQConfiguration),
                 SystemLocalConfiguration,
                 OperationalUnit));
-            
+
             ///
             /// Injecting message receiver background service
             ///
