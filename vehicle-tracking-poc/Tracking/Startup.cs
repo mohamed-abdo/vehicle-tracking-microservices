@@ -99,6 +99,18 @@ namespace Tracking
 
             #region worker background services
 
+            #region tracking vehicle query client
+
+            services.AddScoped<IMessageQuery<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>>,
+                RabbitMQQueryClient<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>>>(
+                srv =>
+                {
+                    return RabbitMQQueryClient<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>>
+                            .Create(loggerFactorySrv, rabbitMQConfiguration);
+                });
+
+            #endregion
+
             #region ping worker
             //you may get a different cache db, by passing db index parameter.
 
@@ -115,7 +127,7 @@ namespace Tracking
                             //cache model body by vehicle chassis as a key
                             if (message.body != null)
                             {
-                                cache.Set(message.body.ChassisNumber, message.header.Timestamp.ToString(), Defaults.CacheTimeout);
+                                cache.Set(message.body.ChassisNumber, message.header.Timestamp.ToString(), Defaults.CacheTimeout).Wait();
                             }
                             Logger.LogInformation($"[x] Tracking service received a message from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
                         }
@@ -129,20 +141,6 @@ namespace Tracking
             #region internal functions
 
             #endregion
-
-            #endregion
-
-            
-
-            #region tracking vehicle query client
-
-            services.AddTransient<IMessageQuery<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>>, 
-                RabbitMQQueryClient<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>>>(
-                srv =>
-                {
-                    return RabbitMQQueryClient<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>>
-                            .Create(loggerFactorySrv, rabbitMQConfiguration);
-                });
 
             #endregion
 

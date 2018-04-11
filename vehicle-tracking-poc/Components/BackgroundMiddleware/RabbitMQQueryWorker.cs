@@ -7,7 +7,6 @@ using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 using System;
 using System.Net.Sockets;
-using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 

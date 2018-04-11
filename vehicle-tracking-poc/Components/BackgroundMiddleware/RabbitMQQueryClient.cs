@@ -89,9 +89,7 @@ namespace BackgroundMiddleware
                                        body: Utilities.BinarySerialize(message));
 
                   logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", message.Header.ExecutionId, exchange, route);
-
                   channel.BasicConsume(consumer: consumer, queue: replyQueueName, autoAck: true);
-
                   return respQueue.Take();
               }, (ex) =>
               {

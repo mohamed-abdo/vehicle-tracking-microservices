@@ -93,8 +93,8 @@ namespace EventSourcingMiddleware
                 {
                     try
                     {
-                       //TODO: add business logic, result should be serializable
-                       Logger.LogInformation($"[x] callback of RabbitMQQueryWorker=>, message: {JsonConvert.SerializeObject(trackingMessageRequest)}");
+                        //TODO: add business logic, result should be serializable
+                        Logger.LogInformation($"[x] callback of RabbitMQQueryWorker=>, message: {JsonConvert.SerializeObject(trackingMessageRequest)}");
                         return trackingSrv.Query((request) => request.body != null)?.ToList();
                     }
                     catch (Exception ex)
