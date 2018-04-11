@@ -6,6 +6,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 using System;
+using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,14 +15,12 @@ namespace BackgroundMiddleware
 {
     public class RabbitMQQueryWorker<TRequest, TResponse> : BackgroundService
     {
-        public const string exchange = "";
-        private const string route = "rpc_queue";
-
         private readonly ILogger logger;
         private int defaultMiddlewarePort = 5672;//default rabbitmq port
-        private readonly RabbitMQConfiguration hostConfig;
+        private readonly RabbitMQConfiguration _hostConfig;
         private readonly IConnectionFactory connectionFactory;
-
+        public readonly string exchange;
+        private readonly string route;
         private readonly Func<TRequest, TResponse> lambda;
         /// <summary>
         /// internal construct subscriber object
@@ -38,15 +37,17 @@ namespace BackgroundMiddleware
 
             if (string.IsNullOrEmpty(hostConfig.hostName))
                 throw new ArgumentNullException("hostName is invalid");
-            this.hostConfig = hostConfig;
+            _hostConfig = hostConfig;
+            exchange = _hostConfig.exchange;
+            route = _hostConfig.routes.FirstOrDefault() ?? throw new ArgumentNullException("route queue is missing.");
             this.lambda = lambda ?? throw new ArgumentNullException("Callback reference is invalid");
-            var host = Helper.ExtractHostStructure(this.hostConfig.hostName);
+            var host = Helper.ExtractHostStructure(_hostConfig.hostName);
             connectionFactory = new ConnectionFactory()
             {
                 HostName = host.hostName,
                 Port = host.port ?? defaultMiddlewarePort,
-                UserName = hostConfig.userName,
-                Password = hostConfig.password,
+                UserName = _hostConfig.userName,
+                Password = _hostConfig.password,
                 ContinuationTimeout = TimeSpan.FromSeconds(DomainModels.System.Identifiers.TimeoutInSec)
             };
         }
@@ -104,7 +105,7 @@ namespace BackgroundMiddleware
                             channel.BasicPublish(exchange: exchange, routingKey: props.ReplyTo, basicProperties: replyProps, body: serializableBinary);
                             channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
 
-                            logger.LogInformation($"[x] Event sourcing service receiving a messaged from exchange: {hostConfig.exchange}, route :{ea.RoutingKey}.");
+                            logger.LogInformation($"[x] Event sourcing service receiving a messaged from exchange: {_hostConfig.exchange}, route :{ea.RoutingKey}.");
                             return true;
                         }, (ex) =>
                         {

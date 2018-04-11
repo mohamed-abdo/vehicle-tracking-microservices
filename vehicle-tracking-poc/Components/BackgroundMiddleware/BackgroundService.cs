@@ -12,19 +12,19 @@ namespace BackgroundMiddleware
 
         protected abstract Task ExecuteAsync(CancellationToken stoppingToken);
 
-        public virtual Task StartAsync(CancellationToken cancellationToken)
+        public virtual async Task StartAsync(CancellationToken cancellationToken)
         {
             // Store the task we're executing
-            _executingTask = ExecuteAsync(_stoppingCts.Token);
+            _executingTask =  ExecuteAsync(_stoppingCts.Token);
 
             // If the task is completed then return it,
             // this will bubble cancellation and failure to the caller
             if (_executingTask.IsCompleted)
             {
-                return _executingTask;
+                await _executingTask;
             }
             // Otherwise it's running
-            return Task.CompletedTask;
+            await Task.CompletedTask;
         }
 
         public virtual async Task StopAsync(CancellationToken cancellationToken)

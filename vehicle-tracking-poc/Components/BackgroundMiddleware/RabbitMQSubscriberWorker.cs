@@ -23,7 +23,7 @@ namespace BackgroundMiddleware
     {
         private readonly ILogger logger;
         private int defaultMiddlewarePort = 5672;//default rabbitmq port
-        private readonly RabbitMQConfiguration hostConfig;
+        private readonly RabbitMQConfiguration _hostConfig;
         private readonly IConnectionFactory connectionFactory;
         //Design decision: keep/ delegate responsibility of translating and casting object to the target type, to receiver callback, even exception will be thrown in his execution thread.
         private readonly Action<Func<TRequest>> callback;
@@ -41,15 +41,15 @@ namespace BackgroundMiddleware
                             ?? throw new ArgumentNullException("Logger reference is required");
 
             Validators.EnsureHostConfig(hostConfig);
-            this.hostConfig = hostConfig;
+            _hostConfig = hostConfig;
             this.callback = callback ?? throw new ArgumentNullException("Callback reference is invalid");
-            var host = Helper.ExtractHostStructure(this.hostConfig.hostName);
+            var host = Helper.ExtractHostStructure(_hostConfig.hostName);
             connectionFactory = new ConnectionFactory()
             {
                 HostName = host.hostName,
                 Port = host.port ?? defaultMiddlewarePort,
-                UserName = hostConfig.userName,
-                Password = hostConfig.password,
+                UserName = _hostConfig.userName,
+                Password = _hostConfig.password,
                 ContinuationTimeout = TimeSpan.FromSeconds(DomainModels.System.Identifiers.TimeoutInSec)
             };
         }
@@ -75,15 +75,15 @@ namespace BackgroundMiddleware
                  using (var connection = connectionFactory.CreateConnection())
                  using (var channel = connection.CreateModel())
                  {
-                     channel.ExchangeDeclare(exchange: hostConfig.exchange, type: ExchangeType.Topic, durable: true);
+                     channel.ExchangeDeclare(exchange: _hostConfig.exchange, type: ExchangeType.Topic, durable: true);
                      //TODO: in case scaling the middleware, running multiple workers simultaneously. 
                      channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
                      var queueName = channel.QueueDeclare().QueueName;
 
-                     foreach (var bindingKey in hostConfig.routes)
+                     foreach (var bindingKey in _hostConfig.routes)
                      {
                          channel.QueueBind(queue: queueName,
-                                           exchange: hostConfig.exchange,
+                                           exchange: _hostConfig.exchange,
                                            routingKey: bindingKey);
                      }
 
@@ -107,7 +107,7 @@ namespace BackgroundMiddleware
 
                               channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
 
-                              logger.LogInformation($"[x] Event sourcing service receiving a messaged from exchange: {hostConfig.exchange}, route :{ea.RoutingKey}.");
+                              logger.LogInformation($"[x] Event sourcing service receiving a messaged from exchange: {_hostConfig.exchange}, route :{ea.RoutingKey}.");
                               return true;
                           }, (ex) =>
                           {

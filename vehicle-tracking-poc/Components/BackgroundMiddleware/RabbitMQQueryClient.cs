@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using BuildingAspects.Behaviors;
@@ -20,12 +21,9 @@ namespace BackgroundMiddleware
     /// </summary>
     public class RabbitMQQueryClient<TRequest, TResponse> : IMessageQuery<TRequest, TResponse>, IDisposable
     {
-        public const string exchange = "";
-        private const string route = "rpc_queue";
-
         private readonly ILogger logger;
         private int defaultMiddlewarePort = 5672;//default rabbitmq port
-        private readonly RabbitMQConfiguration hostConfig;
+        private readonly RabbitMQConfiguration _hostConfig;
         private readonly IConnectionFactory connectionFactory;
         private readonly IConnection connection;
         private readonly IModel channel;
@@ -33,6 +31,8 @@ namespace BackgroundMiddleware
         private readonly EventingBasicConsumer consumer;
         private readonly BlockingCollection<TResponse> respQueue = new BlockingCollection<TResponse>();
         private readonly IBasicProperties props;
+        public readonly string exchange;
+        private readonly string route;
         private RabbitMQQueryClient(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
         {
             this.logger = logger?
@@ -41,15 +41,16 @@ namespace BackgroundMiddleware
                             .CreateLogger<RabbitMQQueryClient<TRequest, TResponse>>()
                             ?? throw new ArgumentNullException("Logger reference is required");
 
-            Validators.EnsureHostConfig(hostConfig);
-            this.hostConfig = hostConfig;
-            var host = Helper.ExtractHostStructure(this.hostConfig.hostName);
+            _hostConfig = hostConfig;
+            exchange = _hostConfig.exchange;
+            route = _hostConfig.routes.FirstOrDefault() ?? throw new ArgumentNullException("route queue is missing.");
+            var host = Helper.ExtractHostStructure(_hostConfig.hostName);
             connectionFactory = new ConnectionFactory()
             {
                 HostName = host.hostName,
                 Port = host.port ?? defaultMiddlewarePort,
-                UserName = hostConfig.userName,
-                Password = hostConfig.password,
+                UserName = _hostConfig.userName,
+                Password = _hostConfig.password,
                 ContinuationTimeout = TimeSpan.FromSeconds(DomainModels.System.Identifiers.TimeoutInSec)
             };
             connection = connectionFactory.CreateConnection();

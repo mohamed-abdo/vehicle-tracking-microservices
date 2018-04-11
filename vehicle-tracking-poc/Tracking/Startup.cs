@@ -55,7 +55,7 @@ namespace Tracking
         }
 
         private MiddlewareConfiguration SystemLocalConfiguration;
-        private RabbitMQConfiguration rabbitMQConfiguration;
+
         private IOperationalUnit OperationalUnit;
         public IHostingEnvironment Environemnt { get; }
         public IConfiguration Configuration { get; }
@@ -82,15 +82,6 @@ namespace Tracking
                 environment: Environemnt.EnvironmentName,
                 assembly: AssemblyName);
 
-            rabbitMQConfiguration = new RabbitMQConfiguration
-            {
-                hostName = SystemLocalConfiguration.MessagesMiddleware,
-                exchange = SystemLocalConfiguration.MiddlewareExchange,
-                userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
-                password = SystemLocalConfiguration.MessagesMiddlewarePassword,
-                routes = new string[] { SystemLocalConfiguration.MessageSubscriberRoute }
-            };
-
             // set cache service for db index 1
             services.AddSingleton<ICacheProvider, CacheManager>(srv => new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1));
             services.AddSingleton<MiddlewareConfiguration, MiddlewareConfiguration>(srv => SystemLocalConfiguration);
@@ -106,7 +97,14 @@ namespace Tracking
                 srv =>
                 {
                     return RabbitMQQueryClient<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>>
-                            .Create(loggerFactorySrv, rabbitMQConfiguration);
+                            .Create(loggerFactorySrv, new RabbitMQConfiguration
+                            {
+                                exchange = "",
+                                hostName = SystemLocalConfiguration.MessagesMiddleware,
+                                userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
+                                password = SystemLocalConfiguration.MessagesMiddlewarePassword,
+                                routes = new string[] { "rpc_queue" },
+                            });
                 });
 
             #endregion
@@ -118,7 +116,14 @@ namespace Tracking
             {
                 var cache = new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1);
                 return RabbitMQSubscriberWorker<(MessageHeader header, PingModel body, MessageFooter footer)>
-                    .Create(loggerFactorySrv, rabbitMQConfiguration
+                    .Create(loggerFactorySrv, new RabbitMQConfiguration
+                    {
+                        hostName = SystemLocalConfiguration.MessagesMiddleware,
+                        exchange = SystemLocalConfiguration.MiddlewareExchange,
+                        userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
+                        password = SystemLocalConfiguration.MessagesMiddlewarePassword,
+                        routes = new string[] { SystemLocalConfiguration.MessageSubscriberRoute }
+                    }
                     , (pingMessageCallback) =>
                     {
                         try

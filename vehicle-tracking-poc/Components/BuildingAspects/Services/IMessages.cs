@@ -7,7 +7,7 @@ namespace BuildingAspects.Services
 {
     public interface IMessageCommand
     {
-        Task Command<TRequest>(string exchange, string route, (MessageHeader Header, TRequest Body, MessageFooter Footer) message);
+        Task Command<TRequest>((MessageHeader Header, TRequest Body, MessageFooter Footer) message);
     }
 
     public interface IMessageQuery<TRequset, TResponse>
