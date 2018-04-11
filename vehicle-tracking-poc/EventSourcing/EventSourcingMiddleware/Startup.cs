@@ -75,39 +75,6 @@ namespace EventSourcingMiddleware
             ///
             #region worker background services
 
-            #region ping worker
-
-            services.AddSingleton<IHostedService, RabbitMQSubscriberWorker<(MessageHeader, PingModel, MessageFooter)>>(srv =>
-            {
-                //get pingServicek
-                var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
-
-                return RabbitMQSubscriberWorker<(MessageHeader header, PingModel body, MessageFooter footer)>
-                .Create(loggerFactorySrv, new RabbitMQConfiguration
-                {
-                    hostName = SystemLocalConfiguration.MessagesMiddleware,
-                    exchange = SystemLocalConfiguration.MiddlewareExchange,
-                    userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
-                    password = SystemLocalConfiguration.MessagesMiddlewarePassword,
-                    routes = getRoutes("ping.vehicle")
-                }
-                , (pingMessageCallback) =>
-                {
-                    try
-                    {
-                        var message = pingMessageCallback();
-                        var addingResult = pingSrv.Add(message);
-                        Logger.LogInformation($"[x] Event sourcing service receiving a message from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.LogCritical(ex, "de-serialize Object exceptions.");
-                    }
-                });
-            });
-
-            #endregion
-
             #region tracking query worker
             // business logic
             services.AddSingleton<IHostedService, RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, TrackingModel body, MessageFooter footer)>>>(srv =>
@@ -139,6 +106,39 @@ namespace EventSourcingMiddleware
                     }
                 });
             });
+            #endregion
+
+            #region ping worker
+
+            services.AddSingleton<IHostedService, RabbitMQSubscriberWorker<(MessageHeader, PingModel, MessageFooter)>>(srv =>
+            {
+                //get pingServicek
+                var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
+
+                return RabbitMQSubscriberWorker<(MessageHeader header, PingModel body, MessageFooter footer)>
+                .Create(loggerFactorySrv, new RabbitMQConfiguration
+                {
+                    hostName = SystemLocalConfiguration.MessagesMiddleware,
+                    exchange = SystemLocalConfiguration.MiddlewareExchange,
+                    userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
+                    password = SystemLocalConfiguration.MessagesMiddlewarePassword,
+                    routes = getRoutes("ping.vehicle")
+                }
+                , (pingMessageCallback) =>
+                {
+                    try
+                    {
+                        var message = pingMessageCallback();
+                        var addingResult = pingSrv.Add(message);
+                        Logger.LogInformation($"[x] Event sourcing service receiving a message from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogCritical(ex, "de-serialize Object exceptions.");
+                    }
+                });
+            });
+
             #endregion
 
             #endregion
