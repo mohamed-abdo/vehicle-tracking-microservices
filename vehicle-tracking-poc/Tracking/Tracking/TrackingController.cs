@@ -21,14 +21,14 @@ namespace Tracking.Controllers
         private readonly ILogger _logger;
         private ICacheProvider _redisCache;
         private readonly IMediator _mediator;
-        private readonly IMessageQuery<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>> _messageQuery;
+        private readonly IMessageQuery<TrackingModel, IEnumerable<(MessageHeader, PingModel, MessageFooter)>> _messageQuery;
         private readonly IOperationalUnit _oprtationalUnit;
         private readonly MiddlewareConfiguration _middlewareConfiguration;
         public TrackingController(
             ILogger<TrackingController> logger,
             IMediator mediator,
             ICacheProvider cache,
-            IMessageQuery<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>> messageQuery,
+            IMessageQuery<TrackingModel, IEnumerable<(MessageHeader, PingModel, MessageFooter)>> messageQuery,
             IOperationalUnit oprtationalUnit,
             MiddlewareConfiguration middlewareConfiguration)
         {
@@ -53,7 +53,7 @@ namespace Tracking.Controllers
             //call mediator
             var request = new TrackingRequest(
                     ControllerContext,
-                    new TrackingModel { },
+                    new TrackingModel { ChassisNumber=id },
                     _redisCache,
                     _messageQuery,
                     _oprtationalUnit,

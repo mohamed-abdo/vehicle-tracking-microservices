@@ -92,11 +92,11 @@ namespace Tracking
 
             #region tracking vehicle query client
 
-            services.AddScoped<IMessageQuery<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>>,
-                RabbitMQQueryClient<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>>>(
+            services.AddScoped<IMessageQuery<TrackingModel, IEnumerable<(MessageHeader, PingModel, MessageFooter)>>,
+            RabbitMQQueryClient<TrackingModel, IEnumerable<(MessageHeader, PingModel, MessageFooter)>>>(
                 srv =>
                 {
-                    return RabbitMQQueryClient<TrackingModel, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>>
+                    return RabbitMQQueryClient<TrackingModel, IEnumerable<(MessageHeader, PingModel, MessageFooter)>>
                             .Create(loggerFactorySrv, new RabbitMQConfiguration
                             {
                                 exchange = "",

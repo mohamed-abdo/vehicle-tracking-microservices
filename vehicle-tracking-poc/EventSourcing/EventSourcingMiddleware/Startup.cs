@@ -77,12 +77,12 @@ namespace EventSourcingMiddleware
 
             #region tracking query worker
             // business logic
-            services.AddSingleton<IHostedService, RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, TrackingModel body, MessageFooter footer)>>>(srv =>
+            services.AddSingleton<IHostedService, RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, PingModel body, MessageFooter footer)>>>(srv =>
             {
                 //get pingService
-                var trackingSrv = new TrackingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
+                var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
 
-                return RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, TrackingModel body, MessageFooter footer)>>
+                return RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, PingModel body, MessageFooter footer)>>
                 .Create(loggerFactorySrv, new RabbitMQConfiguration
                 {
                     exchange = "",
@@ -97,7 +97,7 @@ namespace EventSourcingMiddleware
                     {
                         //TODO: add business logic, result should be serializable
                         Logger.LogInformation($"[x] callback of RabbitMQQueryWorker=>, message: {JsonConvert.SerializeObject(trackingMessageRequest)}");
-                        return trackingSrv.Query((request) => request.body != null)?.ToList();
+                        return pingSrv.Query((request) => true)?.ToList();
                     }
                     catch (Exception ex)
                     {

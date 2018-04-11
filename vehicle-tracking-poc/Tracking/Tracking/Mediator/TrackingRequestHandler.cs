@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Tracking.Tracking.Mediator
 {
-    public class TrackingRequestHandler : IRequestHandler<TrackingRequest, IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>>
+    public class TrackingRequestHandler : IRequestHandler<TrackingRequest, IEnumerable<(MessageHeader, PingModel, MessageFooter)>>
     {
         private readonly ILogger<TrackingRequestHandler> _logger;
         public TrackingRequestHandler(ILogger<TrackingRequestHandler> logger)
@@ -20,7 +20,7 @@ namespace Tracking.Tracking.Mediator
             _logger = logger;
         }
 
-        public async Task<IEnumerable<(MessageHeader, TrackingModel, MessageFooter)>> Handle(TrackingRequest request, CancellationToken cancellationToken)
+        public async Task<IEnumerable<(MessageHeader, PingModel, MessageFooter)>> Handle(TrackingRequest request, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Request => {nameof(TrackingModel)}");
 
