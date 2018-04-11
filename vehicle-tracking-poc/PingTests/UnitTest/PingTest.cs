@@ -22,17 +22,28 @@ namespace PingTests.UnitTest
         private PingRequest _pingRequest;
         private readonly ILogger<VehicleController> _logger;
         private readonly IMediator _mediatorMock;
-        private readonly IServiceLocator _serviceMediatorMock;
+        private readonly IOperationalUnit _operationalUnit;
+        private readonly MiddlewareConfiguration _localConfigurationMock;
+        private readonly IMessageCommand _publisherMock;
         public PingTest()
         {
             var loggerFactortMoq = new Mock<ILoggerFactory>().Object;
             _logger = loggerFactortMoq.CreateLogger<VehicleController>();
 
+            _operationalUnit = new OperationalUnit(
+               environment: "Mock",
+               assembly: $"{Environment.MachineName} {this.GetType().Assembly.FullName} V{this.GetType().Assembly.GetName().Version}");
+
+            _localConfigurationMock = new Mock<MiddlewareConfiguration>().Object;
+
+            _publisherMock = new Mock<IMessageCommand>().Object;
+
             _mediatorMock = new Mock<IMediator>().Object;
 
-            _serviceMediatorMock = new Mock<IServiceLocator>().Object;
+            _ping = new VehicleController(_logger, _mediatorMock, _publisherMock, _operationalUnit, _localConfigurationMock);
 
-            _ping = new VehicleController(_logger, _mediatorMock, _serviceMediatorMock);
+            _mediatorMock = new Mock<IMediator>().Object;
+
             _vehicleId = Guid.NewGuid().ToString();
             _pingRequest = new PingRequest { Status = VehicleStatus.active, Description = "new vehicle!" };
         }

@@ -15,7 +15,6 @@ namespace PingTests.IntegrationTest
         private readonly TestServer _server;
         private readonly HttpClient _client;
         private readonly string _pingSrvUri = "/api/v1/Vehicle/1010";
-        private readonly IHostingEnvironment Environment;
 
         public PingTest()
         {

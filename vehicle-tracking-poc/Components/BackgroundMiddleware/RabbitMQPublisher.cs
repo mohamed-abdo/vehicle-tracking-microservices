@@ -25,7 +25,6 @@ namespace BackgroundMiddleware
         private readonly IConnectionFactory connectionFactory;
         private readonly IConnection connection;
         private readonly IModel channel;
-        private readonly string replyQueueName;
         private RabbitMQPublisher(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
         {
             this.logger = logger?
@@ -47,7 +46,6 @@ namespace BackgroundMiddleware
             };
             connection = connectionFactory.CreateConnection();
             channel = connection.CreateModel();
-            replyQueueName = channel.QueueDeclare().QueueName;
         }
         public static RabbitMQPublisher Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
         {
@@ -56,37 +54,35 @@ namespace BackgroundMiddleware
 
         public async Task Command<TRequest>(string exchange, string route, (MessageHeader Header, TRequest Body, MessageFooter Footer) message)
         {
-            await new Function(logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
-                {
-                    channel.ExchangeDeclare(exchange: exchange, type: ExchangeType.Topic, durable: true);
-
-                    var properties = channel.CreateBasicProperties();
-                    properties.Persistent = true;
-
-                    var body = Utilities.BinarySerialize(message);
-                    channel.BasicPublish(exchange: exchange,
-                                         routingKey: route,
-                                         basicProperties: properties,
-                                         body: body);
-                    logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", message.Header.ExecutionId, exchange, route);
-                    connection.Close();
-                    return Task.CompletedTask;
-                }, (ex) =>
-                {
-                    switch (ex)
+                    await new Function(logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
                     {
-                        case BrokerUnreachableException brokerEx:
-                            return true;
-                        case ConnectFailureException connEx:
-                            return true;
-                        case SocketException socketEx:
-                            return true;
-                        default:
-                            return false;
-                    }
-                });
-        }
+                        channel.ExchangeDeclare(exchange: exchange, type: ExchangeType.Topic, durable: true);
 
+                        var properties = channel.CreateBasicProperties();
+                        properties.Persistent = true;
+
+                        var body = Utilities.BinarySerialize(message);
+                        channel.BasicPublish(exchange: exchange,
+                                             routingKey: route,
+                                             basicProperties: properties,
+                                             body: body);
+                        logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", message.Header.ExecutionId, exchange, route);
+                        return Task.CompletedTask;
+                    }, (ex) =>
+                    {
+                        switch (ex)
+                        {
+                            case BrokerUnreachableException brokerEx:
+                                return true;
+                            case ConnectFailureException connEx:
+                                return true;
+                            case SocketException socketEx:
+                                return true;
+                            default:
+                                return false;
+                        }
+                    });
+                }
         public void Dispose()
         {
             if (connection != null && connection.IsOpen)

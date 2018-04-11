@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Swashbuckle.AspNetCore.Swagger;
+using System;
 using System.Collections.Generic;
 using WebComponents.Interceptors;
 
@@ -57,7 +58,7 @@ namespace Ping
         private string AssemblyName => $"{Environemnt.ApplicationName} V{this.GetType().Assembly.GetName().Version}";
 
         // Inject background service, for receiving message
-        public void ConfigureServices(IServiceCollection services)
+        public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             var loggerFactorySrv = services
                                     .BuildServiceProvider()
@@ -76,8 +77,6 @@ namespace Ping
                 environment: Environemnt.EnvironmentName,
                 assembly: AssemblyName);
 
-            services.AddOptions();
-
             rabbitMQConfiguration = new RabbitMQConfiguration
             {
                 hostName = SystemLocalConfiguration.MessagesMiddleware,
@@ -89,12 +88,10 @@ namespace Ping
 
             // no need to inject the following service since, currently they are injected for the mediator.
 
-            services.AddTransient<IServiceLocator, ServiceLocator>(srv => new ServiceLocator(
-                _logger,
-                RabbitMQPublisher.Create(loggerFactorySrv, rabbitMQConfiguration),
-                SystemLocalConfiguration,
-                OperationalUnit));
-
+            services.AddSingleton<MiddlewareConfiguration, MiddlewareConfiguration>(srv => SystemLocalConfiguration);
+            services.AddScoped<IOperationalUnit, IOperationalUnit>(srv => OperationalUnit);
+            services.AddScoped<IMessageCommand, RabbitMQPublisher>(srv => RabbitMQPublisher.Create(loggerFactorySrv, rabbitMQConfiguration));
+            services.AddOptions();
             ///
             /// Injecting message receiver background service
             ///
@@ -126,6 +123,8 @@ namespace Ping
                 options.Filters.Add(new CustomeExceptoinHandler(_logger, OperationalUnit, Environemnt));
                 options.Filters.Add(new CustomResponseResult(_logger, OperationalUnit));
             });
+
+            return services.BuildServiceProvider();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

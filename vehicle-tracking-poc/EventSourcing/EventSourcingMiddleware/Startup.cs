@@ -78,32 +78,32 @@ namespace EventSourcingMiddleware
             #region tracking query worker
             // business logic
             services.AddSingleton<IHostedService, RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, TrackingModel body, MessageFooter footer)>>>(srv =>
-           {
-               //get pingService
-               var trackingSrv = new TrackingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
+            {
+                //get pingService
+                var trackingSrv = new TrackingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
 
-               return RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, TrackingModel body, MessageFooter footer)>>
-               .Create(loggerFactorySrv, new RabbitMQConfiguration
-               {
-                   hostName = SystemLocalConfiguration.MessagesMiddleware,
-                   userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
-                   password = SystemLocalConfiguration.MessagesMiddlewarePassword,
-               }
-               , (trackingMessageRequest) =>
-               {
-                   try
-                   {
+                return RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, TrackingModel body, MessageFooter footer)>>
+                .Create(loggerFactorySrv, new RabbitMQConfiguration
+                {
+                    hostName = SystemLocalConfiguration.MessagesMiddleware,
+                    userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
+                    password = SystemLocalConfiguration.MessagesMiddlewarePassword,
+                }
+                , (trackingMessageRequest) =>
+                {
+                    try
+                    {
                        //TODO: add business logic, result should be serializable
                        Logger.LogInformation($"[x] callback of RabbitMQQueryWorker=>, message: {JsonConvert.SerializeObject(trackingMessageRequest)}");
-                       return trackingSrv.Query((request) => request.body != null)?.ToList();
-                   }
-                   catch (Exception ex)
-                   {
-                       Logger.LogCritical(ex, "de-serialize Object exceptions.");
-                       return null;
-                   }
-               });
-           });
+                        return trackingSrv.Query((request) => request.body != null)?.ToList();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogCritical(ex, "de-serialize Object exceptions.");
+                        return null;
+                    }
+                });
+            });
             #endregion
 
             #region ping worker
@@ -120,6 +120,7 @@ namespace EventSourcingMiddleware
                     exchange = SystemLocalConfiguration.MiddlewareExchange,
                     userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
                     password = SystemLocalConfiguration.MessagesMiddlewarePassword,
+
                     routes = getRoutes("ping.vehicle")
                 }
                 , (pingMessageCallback) =>

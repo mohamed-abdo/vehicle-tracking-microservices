@@ -1,6 +1,8 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using BuildingAspects.Behaviors;
+using BuildingAspects.Services;
+using DomainModels.System;
 using DomainModels.Vehicle;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -18,15 +20,21 @@ namespace Ping
     {
         private readonly ILogger _logger;
         private readonly IMediator _mediator;
-        private readonly IServiceLocator _serviceMediator;
+        private readonly IMessageCommand _messagePublisher;
+        private readonly IOperationalUnit _operationalUnit;
+        private readonly MiddlewareConfiguration _middlewareConfiguration;
         public VehicleController(
             ILogger<VehicleController> logger,
             IMediator mediator,
-            IServiceLocator serviceMediator)
+            IMessageCommand messagePublisher,
+            IOperationalUnit operationalUnit,
+            MiddlewareConfiguration middlewareConfiguration)
         {
             _logger = logger;
             _mediator = mediator;
-            _serviceMediator = serviceMediator;
+            _messagePublisher = messagePublisher;
+            _operationalUnit = operationalUnit;
+            _middlewareConfiguration = middlewareConfiguration;
         }
 
         // GET api/v/<controller>/5
@@ -39,13 +47,19 @@ namespace Ping
 
             // message definition
             //(MessageHeader Header,PingModel Body, MessageFooter Footer)
-            await _mediator.Publish(new PingPublisher(_serviceMediator, ControllerContext, new PingModel()
-            {
-                ChassisNumber = id,
-                Status = StatusModel.Active,
-                Message = "Hello world => vehicle"
-            }
-            ), cancellationToken);
+            await _mediator.Publish(
+                new PingPublisher(
+                            ControllerContext,
+                            new PingModel()
+                            {
+                                ChassisNumber = id,
+                                Status = StatusModel.Active,
+                                Message = "Hello world => vehicle"
+                            },
+                            _messagePublisher,
+                            _middlewareConfiguration,
+                            _operationalUnit)
+            , cancellationToken);
             //throw new CustomException(code: ExceptionCodes.MessageMalformed);
             return Ok(id);
         }
@@ -55,12 +69,17 @@ namespace Ping
         [HttpPost("{vehicleId}")]
         public async Task<IActionResult> Post(string vehicleId, PingRequest pingRequest, CancellationToken cancellationToken)
         {
-            await _mediator.Publish(new PingPublisher(_serviceMediator, ControllerContext, new PingModel()
-            {
-                ChassisNumber = vehicleId,
-                Status = StatusModel.Active,
-                Message = "Hello world => vehicle"
-            }), cancellationToken);
+            await _mediator.Publish(new PingPublisher(
+                            ControllerContext,
+                            new PingModel()
+                            {
+                                ChassisNumber = vehicleId,
+                                Status = StatusModel.Active,
+                                Message = "Hello world => vehicle"
+                            },
+                            _messagePublisher,
+                            _middlewareConfiguration,
+                            _operationalUnit), cancellationToken);
             return Ok();
         }
     }

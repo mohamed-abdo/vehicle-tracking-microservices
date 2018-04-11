@@ -60,11 +60,10 @@ namespace Tracking
         public IHostingEnvironment Environemnt { get; }
         public IConfiguration Configuration { get; }
         public ILogger Logger { get; }
-        public ICacheProvider Cache { get; set; }
         private string AssemblyName => $"{Environemnt.ApplicationName} V{this.GetType().Assembly.GetName().Version}";
 
         // Inject background service, for receiving message
-        public void ConfigureServices(IServiceCollection services)
+        public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             var loggerFactorySrv = services
                                     .BuildServiceProvider()
@@ -93,11 +92,9 @@ namespace Tracking
             };
 
             // set cache service for db index 1
-            Cache = new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1);
             services.AddSingleton<ICacheProvider, CacheManager>(srv => new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1));
-            services.AddTransient<IOperationalUnit, IOperationalUnit>(srv => OperationalUnit);
-           
             services.AddSingleton<MiddlewareConfiguration, MiddlewareConfiguration>(srv => SystemLocalConfiguration);
+            services.AddScoped<IOperationalUnit, IOperationalUnit>(srv => OperationalUnit);
             services.AddOptions();
 
             #region worker background services
@@ -107,6 +104,7 @@ namespace Tracking
 
             services.AddSingleton<IHostedService, RabbitMQSubscriberWorker<(MessageHeader, PingModel, MessageFooter)>>(srv =>
             {
+                var cache = new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1);
                 return RabbitMQSubscriberWorker<(MessageHeader header, PingModel body, MessageFooter footer)>
                     .Create(loggerFactorySrv, rabbitMQConfiguration
                     , (pingMessageCallback) =>
@@ -117,7 +115,7 @@ namespace Tracking
                             //cache model body by vehicle chassis as a key
                             if (message.body != null)
                             {
-                                Cache.Set(message.body.ChassisNumber, message.header.Timestamp.ToString(), Defaults.CacheTimeout);
+                                cache.Set(message.body.ChassisNumber, message.header.Timestamp.ToString(), Defaults.CacheTimeout);
                             }
                             Logger.LogInformation($"[x] Tracking service received a message from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
                         }
@@ -182,6 +180,8 @@ namespace Tracking
                 options.Filters.Add(new CustomeExceptoinHandler(_logger, OperationalUnit, Environemnt));
                 options.Filters.Add(new CustomResponseResult(_logger, OperationalUnit));
             });
+
+            return services.BuildServiceProvider();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
