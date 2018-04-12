@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,43 +28,45 @@ namespace EventSourcingMiddleware
     {
         public Startup(ILoggerFactory logger, IHostingEnvironment environemnt, IConfiguration configuration)
         {
-            Configuration = configuration;
+            _configuration = configuration;
 
-            Environemnt = environemnt;
+            _environemnt = environemnt;
 
-            logger
+            _logger = new LoggerFactory()
                 .AddConsole()
                 .AddDebug()
-                .AddFile(configuration.GetSection("Logging"));
-
-            Logger = logger
+                .AddFile(configuration.GetSection("Logging"))
                 .CreateLogger<Startup>();
-            //local system configuration
-            SystemLocalConfiguration = new ServiceConfiguration().Create(new Dictionary<string, string>() {
 
-                {nameof(SystemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},
-                {nameof(SystemLocalConfiguration.VehiclesCacheDB),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
-                {nameof(SystemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>(Identifiers.MessagesMiddleware)},
-                {nameof(SystemLocalConfiguration.MiddlewareExchange),  Configuration.GetValue<string>(Identifiers.MiddlewareExchange)},
-                {nameof(SystemLocalConfiguration.MessageSubscriberRoute),  Configuration.GetValue<string>(Identifiers.MessageSubscriberRoutes)},
-                {nameof(SystemLocalConfiguration.MessagesMiddlewareUsername),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewareUsername)},
-                {nameof(SystemLocalConfiguration.MessagesMiddlewarePassword),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewarePassword)},
-                {nameof(SystemLocalConfiguration.EventDbConnection),    Configuration.GetValue<string>(Identifiers.EventDbConnection)},
+            //local system configuration
+            _systemLocalConfiguration = new ServiceConfiguration().Create(new Dictionary<string, string>() {
+
+                {nameof(_systemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},
+                {nameof(_systemLocalConfiguration.VehiclesCacheDB),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
+                {nameof(_systemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>(Identifiers.MessagesMiddleware)},
+                {nameof(_systemLocalConfiguration.MiddlewareExchange),  Configuration.GetValue<string>(Identifiers.MiddlewareExchange)},
+                {nameof(_systemLocalConfiguration.MessageSubscriberRoute),  Configuration.GetValue<string>(Identifiers.MessageSubscriberRoutes)},
+                {nameof(_systemLocalConfiguration.MessagesMiddlewareUsername),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewareUsername)},
+                {nameof(_systemLocalConfiguration.MessagesMiddlewarePassword),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewarePassword)},
+                {nameof(_systemLocalConfiguration.EventDbConnection),    Configuration.GetValue<string>(Identifiers.EventDbConnection)},
             });
         }
 
-        private MiddlewareConfiguration SystemLocalConfiguration;
-        public IHostingEnvironment Environemnt { get; }
-        public IConfiguration Configuration { get; }
-        public ILogger Logger { get; }
-
+        private readonly MiddlewareConfiguration _systemLocalConfiguration;
+        private readonly IHostingEnvironment _environemnt;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger _logger;
+        public IHostingEnvironment Environemnt => _environemnt;
+        public IConfiguration Configuration => _configuration;
+        public ILogger Logger => _logger;
         // Inject background service, for receiving message
-        public IServiceProvider ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services)
         {
-            var loggerFactorySrv = services.BuildServiceProvider().GetService<ILoggerFactory>();
+            var serviceProvider = services.BuildServiceProvider();
+            var loggerFactorySrv = serviceProvider.GetService<ILoggerFactory>();
 
             services.AddDbContextPool<VehicleDbContext>(options => options.UseSqlServer(
-                SystemLocalConfiguration.EventDbConnection,
+                _systemLocalConfiguration.EventDbConnection,
                 //enable connection resilience
                 connectOptions =>
                 {
@@ -75,39 +78,6 @@ namespace EventSourcingMiddleware
             ///
             #region worker background services
 
-            #region tracking query worker
-            // business logic
-            services.AddSingleton<IHostedService, RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, PingModel body, MessageFooter footer)>>>(srv =>
-            {
-                //get pingService
-                var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
-
-                return RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, PingModel body, MessageFooter footer)>>
-                .Create(loggerFactorySrv, new RabbitMQConfiguration
-                {
-                    exchange = "",
-                    hostName = SystemLocalConfiguration.MessagesMiddleware,
-                    userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
-                    password = SystemLocalConfiguration.MessagesMiddlewarePassword,
-                    routes = new string[] { "rpc_queue" },
-                }
-                , (trackingMessageRequest) =>
-                {
-                    try
-                    {
-                        //TODO: add business logic, result should be serializable
-                        Logger.LogInformation($"[x] callback of RabbitMQQueryWorker=>, message: {JsonConvert.SerializeObject(trackingMessageRequest)}");
-                        return pingSrv.Query((request) => true)?.ToList();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.LogCritical(ex, "de-serialize Object exceptions.");
-                        return null;
-                    }
-                });
-            });
-            #endregion
-
             #region ping worker
 
             services.AddSingleton<IHostedService, RabbitMQSubscriberWorker<(MessageHeader, PingModel, MessageFooter)>>(srv =>
@@ -116,12 +86,12 @@ namespace EventSourcingMiddleware
                 var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
 
                 return RabbitMQSubscriberWorker<(MessageHeader header, PingModel body, MessageFooter footer)>
-                .Create(loggerFactorySrv, new RabbitMQConfiguration
+                .Create(serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
                 {
-                    hostName = SystemLocalConfiguration.MessagesMiddleware,
-                    exchange = SystemLocalConfiguration.MiddlewareExchange,
-                    userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
-                    password = SystemLocalConfiguration.MessagesMiddlewarePassword,
+                    hostName = _systemLocalConfiguration.MessagesMiddleware,
+                    exchange = _systemLocalConfiguration.MiddlewareExchange,
+                    userName = _systemLocalConfiguration.MessagesMiddlewareUsername,
+                    password = _systemLocalConfiguration.MessagesMiddlewarePassword,
                     routes = getRoutes("ping.vehicle")
                 }
                 , (pingMessageCallback) =>
@@ -130,7 +100,7 @@ namespace EventSourcingMiddleware
                     {
                         var message = pingMessageCallback();
                         var addingResult = pingSrv.Add(message);
-                        Logger.LogInformation($"[x] Event sourcing service receiving a message from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
+                        Logger.LogInformation($"[x] Event sourcing service receiving a message from exchange: {_systemLocalConfiguration.MiddlewareExchange}, route :{_systemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
                     }
                     catch (Exception ex)
                     {
@@ -143,18 +113,17 @@ namespace EventSourcingMiddleware
 
             #endregion
 
-            #region internal functions
-            string[] getRoutes(string endwithMatch)
-            {
-                return SystemLocalConfiguration.MessageSubscriberRoute
-                                 .Split(',')
-                                               .Where(route => route.ToLower().EndsWith(endwithMatch, StringComparison.InvariantCultureIgnoreCase))
-                                 .ToArray();
-            }
-            #endregion
-
-            return services.BuildServiceProvider();
         }
+        #region internal functions
+        private string[] getRoutes(string endwithMatch)
+        {
+            return _systemLocalConfiguration.MessageSubscriberRoute
+                             .Split(',')
+                                           .Where(route => route.ToLower().EndsWith(endwithMatch, StringComparison.InvariantCultureIgnoreCase))
+                             .ToArray();
+        }
+
+        #endregion
 
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
         {
@@ -162,7 +131,7 @@ namespace EventSourcingMiddleware
             using (var scope = app.ApplicationServices.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetService<VehicleDbContext>();
-                dbContext.Database.EnsureCreated();
+                dbContext?.Database?.EnsureCreated();
             }
 
             loggerFactory.AddConsole();

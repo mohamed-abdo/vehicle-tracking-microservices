@@ -8,8 +8,6 @@ using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 using System;
 using System.Net.Sockets;
-using System.Runtime.Serialization;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,7 +30,11 @@ namespace BackgroundMiddleware
         /// </summary>
         /// <param name="logger">ILogger instance</param>
         /// <param name="hostConfig">rabbitMQ configuration</param>
-        private RabbitMQSubscriberWorker(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Func<TRequest>> callback)
+        private RabbitMQSubscriberWorker(
+            IServiceProvider serviceProvider,
+            ILoggerFactory logger,
+            RabbitMQConfiguration hostConfig,
+            Action<Func<TRequest>> callback) : base(serviceProvider)
         {
             this.logger = logger?
                             .AddConsole()
@@ -59,9 +61,9 @@ namespace BackgroundMiddleware
         /// </summary>
         /// <param name="logger">ILogger instance</param>
         /// <param name="hostConfig">rabbitMQ configuration</param>
-        public static RabbitMQSubscriberWorker<TRequest> Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Func<TRequest>> callback)
+        public static RabbitMQSubscriberWorker<TRequest> Create(IServiceProvider serviceProvider, ILoggerFactory logger, RabbitMQConfiguration hostConfig, Action<Func<TRequest>> callback)
         {
-            return new RabbitMQSubscriberWorker<TRequest>(logger, hostConfig, callback);
+            return new RabbitMQSubscriberWorker<TRequest>(serviceProvider, logger, hostConfig, callback);
         }
         /// <summary>
         /// 

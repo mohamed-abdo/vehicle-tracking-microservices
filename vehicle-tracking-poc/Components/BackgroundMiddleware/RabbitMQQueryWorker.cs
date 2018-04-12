@@ -27,7 +27,11 @@ namespace BackgroundMiddleware
         /// </summary>
         /// <param name="logger">ILogger instance</param>
         /// <param name="hostConfig">rabbitMQ configuration</param>
-        private RabbitMQQueryWorker(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Func<TRequest, TResponse> lambda)
+        private RabbitMQQueryWorker(
+            IServiceProvider serviceProvider,
+            ILoggerFactory logger,
+            RabbitMQConfiguration hostConfig,
+            Func<TRequest, TResponse> lambda) : base(serviceProvider)
         {
             this.logger = logger?
                             .AddConsole()
@@ -57,9 +61,9 @@ namespace BackgroundMiddleware
         /// </summary>
         /// <param name="logger">ILogger instance</param>
         /// <param name="hostConfig">rabbitMQ configuration</param>
-        public static RabbitMQQueryWorker<TRequest, TResponse> Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig, Func<TRequest, TResponse> lambda)
+        public static RabbitMQQueryWorker<TRequest, TResponse> Create(IServiceProvider serviceProvider, ILoggerFactory logger, RabbitMQConfiguration hostConfig, Func<TRequest, TResponse> lambda)
         {
-            return new RabbitMQQueryWorker<TRequest, TResponse>(logger, hostConfig, lambda);
+            return new RabbitMQQueryWorker<TRequest, TResponse>(serviceProvider, logger, hostConfig, lambda);
         }
         /// <summary>
         /// 
@@ -101,7 +105,9 @@ namespace BackgroundMiddleware
                             //TODO: in the future validate response is serializable
                             //if (!(response is ISerializable))
                             //    throw new SerializationException("response is not serializable");
-                            var serializableBinary = Utilities.BinarySerialize(response);
+                            byte[] serializableBinary = null;
+                            if (response != null)
+                                serializableBinary = Utilities.BinarySerialize(response);
                             channel.BasicPublish(exchange: exchange, routingKey: props.ReplyTo, basicProperties: replyProps, body: serializableBinary);
                             channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
 

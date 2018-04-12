@@ -33,7 +33,7 @@ namespace EventSourceingSqlDb.Functors
                 Assembly = pingEntity.Assembly,
                 Environment = pingEntity.Environment,
                 FingerPrint = pingEntity.FingerPrint,
-                Hint = Enum.GetName(typeof(ResponseHint), pingEntity.Hint),
+                Hint = pingEntity.Hint,
                 Route = JsonConvert.SerializeObject(pingEntity.Route, Defaults.JsonSerializerSettings),
                 Sender = pingEntity.Sender
             };

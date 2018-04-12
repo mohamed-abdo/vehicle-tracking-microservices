@@ -65,8 +65,8 @@ namespace BackgroundMiddleware
 
             consumer.Received += (model, ea) =>
             {
-                if (ea.Body == null || ea.Body.Length == 0)
-                    throw new TypeLoadException("Invalid message type");
+                if (ea.Body == null)
+                    return;
                 if (!(Utilities.BinaryDeserialize(ea.Body) is TResponse response))
                     throw new InvalidCastException("Invalid message cast");
                 if (ea.BasicProperties.CorrelationId == correlationId)

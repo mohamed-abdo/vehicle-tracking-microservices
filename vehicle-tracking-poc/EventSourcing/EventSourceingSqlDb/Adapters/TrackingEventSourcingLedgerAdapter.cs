@@ -24,8 +24,7 @@ namespace EventSourceingSqlDb.Adapters
             return
                 _pingEventSourcingLedger
                 .Query(Functors.Mappers<TrackingModel>.PredicateMapper(predicate))
-                .Select(Functors.Mappers<TrackingModel>.FromEnityToPingModel)
-                .AsQueryable();
+                .Select(Functors.Mappers<TrackingModel>.FromEnityToPingModel);
         }
     }
 }

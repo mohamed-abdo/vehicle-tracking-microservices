@@ -24,10 +24,11 @@ namespace EventSourceingSqlDb.DbModels
                 Environment = footer.Environment,
                 Assembly = footer.Assembly,
                 FingerPrint = footer.FingerPrint,
-                Hint = Enum.GetName(typeof(ResponseHint), footer.Hint),
+                Hint = footer.Hint,
                 Route = JsonConvert.DeserializeObject<IDictionary<string, string>>(footer.Route, Defaults.JsonSerializerSettings)
             };
         }
-
     }
+
 }
+

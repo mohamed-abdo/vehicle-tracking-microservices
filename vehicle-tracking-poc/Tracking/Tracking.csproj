@@ -11,6 +11,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="2.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Redis.Core" Version="1.0.3" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="2.0.2" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="1.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.6" />
@@ -35,6 +37,7 @@
     <ProjectReference Include="..\Components\WebComponents\WebComponents.csproj" />
     <ProjectReference Include="..\DomainModels\DomainModels.csproj" />
     <ProjectReference Include="..\Components\RedisCacheAdapter\RedisCacheAdapter.csproj" />
+    <ProjectReference Include="..\EventSourcing\EventSourceingSqlDb\EventSourceingSqlDb.csproj" />
   </ItemGroup>
 
 </Project>

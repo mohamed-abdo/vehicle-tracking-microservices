@@ -20,6 +20,11 @@ using System;
 using System.Linq;
 using Newtonsoft.Json;
 using RedisCacheAdapter;
+using EventSourceingSqlDb.Adapters;
+using EventSourceingSqlDb.DbModels;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http.Features;
+
 namespace Tracking
 {
     public class Startup
@@ -30,45 +35,54 @@ namespace Tracking
                 .SetBasePath(environemnt.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables();
+            _configuration = builder.Build();
 
-            Configuration = builder.Build();
+            _environemnt = environemnt;
 
-            Environemnt = environemnt;
+            _logger = logger
+                  .AddConsole()
+                  .AddDebug()
+                  .AddFile("Logs/Startup-{Date}.txt", isJson: true)
+                  .CreateLogger<Startup>();
 
-            logger
-                .AddConsole()
-                .AddDebug()
-                .AddFile("Logs/Startup-{Date}.txt", isJson: true);
-
-            Logger = logger
-                .CreateLogger<Startup>();
             //local system configuration
-            SystemLocalConfiguration = new ServiceConfiguration().Create(new Dictionary<string, string>() {
-                {nameof(SystemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},
-                {nameof(SystemLocalConfiguration.VehiclesCacheDB),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
-                {nameof(SystemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>(Identifiers.MessagesMiddleware)},
-                {nameof(SystemLocalConfiguration.MiddlewareExchange),  Configuration.GetValue<string>(Identifiers.MiddlewareExchange)},
-                {nameof(SystemLocalConfiguration.MessageSubscriberRoute),  Configuration.GetValue<string>(Identifiers.MessageSubscriberRoutes)},
-                {nameof(SystemLocalConfiguration.MessagesMiddlewareUsername),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewareUsername)},
-                {nameof(SystemLocalConfiguration.MessagesMiddlewarePassword),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewarePassword)},
+            _systemLocalConfiguration = new ServiceConfiguration().Create(new Dictionary<string, string>() {
+                {nameof(_systemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},
+                {nameof(_systemLocalConfiguration.VehiclesCacheDB),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
+                {nameof(_systemLocalConfiguration.EventDbConnection),  Configuration.GetValue<string>(Identifiers.EventDbConnection)},
+                {nameof(_systemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>(Identifiers.MessagesMiddleware)},
+                {nameof(_systemLocalConfiguration.MiddlewareExchange),  Configuration.GetValue<string>(Identifiers.MiddlewareExchange)},
+                {nameof(_systemLocalConfiguration.MessageSubscriberRoute),  Configuration.GetValue<string>(Identifiers.MessageSubscriberRoutes)},
+                {nameof(_systemLocalConfiguration.MessagesMiddlewareUsername),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewareUsername)},
+                {nameof(_systemLocalConfiguration.MessagesMiddlewarePassword),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewarePassword)},
             });
         }
 
-        private MiddlewareConfiguration SystemLocalConfiguration;
-
-        private IOperationalUnit OperationalUnit;
-        public IHostingEnvironment Environemnt { get; }
-        public IConfiguration Configuration { get; }
-        public ILogger Logger { get; }
+        private readonly MiddlewareConfiguration _systemLocalConfiguration;
+        private readonly IHostingEnvironment _environemnt;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger _logger;
+        public IHostingEnvironment Environemnt => _environemnt;
+        public IConfiguration Configuration => _configuration;
+        public ILogger Logger => _logger;
         private string AssemblyName => $"{Environemnt.ApplicationName} V{this.GetType().Assembly.GetName().Version}";
 
         // Inject background service, for receiving message
-        public IServiceProvider ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services)
         {
-            var loggerFactorySrv = services
-                                    .BuildServiceProvider()
-                                    .GetService<ILoggerFactory>();
-            
+            var serviceProvider = services.BuildServiceProvider();
+            var loggerFactorySrv = serviceProvider.GetService<ILoggerFactory>();
+
+            services.AddDbContextPool<VehicleDbContext>(options => options.UseSqlServer(
+              _systemLocalConfiguration.EventDbConnection,
+              //enable connection resilience
+              connectOptions =>
+              {
+                  connectOptions.EnableRetryOnFailure();
+                  connectOptions.CommandTimeout(Identifiers.TimeoutInSec);
+              })
+          );
+
             //add application insights information, could be used to monitor the performance, and more analytics when application moved to the cloud.
             loggerFactorySrv.AddApplicationInsights(services.BuildServiceProvider(), LogLevel.Information);
 
@@ -78,17 +92,18 @@ namespace Tracking
                 .AddFile(Configuration.GetSection("Logging"))
                 .CreateLogger<Startup>();
 
-            OperationalUnit = new OperationalUnit(
+            var operationalUnit = new OperationalUnit(
                 environment: Environemnt.EnvironmentName,
                 assembly: AssemblyName);
 
             // set cache service for db index 1
-            services.AddSingleton<ICacheProvider, CacheManager>(srv => new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1));
-            services.AddSingleton<MiddlewareConfiguration, MiddlewareConfiguration>(srv => SystemLocalConfiguration);
-            services.AddScoped<IOperationalUnit, IOperationalUnit>(srv => OperationalUnit);
+            services.AddSingleton<ICacheProvider, CacheManager>(srv => new CacheManager(Logger, _systemLocalConfiguration.CacheServer, 1));
+            services.AddSingleton<MiddlewareConfiguration, MiddlewareConfiguration>(srv => _systemLocalConfiguration);
+            services.AddScoped<IOperationalUnit, IOperationalUnit>(srv => operationalUnit);
             services.AddOptions();
 
             #region worker background services
+
 
             #region tracking vehicle query client
 
@@ -100,29 +115,71 @@ namespace Tracking
                             .Create(loggerFactorySrv, new RabbitMQConfiguration
                             {
                                 exchange = "",
-                                hostName = SystemLocalConfiguration.MessagesMiddleware,
-                                userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
-                                password = SystemLocalConfiguration.MessagesMiddlewarePassword,
+                                hostName = _systemLocalConfiguration.MessagesMiddleware,
+                                userName = _systemLocalConfiguration.MessagesMiddlewareUsername,
+                                password = _systemLocalConfiguration.MessagesMiddlewarePassword,
                                 routes = new string[] { "rpc_queue" },
                             });
                 });
 
             #endregion
 
-            #region ping worker
+
+
+            #region build ping worker cache
+
+            #region tracking query worker
+            // business logic
+
+            services.AddSingleton<IHostedService, RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, PingModel body, MessageFooter footer)>>>(srv =>
+            {
+                Func<(MessageHeader header, PingModel body, MessageFooter footer), bool> filterQuery = (model) =>
+                {
+                    return true;
+                };
+                //get pingService
+                var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
+
+                return RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, PingModel body, MessageFooter footer)>>
+                .Create(serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
+                {
+                    exchange = "",
+                    hostName = _systemLocalConfiguration.MessagesMiddleware,
+                    userName = _systemLocalConfiguration.MessagesMiddlewareUsername,
+                    password = _systemLocalConfiguration.MessagesMiddlewarePassword,
+                    routes = new string[] { "rpc_queue" },
+                }
+                , (trackingMessageRequest) =>
+                {
+                    try
+                    {
+                        //TODO: add business logic, result should be serializable
+                        Logger.LogInformation($"[x] callback of RabbitMQQueryWorker=>, message: {JsonConvert.SerializeObject(trackingMessageRequest)}");
+                        return pingSrv.Query(filterQuery)?.ToList();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogCritical(ex, "de-serialize Object exceptions.");
+                        return null;
+                    }
+                });
+            });
+            #endregion
+
             //you may get a different cache db, by passing db index parameter.
+            #region cache worker
 
             services.AddSingleton<IHostedService, RabbitMQSubscriberWorker<(MessageHeader, PingModel, MessageFooter)>>(srv =>
             {
-                var cache = new CacheManager(Logger, SystemLocalConfiguration.CacheServer, 1);
+                var cache = new CacheManager(Logger, _systemLocalConfiguration.CacheServer, 1);
                 return RabbitMQSubscriberWorker<(MessageHeader header, PingModel body, MessageFooter footer)>
-                    .Create(loggerFactorySrv, new RabbitMQConfiguration
+                    .Create(serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
                     {
-                        hostName = SystemLocalConfiguration.MessagesMiddleware,
-                        exchange = SystemLocalConfiguration.MiddlewareExchange,
-                        userName = SystemLocalConfiguration.MessagesMiddlewareUsername,
-                        password = SystemLocalConfiguration.MessagesMiddlewarePassword,
-                        routes = new string[] { SystemLocalConfiguration.MessageSubscriberRoute }
+                        hostName = _systemLocalConfiguration.MessagesMiddleware,
+                        exchange = _systemLocalConfiguration.MiddlewareExchange,
+                        userName = _systemLocalConfiguration.MessagesMiddlewareUsername,
+                        password = _systemLocalConfiguration.MessagesMiddlewarePassword,
+                        routes = new string[] { _systemLocalConfiguration.MessageSubscriberRoute }
                     }
                     , (pingMessageCallback) =>
                     {
@@ -134,7 +191,7 @@ namespace Tracking
                             {
                                 cache.Set(message.body.ChassisNumber, message.header.Timestamp.ToString(), Defaults.CacheTimeout).Wait();
                             }
-                            Logger.LogInformation($"[x] Tracking service received a message from exchange: {SystemLocalConfiguration.MiddlewareExchange}, route :{SystemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
+                            Logger.LogInformation($"[x] Tracking service received a message from exchange: {_systemLocalConfiguration.MiddlewareExchange}, route :{_systemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
                         }
                         catch (Exception ex)
                         {
@@ -143,11 +200,15 @@ namespace Tracking
                     });
             });
 
+            #endregion
+
+            #endregion
+
+
             #region internal functions
 
             #endregion
 
-            #endregion
 
             #endregion
 
@@ -157,8 +218,8 @@ namespace Tracking
 
             services.AddDistributedRedisCache(redisOptions =>
             {
-                redisOptions.Configuration = SystemLocalConfiguration.CacheServer;
-                redisOptions.InstanceName = SystemLocalConfiguration.VehiclesCacheDB;
+                redisOptions.Configuration = _systemLocalConfiguration.CacheServer;
+                redisOptions.InstanceName = _systemLocalConfiguration.VehiclesCacheDB;
             });
 
             services.AddApiVersioning(options =>
@@ -170,7 +231,7 @@ namespace Tracking
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Info { Title = OperationalUnit.Assembly, Version = "v1" });
+                c.SwaggerDoc("v1", new Info { Title = operationalUnit.Assembly, Version = "v1" });
             });
 
 
@@ -179,16 +240,14 @@ namespace Tracking
             services.AddMvc(options =>
             {
                 //TODO: add practical policy instead of empty policy for authentication / authorization .
-                options.Filters.Add(new CustomAuthorizer(_logger, OperationalUnit));
-                options.Filters.Add(new CustomeExceptoinHandler(_logger, OperationalUnit, Environemnt));
-                options.Filters.Add(new CustomResponseResult(_logger, OperationalUnit));
+                options.Filters.Add(new CustomAuthorizer(_logger, operationalUnit));
+                options.Filters.Add(new CustomeExceptoinHandler(_logger, operationalUnit, Environemnt));
+                options.Filters.Add(new CustomResponseResult(_logger, operationalUnit));
             });
-
-            return services.BuildServiceProvider();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IDistributedCache cache, IHostingEnvironment environemnt)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment environemnt)
         {
             app.UseStatusCodePages();
             if (environemnt.IsDevelopment())

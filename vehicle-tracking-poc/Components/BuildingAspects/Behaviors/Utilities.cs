@@ -89,7 +89,7 @@ namespace BuildingAspects.Behaviors
         public static object BinaryDeserialize(byte[] objAsBinary)
         {
             if(objAsBinary ==null)throw new ArgumentNullException(MadatoryParam);
-                
+            if (objAsBinary.Length == 0) return null;
             var formatter = new BinaryFormatter();
             using (var memory = new MemoryStream(objAsBinary))
             {

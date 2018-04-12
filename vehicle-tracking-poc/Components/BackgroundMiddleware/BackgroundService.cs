@@ -7,16 +7,23 @@ namespace BackgroundMiddleware
 {
     public abstract class BackgroundService : IHostedService, IDisposable
     {
+        private readonly IServiceProvider _serviceProvider;
+        public BackgroundService(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        }
         private Task _executingTask;
         private readonly CancellationTokenSource _stoppingCts = new CancellationTokenSource();
+
+        public IServiceProvider Services => _serviceProvider;
 
         protected abstract Task ExecuteAsync(CancellationToken stoppingToken);
 
         public virtual async Task StartAsync(CancellationToken cancellationToken)
         {
             // Store the task we're executing
-            _executingTask =  ExecuteAsync(_stoppingCts.Token);
-
+            _executingTask = ExecuteAsync(_stoppingCts.Token);
+            await _executingTask;
             // If the task is completed then return it,
             // this will bubble cancellation and failure to the caller
             if (_executingTask.IsCompleted)
