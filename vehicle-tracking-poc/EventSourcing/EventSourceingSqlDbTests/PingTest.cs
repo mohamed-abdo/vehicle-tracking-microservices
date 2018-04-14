@@ -19,9 +19,9 @@ namespace EventSourceingSqlDbTests
     {
         private readonly Mock<ILoggerFactory> _loggerMoq;
         private readonly VehicleDbContext _dbContext;
-        private readonly ICommandEventSourcingLedger<(MessageHeader header, PingModel body, MessageFooter footer)> _eventSourcingLedger;
-        private readonly IQueryEventSourcingLedger<(MessageHeader header, PingModel body, MessageFooter footer)> _eventSourcingLedgerQuery;
-        private (MessageHeader header, PingModel body, MessageFooter footer) message;
+        private readonly ICommandEventSourcingLedger<PingModel> _eventSourcingLedger;
+        private readonly IQueryEventSourcingLedger<PingModel> _eventSourcingLedgerQuery;
+        private PingModel message;
         public PingTest()
         {
             _loggerMoq = new Mock<ILoggerFactory>(MockBehavior.Loose);
@@ -36,11 +36,12 @@ namespace EventSourceingSqlDbTests
         [SetUp]
         public void SetUp()
         {
-            message = (
-            header: new MessageHeader(executionId: Guid.NewGuid().ToString(), timestamp: new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds()),
-            body: new PingModel(),
-            footer: new MessageFooter()
-            );
+            message = new PingModel
+            {
+                Header = new MessageHeader(executionId: Guid.NewGuid().ToString(), timestamp: new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds()),
+                Body = new Ping(),
+                Footer = new MessageFooter()
+            };
         }
         [Test]
         public async Task TestAddPingEventSourcing()
@@ -52,7 +53,7 @@ namespace EventSourceingSqlDbTests
         [Test]
         public async Task TestAddPingSourcingVerifyMessageExecId()
         {
-            var execId = message.header.ExecutionId;
+            var execId = message.Header.ExecutionId;
             var result = await _eventSourcingLedger.Add(message);
             var messageRec = await _dbContext.PingEventSource
                 .FirstOrDefaultAsync(p => p.ExecutionId == execId);
@@ -62,9 +63,9 @@ namespace EventSourceingSqlDbTests
         [Test]
         public async Task TestAddPingEventSourcingVerifyMessageBody()
         {
-            var execId = message.header.ExecutionId;
-            var messageBody = new PingModel { ChassisNumber = "Xyz-Vehicle!" };
-            message.body = messageBody;
+            var execId = message.Header.ExecutionId;
+            var messageBody = new Ping { ChassisNumber = "Xyz-Vehicle!" };
+            message.Body = messageBody;
             var result = await _eventSourcingLedger.Add(message);
             var messageRec = await _dbContext.PingEventSource.FirstOrDefaultAsync(p => p.ExecutionId == execId);
             var originalObj = messageRec.Data.ToObject<PingModel>();
@@ -74,44 +75,46 @@ namespace EventSourceingSqlDbTests
         [Test]
         public async Task TestQueryPingEventSourcing()
         {
-            var execId = message.header.ExecutionId;
-            var messageBody = new PingModel() { ChassisNumber = "Xyz-Vehicle!" };
-            var pingMessage = (
-                            header: message.header,
-                            body: messageBody,
-                            footer: message.footer
-                       );
+            var execId = message.Header.ExecutionId;
+            var messageBody = new Ping() { ChassisNumber = "Xyz-Vehicle!" };
+            var pingMessage = new PingModel
+            {
+                Header = message.Header,
+                Body = messageBody,
+                Footer = message.Footer
+            };
             var dbObjec = new PingEventSourcing(EventSourceingSqlDb.Functors.Mappers<PingModel>.FromPingModelToEnity(pingMessage));
 
             _dbContext.PingEventSource.Add(dbObjec);
             await _dbContext.SaveChangesAsync();
-            var messageRec = _eventSourcingLedgerQuery.Query(p => p.header.ExecutionId == execId).FirstOrDefault();
+            var messageRec = _eventSourcingLedgerQuery.Query(p => p.Header.ExecutionId == execId).FirstOrDefault();
 
-            Assert.IsTrue(pingMessage.body.EqualsByValue(messageRec.body), "query ping failed, message has been tempered.");
+            Assert.IsTrue(pingMessage.Body.EqualsByValue(messageRec.Body), "query ping failed, message has been tempered.");
         }
 
         [Test]
         public async Task TestQueryPingEventSourcingFullMessage()
         {
-            var execId = message.header.ExecutionId;
-            var messageBody = new PingModel() { ChassisNumber = "Xyz-Vehicle!" };
-            var pingMessage = (
-                            header: message.header,
-                            body: messageBody,
-                            footer: message.footer
-                       );
+            var execId = message.Header.ExecutionId;
+            var messageBody = new Ping() { ChassisNumber = "Xyz-Vehicle!" };
+            var pingMessage = new PingModel
+            {
+                Header = message.Header,
+                Body = messageBody,
+                Footer = message.Footer
+            };
 
-            byte[] binObjSource = Utilities.BinarySerialize(pingMessage);
+            byte[] binObjSource = Utilities.JsonBinarySerialize(pingMessage);
 
             var dbObjec = new PingEventSourcing(EventSourceingSqlDb.Functors.Mappers<PingModel>.FromPingModelToEnity(pingMessage));
 
             _dbContext.PingEventSource.Add(dbObjec);
             await _dbContext.SaveChangesAsync();
-            var messageRec = _eventSourcingLedgerQuery.Query(p => p.header.ExecutionId == execId).FirstOrDefault();
+            var messageRec = _eventSourcingLedgerQuery.Query(p => p.Header.ExecutionId == execId).FirstOrDefault();
 
-            byte[] binObjDestination = Utilities.BinarySerialize(messageRec);
+            byte[] binObj = Utilities.JsonBinarySerialize(messageRec);
 
-            Assert.IsTrue(binObjSource.SequenceEqual(binObjDestination), "query ping failed,full message has been tempered.");
+            Assert.IsTrue(binObjSource.SequenceEqual(binObj), "query ping failed,full message has been tempered.");
         }
     }
 }

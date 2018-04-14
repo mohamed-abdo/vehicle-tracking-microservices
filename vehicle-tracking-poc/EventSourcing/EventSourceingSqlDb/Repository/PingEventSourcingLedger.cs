@@ -1,17 +1,16 @@
-﻿using DomainModels.Types.Messages;
-using DomainModels.Vehicle;
+﻿using DomainModels.System;
 using EventSourceingSqlDb.DbModels;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace EventSourceingSqlDb.Repository
 {
-    public class PingEventSourcingLedger : BaseEventSourcingLedger, ICommandEventSourcingLedger<DbModel>
-        , IQueryEventSourcingLedger<DbModel>
+    public class PingEventSourcingLedger : BaseEventSourcingLedger,
+        ICommandEventSourcingLedger<DbModel>,
+        IQueryEventSourcingLedger<DbModel>
     {
         public PingEventSourcingLedger(ILoggerFactory loggerFactory, VehicleDbContext dbContext) : base(loggerFactory, dbContext) { }
 
@@ -21,9 +20,32 @@ namespace EventSourceingSqlDb.Repository
             return DbContext.SaveChangesAsync();
         }
 
-        public IEnumerable<DbModel> Query(Func<DbModel, bool> predicate)
+        public IQueryable<DbModel> Query(Func<DbModel, bool> predicate)
         {
             return DbContext.PingEventSource.Where(predicate).AsQueryable();
+        }
+        public IQueryable<DbModel> Query(IFilter queryFilter, Func<DbModel, bool> predicate = null)
+        {
+            predicate = (m) =>
+            {
+                return
+                m.Timestamp >= queryFilter.StartFromTime &&
+                m.Timestamp <= queryFilter.EndByTime &&
+                (predicate == null ? true : predicate(m));
+            };
+
+            return DbContext
+                    .PingEventSource
+                    .Where(predicate)
+                    .Skip(queryFilter.PageNo * queryFilter.PageSize)
+                    .Take(queryFilter.PageSize)
+                    .OrderByDescending(o => o.Timestamp)
+                    .AsQueryable();
+        }
+
+        public IQueryable<DbModel> Query(IFilter queryFilter, IDictionary<string, string> modelCriteria = null)
+        {
+            throw new NotImplementedException();
         }
     }
 }

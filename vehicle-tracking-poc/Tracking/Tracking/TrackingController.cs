@@ -1,10 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
 using DomainModels.System;
-using DomainModels.Types.Messages;
 using DomainModels.Vehicle;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -21,14 +18,14 @@ namespace Tracking.Controllers
         private readonly ILogger _logger;
         private ICacheProvider _redisCache;
         private readonly IMediator _mediator;
-        private readonly IMessageQuery<TrackingModel, IEnumerable<(MessageHeader, PingModel, MessageFooter)>> _messageQuery;
+        private readonly IMessageQuery<TrackingFilterModel, IEnumerable<PingModel>> _messageQuery;
         private readonly IOperationalUnit _oprtationalUnit;
         private readonly MiddlewareConfiguration _middlewareConfiguration;
         public TrackingController(
             ILogger<TrackingController> logger,
             IMediator mediator,
             ICacheProvider cache,
-            IMessageQuery<TrackingModel, IEnumerable<(MessageHeader, PingModel, MessageFooter)>> messageQuery,
+            IMessageQuery<TrackingFilterModel, IEnumerable<PingModel>> messageQuery,
             IOperationalUnit oprtationalUnit,
             MiddlewareConfiguration middlewareConfiguration)
         {
@@ -47,13 +44,18 @@ namespace Tracking.Controllers
         }
 
         // GET api/values/5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(string id)
+        [HttpGet("{startFrom}/{endBy}/{pageNo}/{pageSize}")]
+        public async Task<IActionResult> Get(long startFrom, long endBy, int pageNo = 0, int pageSize = 10)
         {
             //call mediator
             var request = new TrackingRequest(
-                    ControllerContext,
-                    new TrackingModel { ChassisNumber=id },
+                    ControllerContext, new TrackingFilter
+                    {
+                        StartFromTime = startFrom,
+                        EndByTime = endBy,
+                        PageNo = pageNo,
+                        PageSize = pageSize
+                    },
                     _redisCache,
                     _messageQuery,
                     _oprtationalUnit,

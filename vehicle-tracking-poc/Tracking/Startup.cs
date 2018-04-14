@@ -5,7 +5,6 @@ using DomainModels.DataStructure;
 using DomainModels.System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -14,7 +13,6 @@ using WebComponents.Interceptors;
 using Swashbuckle.AspNetCore.Swagger;
 using MediatR;
 using Microsoft.Extensions.Hosting;
-using DomainModels.Types.Messages;
 using DomainModels.Vehicle;
 using System;
 using System.Linq;
@@ -23,7 +21,6 @@ using RedisCacheAdapter;
 using EventSourceingSqlDb.Adapters;
 using EventSourceingSqlDb.DbModels;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Http.Features;
 
 namespace Tracking
 {
@@ -107,11 +104,11 @@ namespace Tracking
 
             #region tracking vehicle query client
 
-            services.AddScoped<IMessageQuery<TrackingModel, IEnumerable<(MessageHeader, PingModel, MessageFooter)>>,
-            RabbitMQQueryClient<TrackingModel, IEnumerable<(MessageHeader, PingModel, MessageFooter)>>>(
+            services.AddScoped<IMessageQuery<TrackingFilterModel, IEnumerable<PingModel>>,
+            RabbitMQQueryClient<TrackingFilterModel, IEnumerable<PingModel>>>(
                 srv =>
                 {
-                    return new RabbitMQQueryClient<TrackingModel, IEnumerable<(MessageHeader, PingModel, MessageFooter)>>
+                    return new RabbitMQQueryClient<TrackingFilterModel, IEnumerable<PingModel>>
                             (loggerFactorySrv, new RabbitMQConfiguration
                             {
                                 exchange = "",
@@ -131,16 +128,16 @@ namespace Tracking
             #region tracking query worker
             // business logic
 
-            services.AddSingleton<IHostedService, RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, PingModel body, MessageFooter footer)>>>(srv =>
+            services.AddSingleton<IHostedService, RabbitMQQueryWorker>(srv =>
             {
-                Func<(MessageHeader header, PingModel body, MessageFooter footer), bool> filterQuery = (model) =>
+                Func<PingModel, bool> filterQuery = (model) =>
                 {
                     return true;
                 };
                 //get pingService
                 var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
 
-                return new RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, PingModel body, MessageFooter footer)>>
+                return new RabbitMQQueryWorker
                 (serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
                 {
                     exchange = "",
@@ -155,7 +152,10 @@ namespace Tracking
                     {
                         //TODO: add business logic, result should be serializable
                         Logger.LogInformation($"[x] callback of RabbitMQQueryWorker=>, message: {JsonConvert.SerializeObject(trackingMessageRequest)}");
-                        return pingSrv.Query(filterQuery)?.ToList();
+                        var response = pingSrv.Query(filterQuery)?.ToList();
+                        if (response == null)
+                            return new byte[0];
+                        return Utilities.JsonBinarySerialize(response);
                     }
                     catch (Exception ex)
                     {
@@ -169,10 +169,10 @@ namespace Tracking
             //you may get a different cache db, by passing db index parameter.
             #region cache worker
 
-            services.AddSingleton<IHostedService, RabbitMQSubscriberWorker<(MessageHeader, PingModel, MessageFooter)>>(srv =>
+            services.AddSingleton<IHostedService, RabbitMQSubscriberWorker>(srv =>
             {
                 var cache = new CacheManager(Logger, _systemLocalConfiguration.CacheServer, 1);
-                return new RabbitMQSubscriberWorker<(MessageHeader header, PingModel body, MessageFooter footer)>
+                return new RabbitMQSubscriberWorker
                     (serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
                     {
                         hostName = _systemLocalConfiguration.MessagesMiddleware,
@@ -187,9 +187,11 @@ namespace Tracking
                         {
                             var message = pingMessageCallback();
                             //cache model body by vehicle chassis as a key
-                            if (message.body != null)
+                            if (message != null)
                             {
-                                cache.Set(message.body.ChassisNumber, message.header.Timestamp.ToString(), Defaults.CacheTimeout).Wait();
+                                var pingModel = Utilities.JsonBinaryDeserialize<PingModel>(message);
+                                if (pingModel != null)
+                                    cache.Set(pingModel.Body.ChassisNumber, pingModel.Header.Timestamp.ToString(), Defaults.CacheTimeout).Wait();
                             }
                             Logger.LogInformation($"[x] Tracking service received a message from exchange: {_systemLocalConfiguration.MiddlewareExchange}, route :{_systemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
                         }

@@ -1,8 +1,7 @@
 ﻿using BackgroundMiddleware;
-using BuildingAspects.Services;
+using BuildingAspects.Behaviors;
 using DomainModels.DataStructure;
 using DomainModels.System;
-using DomainModels.Types.Messages;
 using DomainModels.Vehicle;
 using EventSourceingSqlDb.Adapters;
 using EventSourceingSqlDb.DbModels;
@@ -11,7 +10,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -80,12 +78,12 @@ namespace EventSourcingMiddleware
 
             #region ping worker
 
-            services.AddSingleton<IHostedService, RabbitMQSubscriberWorker<(MessageHeader, PingModel, MessageFooter)>>(srv =>
+            services.AddSingleton<IHostedService, RabbitMQSubscriberWorker>(srv =>
             {
                 //get pingServicek
                 var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
 
-                return new RabbitMQSubscriberWorker<(MessageHeader header, PingModel body, MessageFooter footer)>
+                return new RabbitMQSubscriberWorker
                 (serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
                 {
                     hostName = _systemLocalConfiguration.MessagesMiddleware,
@@ -99,7 +97,12 @@ namespace EventSourcingMiddleware
                     try
                     {
                         var message = pingMessageCallback();
-                        var addingResult = pingSrv.Add(message);
+                        if (message != null)
+                        {
+                            var pingModel = Utilities.JsonBinaryDeserialize<PingModel>(message);
+                            if (pingModel != null)
+                                pingSrv.Add(pingModel);
+                        }
                         Logger.LogInformation($"[x] Event sourcing service receiving a message from exchange: {_systemLocalConfiguration.MiddlewareExchange}, route :{_systemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
                     }
                     catch (Exception ex)

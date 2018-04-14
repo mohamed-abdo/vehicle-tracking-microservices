@@ -1,4 +1,5 @@
 ﻿using DomainModels.Types;
+using DomainModels.Types.Messages;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -6,7 +7,12 @@ using System.Text;
 namespace DomainModels.Vehicle
 {
     [Serializable]
-    public class TrackingModel : DomainModel
+    public class TrackingModel : DomainModel<Tracking>
+    {
+
+    }
+    [Serializable]
+    public class Tracking
     {
         public string ChassisNumber { get; set; }
         public string Vehicle { get; set; }
@@ -15,7 +21,5 @@ namespace DomainModels.Vehicle
         public StatusModel Status { get; set; }
         public DateTime LastUpdate { get; set; }
         public string Message { get; set; }
-
-        public override string Description => $"vehicle:{ChassisNumber},status:{Status},last-update:{LastUpdate}";
     }
 }

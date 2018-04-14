@@ -7,7 +7,7 @@ using BuildingAspects.Functors;
 using BuildingAspects.Services;
 using BuildingAspects.Utilities;
 using DomainModels.DataStructure;
-using DomainModels.Types.Messages;
+using DomainModels.Types;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
@@ -23,8 +23,8 @@ namespace BackgroundMiddleware
         private int defaultMiddlewarePort = 5672;//default rabbitmq port
         private readonly RabbitMQConfiguration _hostConfig;
         private readonly IConnectionFactory connectionFactory;
-        private readonly IConnection connection;
-        private readonly IModel channel;
+        private IConnection connection;
+        private IModel channel;
         private readonly IBasicProperties props;
         public readonly string exchange;
         private readonly string route;
@@ -49,41 +49,40 @@ namespace BackgroundMiddleware
                 Password = _hostConfig.password,
                 ContinuationTimeout = TimeSpan.FromSeconds(DomainModels.System.Identifiers.TimeoutInSec)
             };
-            connection = connectionFactory.CreateConnection();
-            channel = connection.CreateModel();
+            new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
+           {
+               connection = connectionFactory.CreateConnection();
+               channel = connection.CreateModel();
+               return true;
+           }, (ex) =>
+           {
+               switch (ex)
+               {
+                   case BrokerUnreachableException brokerEx:
+                       return true;
+                   case ConnectFailureException connEx:
+                       return true;
+                   case SocketException socketEx:
+                       return true;
+                   default:
+                       return false;
+               }
+           }).Wait();
             channel.ExchangeDeclare(exchange: exchange, type: ExchangeType.Topic, durable: true);
-
             props = channel.CreateBasicProperties();
             props.Persistent = true;
-
         }
-   
-        public async Task Command<TRequest>((MessageHeader Header, TRequest Body, MessageFooter Footer) message)
+
+        public Task Command<TRequest>(TRequest message)
         {
-            var body = Utilities.BinarySerialize(message);
+            var body = Utilities.JsonBinarySerialize(message);
             channel.BasicPublish(exchange: exchange,
                                  routingKey: route,
                                  basicProperties: props,
                                  body: body);
-            _logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", message.Header.ExecutionId, exchange, route);
+            _logger.LogInformation("[x] Sent a message, exchange:{0}, route: {1}", exchange, route);
 
-            await new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
-                    {
-                        return Task.CompletedTask;
-                    }, (ex) =>
-                    {
-                        switch (ex)
-                        {
-                            case BrokerUnreachableException brokerEx:
-                                return true;
-                            case ConnectFailureException connEx:
-                                return true;
-                            case SocketException socketEx:
-                                return true;
-                            default:
-                                return false;
-                        }
-                    });
+            return Task.CompletedTask;
         }
         public void Dispose()
         {

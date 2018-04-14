@@ -1,23 +1,20 @@
-﻿using BuildingAspects.Behaviors;
-using BuildingAspects.Services;
+﻿using BuildingAspects.Services;
 using DomainModels.System;
-using DomainModels.Vehicle;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace Ping.Vehicle.Mediator
 {
     public class PingPublisher : INotification
     {
         private readonly ControllerContext _controller;
-        private readonly PingModel _model;
+        private readonly DomainModels.Vehicle.Ping _model;
         private readonly IOperationalUnit _operationalUnit;
         private readonly IMessageCommand _publisher;
         private readonly MiddlewareConfiguration _localConfiguration;
         public PingPublisher(
             ControllerContext controller,
-            PingModel model,
+            DomainModels.Vehicle.Ping model,
             IMessageCommand publisher,
             MiddlewareConfiguration localConfiguration,
             IOperationalUnit operationalUnit)
@@ -29,7 +26,7 @@ namespace Ping.Vehicle.Mediator
             _localConfiguration = localConfiguration;
         }
         public ControllerContext Controller => _controller;
-        public PingModel Model => _model;
+        public DomainModels.Vehicle.Ping Model => _model;
         public IOperationalUnit OperationalUnit => _operationalUnit;
         public IMessageCommand MessagePublisher => _publisher;
         public MiddlewareConfiguration MiddlewareConfiguration => _localConfiguration;

@@ -50,7 +50,7 @@ namespace Ping
             await _mediator.Publish(
                 new PingPublisher(
                             ControllerContext,
-                            new PingModel()
+                            new DomainModels.Vehicle.Ping()
                             {
                                 ChassisNumber = id,
                                 Status = StatusModel.Active,
@@ -71,7 +71,7 @@ namespace Ping
         {
             await _mediator.Publish(new PingPublisher(
                             ControllerContext,
-                            new PingModel()
+                            new DomainModels.Vehicle.Ping()
                             {
                                 ChassisNumber = vehicleId,
                                 Status = StatusModel.Active,

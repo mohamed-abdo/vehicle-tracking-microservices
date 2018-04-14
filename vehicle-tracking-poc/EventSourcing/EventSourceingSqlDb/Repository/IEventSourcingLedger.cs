@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DomainModels.System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,6 +14,8 @@ namespace EventSourceingSqlDb.Repository
     public interface IQueryEventSourcingLedger<T> where T : new()
     {
         // return type must be serializable, so i change from IQuerable
-        IEnumerable<T> Query(Func<T, bool> predicate);
+        IQueryable<T> Query(Func<T, bool> predicate);
+        IQueryable<T> Query(IFilter queryFilter, Func<T, bool> predicate = null);
+        IQueryable<T> Query(IFilter queryFilter, IDictionary<string,string> modelCriteria = null);
     }
 }

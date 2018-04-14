@@ -5,7 +5,12 @@ using System.Collections;
 namespace DomainModels.Vehicle
 {
     [Serializable]
-    public class VehicleModel : DomainModel
+    public class VehicleModel : DomainModel<Vehicle>
+    {
+
+    }
+    [Serializable]
+    public class Vehicle
     {
         public string ChassisNumber { get; set; }
         public string Model { get; set; }
@@ -14,6 +19,5 @@ namespace DomainModels.Vehicle
         public string ProductoinFactory { get; set; }
         public IDictionary Features { get; set; }
 
-        public override string Description => $"model:{Model},color{Color},year:{ProductionYear},chassis:{ChassisNumber}";
     }
 }

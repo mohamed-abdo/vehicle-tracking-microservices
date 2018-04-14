@@ -1,17 +1,16 @@
 ﻿using DomainModels.Types;
-using DomainModels.Types.Messages;
-using System.Runtime.Serialization;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace BuildingAspects.Services
 {
     public interface IMessageCommand
     {
-        Task Command<TRequest>((MessageHeader Header, TRequest Body, MessageFooter Footer) message);
+        Task Command<TRequest>(TRequest message);
     }
 
-    public interface IMessageQuery<TRequset, TResponse>
+    public interface IMessageQuery<TRequest, TResponse>
     {
-        Task<TResponse> Query((MessageHeader Header, TRequset Body, MessageFooter Footer) message);
+        Task<TResponse> Query(TRequest message);
     }
 }

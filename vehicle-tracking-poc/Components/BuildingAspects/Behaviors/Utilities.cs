@@ -8,13 +8,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 
 namespace BuildingAspects.Behaviors
 {
     public static class Utilities
     {
-        private const string MadatoryParam = "Parameter is manadatory!";
-      
+        private const string MandatoryParam = "Parameter is manadatory!";
+
         public static IDictionary<string, object> ToDictionary(this object source)
         {
             var fields = source.GetType().GetFields(
@@ -74,9 +75,19 @@ namespace BuildingAspects.Behaviors
             return propsDic;
         }
 
+        public static byte[] JsonBinarySerialize(object instance)
+        {
+            if (instance == null) throw new ArgumentNullException(MandatoryParam);
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(instance));
+        }
+        public static T JsonBinaryDeserialize<T>(byte[] objAsBinary)
+        {
+            if (objAsBinary == null) throw new ArgumentNullException(MandatoryParam);
+            return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(objAsBinary));
+        }
         public static byte[] BinarySerialize(object instance)
         {
-            if (instance == null) throw new ArgumentNullException(MadatoryParam);
+            if (instance == null) throw new ArgumentNullException(MandatoryParam);
             byte[] binObjSource;
             var formatter = new BinaryFormatter();
             using (var memory = new MemoryStream())
@@ -88,7 +99,7 @@ namespace BuildingAspects.Behaviors
         }
         public static object BinaryDeserialize(byte[] objAsBinary)
         {
-            if(objAsBinary ==null)throw new ArgumentNullException(MadatoryParam);
+            if (objAsBinary == null) throw new ArgumentNullException(MandatoryParam);
             if (objAsBinary.Length == 0) return null;
             var formatter = new BinaryFormatter();
             using (var memory = new MemoryStream(objAsBinary))

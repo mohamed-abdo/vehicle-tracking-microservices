@@ -18,7 +18,7 @@ namespace BackgroundMiddleware
     /// rabbitMQ worker listener background service. 
     /// </summary>
     /// <typeparam name="TRequest">Expected structure coming from the publisher to the subscriber.</typeparam>
-    public class RabbitMQSubscriberWorker<TRequest> : BackgroundService, IDisposable
+    public class RabbitMQSubscriberWorker : BackgroundService, IDisposable
     {
         private const int defaultMiddlewarePort = 5672;//default rabbitmq port
         private readonly ILogger _logger;
@@ -30,7 +30,7 @@ namespace BackgroundMiddleware
         private readonly EventingBasicConsumer consumer;
         public readonly string exchange, route, queueName;
         //Design decision: keep/ delegate responsibility of translating and casting object to the target type, to receiver callback, even exception will be thrown in his execution thread.
-        private readonly Action<Func<TRequest>> callback;
+        private readonly Action<Func<byte[]>> callback;
         /// <summary>
         /// internal construct subscriber object
         /// </summary>
@@ -40,7 +40,7 @@ namespace BackgroundMiddleware
             IServiceProvider serviceProvider,
             ILoggerFactory logger,
             RabbitMQConfiguration hostConfig,
-            Action<Func<TRequest>> callback) : base(serviceProvider)
+            Action<Func<byte[]>> callback) : base(serviceProvider)
         {
             this._logger = logger?
                             .AddConsole()
@@ -105,12 +105,7 @@ namespace BackgroundMiddleware
                         throw new TypeLoadException("Invalid message type");
 
                     // callback action feeding 
-                    if (Utilities.BinaryDeserialize(ea.Body) is TRequest request)
-                        callback(() => request);
-                    else
-                        throw new InvalidCastException("Invalid message cast");
-                    //send acknowledgment to publisher
-
+                    callback(() => ea.Body);
                     channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
 
                     _logger.LogInformation($"[x] Event sourcing service receiving a messaged from exchange: {_hostConfig.exchange}, route :{ea.RoutingKey}.");

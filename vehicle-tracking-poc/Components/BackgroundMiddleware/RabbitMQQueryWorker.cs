@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace BackgroundMiddleware
 {
-    public class RabbitMQQueryWorker<TRequest, TResponse> : BackgroundService, IDisposable
+    public class RabbitMQQueryWorker : BackgroundService, IDisposable
     {
         private const int defaultMiddlewarePort = 5672;//default rabbitmq port
         private readonly ILogger _logger;
@@ -24,7 +24,7 @@ namespace BackgroundMiddleware
         private readonly IBasicProperties props;
         private readonly EventingBasicConsumer consumer;
         public readonly string exchange, route;
-        private readonly Func<TRequest, TResponse> lambda;
+        private readonly Func<byte[], byte[]> lambda;
         /// <summary>
         /// internal construct subscriber object
         /// </summary>
@@ -34,7 +34,7 @@ namespace BackgroundMiddleware
             IServiceProvider serviceProvider,
             ILoggerFactory logger,
             RabbitMQConfiguration hostConfig,
-            Func<TRequest, TResponse> lambda) : base(serviceProvider)
+            Func<byte[], byte[]> lambda) : base(serviceProvider)
         {
             this._logger = logger?
                             .AddConsole()
@@ -91,20 +91,9 @@ namespace BackgroundMiddleware
                     replyProps.CorrelationId = props.CorrelationId;
                     if (ea.Body == null || ea.Body.Length == 0)
                         throw new TypeLoadException("Invalid message type");
-                    TResponse response;
-                    // callback action feeding 
-                    if (Utilities.BinaryDeserialize(ea.Body) is TRequest request)
-                        response = lambda(request);
-                    else
-                        throw new InvalidCastException("Invalid message cast");
-                    //send acknowledgment to publisher
-                    //TODO: in the future validate response is serializable
-                    //if (!(response is ISerializable))
-                    //    throw new SerializationException("response is not serializable");
-                    byte[] serializableBinary = null;
-                    if (response != null)
-                        serializableBinary = Utilities.BinarySerialize(response);
-                    channel.BasicPublish(exchange: exchange, routingKey: props.ReplyTo, basicProperties: replyProps, body: serializableBinary);
+                    // callback action feeding  
+                    var binaryResponse = lambda(ea.Body);
+                    channel.BasicPublish(exchange: exchange, routingKey: props.ReplyTo, basicProperties: replyProps, body: binaryResponse);
                     channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
 
                     _logger.LogInformation($"[x] Event sourcing service receiving a messaged from exchange: {_hostConfig.exchange}, route :{ea.RoutingKey}.");
