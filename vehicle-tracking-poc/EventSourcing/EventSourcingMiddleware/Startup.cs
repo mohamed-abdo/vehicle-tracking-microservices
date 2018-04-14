@@ -85,8 +85,8 @@ namespace EventSourcingMiddleware
                 //get pingServicek
                 var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
 
-                return RabbitMQSubscriberWorker<(MessageHeader header, PingModel body, MessageFooter footer)>
-                .Create(serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
+                return new RabbitMQSubscriberWorker<(MessageHeader header, PingModel body, MessageFooter footer)>
+                (serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
                 {
                     hostName = _systemLocalConfiguration.MessagesMiddleware,
                     exchange = _systemLocalConfiguration.MiddlewareExchange,

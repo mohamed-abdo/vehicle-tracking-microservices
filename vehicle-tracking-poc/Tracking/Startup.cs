@@ -111,8 +111,8 @@ namespace Tracking
             RabbitMQQueryClient<TrackingModel, IEnumerable<(MessageHeader, PingModel, MessageFooter)>>>(
                 srv =>
                 {
-                    return RabbitMQQueryClient<TrackingModel, IEnumerable<(MessageHeader, PingModel, MessageFooter)>>
-                            .Create(loggerFactorySrv, new RabbitMQConfiguration
+                    return new RabbitMQQueryClient<TrackingModel, IEnumerable<(MessageHeader, PingModel, MessageFooter)>>
+                            (loggerFactorySrv, new RabbitMQConfiguration
                             {
                                 exchange = "",
                                 hostName = _systemLocalConfiguration.MessagesMiddleware,
@@ -140,8 +140,8 @@ namespace Tracking
                 //get pingService
                 var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
 
-                return RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, PingModel body, MessageFooter footer)>>
-                .Create(serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
+                return new RabbitMQQueryWorker<(MessageHeader header, TrackingModel body, MessageFooter footer), IEnumerable<(MessageHeader header, PingModel body, MessageFooter footer)>>
+                (serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
                 {
                     exchange = "",
                     hostName = _systemLocalConfiguration.MessagesMiddleware,
@@ -172,8 +172,8 @@ namespace Tracking
             services.AddSingleton<IHostedService, RabbitMQSubscriberWorker<(MessageHeader, PingModel, MessageFooter)>>(srv =>
             {
                 var cache = new CacheManager(Logger, _systemLocalConfiguration.CacheServer, 1);
-                return RabbitMQSubscriberWorker<(MessageHeader header, PingModel body, MessageFooter footer)>
-                    .Create(serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
+                return new RabbitMQSubscriberWorker<(MessageHeader header, PingModel body, MessageFooter footer)>
+                    (serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
                     {
                         hostName = _systemLocalConfiguration.MessagesMiddleware,
                         exchange = _systemLocalConfiguration.MiddlewareExchange,

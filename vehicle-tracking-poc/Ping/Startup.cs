@@ -84,7 +84,8 @@ namespace Ping
 
             services.AddSingleton<MiddlewareConfiguration, MiddlewareConfiguration>(srv => _systemLocalConfiguration);
             services.AddScoped<IOperationalUnit, IOperationalUnit>(srv => _operationalUnit);
-            services.AddScoped<IMessageCommand, RabbitMQPublisher>(srv => RabbitMQPublisher.Create(loggerFactorySrv, new RabbitMQConfiguration
+            services.AddScoped<IMessageCommand, RabbitMQPublisher>(srv => new RabbitMQPublisher(loggerFactorySrv,
+            new RabbitMQConfiguration
             {
                 hostName = _systemLocalConfiguration.MessagesMiddleware,
                 exchange = _systemLocalConfiguration.MiddlewareExchange,

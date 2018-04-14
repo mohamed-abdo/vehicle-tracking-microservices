@@ -8,6 +8,7 @@ namespace BackgroundMiddleware
     public abstract class BackgroundService : IHostedService, IDisposable
     {
         private readonly IServiceProvider _serviceProvider;
+        private static object _syncObject = new object();
         public BackgroundService(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
@@ -19,38 +20,41 @@ namespace BackgroundMiddleware
 
         protected abstract Task ExecuteAsync(CancellationToken stoppingToken);
 
-        public virtual async Task StartAsync(CancellationToken cancellationToken)
+        public virtual Task StartAsync(CancellationToken cancellationToken)
         {
             // Store the task we're executing
-            _executingTask = ExecuteAsync(_stoppingCts.Token);
-            await _executingTask;
-            // If the task is completed then return it,
-            // this will bubble cancellation and failure to the caller
-            if (_executingTask.IsCompleted)
+            lock (_syncObject)
             {
-                await _executingTask;
+                _executingTask = ExecuteAsync(_stoppingCts.Token);
+                // If the task is completed then return it,
+                // this will bubble cancellation and failure to the caller
+                if (_executingTask.IsCompleted)
+                {
+                    return _executingTask;
+                }
+                // Otherwise it's running
+                return Task.CompletedTask;
             }
-            // Otherwise it's running
-            await Task.CompletedTask;
         }
 
-        public virtual async Task StopAsync(CancellationToken cancellationToken)
+        public virtual Task StopAsync(CancellationToken cancellationToken)
         {
             // Stop called without start
             if (_executingTask == null)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             try
             {
                 // Signal cancellation to the executing method
                 _stoppingCts.Cancel();
+                return Task.CompletedTask;
             }
             finally
             {
                 // Wait until the task completes or the stop token triggers
-                await Task.WhenAny(_executingTask, Task.Delay(Timeout.Infinite, cancellationToken));
+                Task.WhenAny(_executingTask, Task.Delay(Timeout.Infinite, cancellationToken));
             }
         }
 

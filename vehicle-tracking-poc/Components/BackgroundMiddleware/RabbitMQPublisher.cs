@@ -19,8 +19,7 @@ namespace BackgroundMiddleware
     /// </summary>
     public class RabbitMQPublisher : IMessageCommand, IDisposable
     {
-
-        private readonly ILogger logger;
+        private readonly ILogger _logger;
         private int defaultMiddlewarePort = 5672;//default rabbitmq port
         private readonly RabbitMQConfiguration _hostConfig;
         private readonly IConnectionFactory connectionFactory;
@@ -29,9 +28,9 @@ namespace BackgroundMiddleware
         private readonly IBasicProperties props;
         public readonly string exchange;
         private readonly string route;
-        private RabbitMQPublisher(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
+        public RabbitMQPublisher(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
         {
-            this.logger = logger?
+            this._logger = logger?
                             .AddConsole()
                             .AddDebug()
                             .CreateLogger<RabbitMQPublisher>()
@@ -58,21 +57,18 @@ namespace BackgroundMiddleware
             props.Persistent = true;
 
         }
-        public static RabbitMQPublisher Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
-        {
-            return new RabbitMQPublisher(logger, hostConfig);
-        }
-
+   
         public async Task Command<TRequest>((MessageHeader Header, TRequest Body, MessageFooter Footer) message)
         {
-                    await new Function(logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
+            var body = Utilities.BinarySerialize(message);
+            channel.BasicPublish(exchange: exchange,
+                                 routingKey: route,
+                                 basicProperties: props,
+                                 body: body);
+            _logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", message.Header.ExecutionId, exchange, route);
+
+            await new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
                     {
-                        var body = Utilities.BinarySerialize(message);
-                        channel.BasicPublish(exchange: exchange,
-                                             routingKey: route,
-                                             basicProperties: props,
-                                             body: body);
-                        logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", message.Header.ExecutionId, exchange, route);
                         return Task.CompletedTask;
                     }, (ex) =>
                     {
@@ -88,7 +84,7 @@ namespace BackgroundMiddleware
                                 return false;
                         }
                     });
-                }
+        }
         public void Dispose()
         {
             if (connection != null && connection.IsOpen)

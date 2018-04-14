@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using BuildingAspects.Behaviors;
-using BuildingAspects.Functors;
 using BuildingAspects.Services;
 using BuildingAspects.Utilities;
 using DomainModels.DataStructure;
@@ -21,7 +20,7 @@ namespace BackgroundMiddleware
     /// </summary>
     public class RabbitMQQueryClient<TRequest, TResponse> : IMessageQuery<TRequest, TResponse>, IDisposable
     {
-        private readonly ILogger logger;
+        private readonly ILogger _logger;
         private int defaultMiddlewarePort = 5672;//default rabbitmq port
         private readonly RabbitMQConfiguration _hostConfig;
         private readonly IConnectionFactory connectionFactory;
@@ -33,9 +32,9 @@ namespace BackgroundMiddleware
         private readonly IBasicProperties props;
         public readonly string exchange;
         private readonly string route;
-        private RabbitMQQueryClient(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
+        public RabbitMQQueryClient(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
         {
-            this.logger = logger?
+            this._logger = logger?
                             .AddConsole()
                             .AddDebug()
                             .CreateLogger<RabbitMQQueryClient<TRequest, TResponse>>()
@@ -75,21 +74,17 @@ namespace BackgroundMiddleware
                 }
             };
         }
-        public static RabbitMQQueryClient<TRequest, TResponse> Create(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
-        {
-            return new RabbitMQQueryClient<TRequest, TResponse>(logger, hostConfig);
-        }
-
+   
         public async Task<TResponse> Query((MessageHeader Header, TRequest Body, MessageFooter Footer) message)
         {
-            return await new Function(logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
+            return await new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
               {
                   channel.BasicPublish(exchange: exchange,
                                        routingKey: route,
                                        basicProperties: props,
                                        body: Utilities.BinarySerialize(message));
 
-                  logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", message.Header.ExecutionId, exchange, route);
+                  _logger.LogInformation("[x] Sent a message {0}, exchange:{1}, route: {2}", message.Header.ExecutionId, exchange, route);
                   channel.BasicConsume(consumer: consumer, queue: replyQueueName, autoAck: true);
                   return respQueue.Take();
               }, (ex) =>

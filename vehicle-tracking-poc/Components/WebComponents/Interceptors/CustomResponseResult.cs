@@ -87,7 +87,7 @@ namespace WebComponents.Interceptors
                         }
                     default:
                         {
-                            return result?.ToString();
+                            return result;
                         }
                 }
             };
