@@ -3,13 +3,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using BuildingAspects.Services;
 using DomainModels.System;
-using DomainModels.Vehicle;
+using DomainModels.Business;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using RedisCacheAdapter;
-using Tracking.Tracking.Mediator;
 using WebComponents.Interceptors;
+using Tracking.Controllers.Mediator;
 
 namespace Tracking.Controllers
 {
@@ -46,7 +46,7 @@ namespace Tracking.Controllers
             return Ok($"tracking service hello world;{id}");
         }
 
-        // GET api/values/5
+        [CustomHeader(Models.Identifiers.DomainModel, Models.Identifiers.TrackingDomainModel)]
         [HttpGet("{startFrom}/{endBy}/{pageNo}/{pageSize}")]
         public async Task<IActionResult> Get(long startFrom, long endBy, int pageNo = 0, int pageSize = 10)
         {

@@ -27,6 +27,7 @@ namespace DomainModels.System
         public const int TimeoutInSec = 60;
         public const int BreakTimeoutInSec = 5;
         public const int CircutBreakerExceptionsCount = 5;
+        public const int MaxRowsCount = 1000;
         #endregion
     }
 }

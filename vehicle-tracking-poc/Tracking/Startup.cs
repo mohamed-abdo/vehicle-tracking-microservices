@@ -13,7 +13,7 @@ using WebComponents.Interceptors;
 using Swashbuckle.AspNetCore.Swagger;
 using MediatR;
 using Microsoft.Extensions.Hosting;
-using DomainModels.Vehicle;
+using DomainModels.Business;
 using System;
 using System.Linq;
 using Newtonsoft.Json;
@@ -77,7 +77,7 @@ namespace Tracking
               {
                   connectOptions.EnableRetryOnFailure();
                   connectOptions.CommandTimeout(Identifiers.TimeoutInSec);
-              })
+              })//.UseLoggerFactory(loggerFactorySrv)// to log queries
           );
 
             //add application insights information, could be used to monitor the performance, and more analytics when application moved to the cloud.
@@ -128,10 +128,6 @@ namespace Tracking
 
             services.AddSingleton<IHostedService, RabbitMQQueryWorker>(srv =>
             {
-                Func<PingModel, bool> filterQuery = (model) =>
-                {
-                    return true;
-                };
                 //get pingService
                 var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
 
@@ -146,20 +142,21 @@ namespace Tracking
                 }
                 , (trackingMessageRequest) =>
                 {
-                    try
-                    {
-                        //TODO: add business logic, result should be serializable
-                        var trackingFilter = Utilities.JsonBinaryDeserialize<TrackingFilterModel>(trackingMessageRequest);
-                        Logger.LogInformation($"[x] callback of RabbitMQQueryWorker=>, message: {JsonConvert.SerializeObject(trackingMessageRequest)}");
-                        var response = pingSrv.Query(trackingFilter.Body, filterQuery)?.ToList();
-                        if (response == null)
-                            return new byte[0];
-                        return Utilities.JsonBinarySerialize(response);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.LogCritical(ex, "de-serialize Object exceptions.");
-                        return null;
+                try
+                {
+                    //TODO: add business logic, result should be serializable
+                    var trackingFilter = Utilities.JsonBinaryDeserialize<TrackingFilterModel>(trackingMessageRequest);
+                    Logger.LogInformation($"[x] callback of RabbitMQQueryWorker=> a message");
+                    var response = pingSrv.Query(trackingFilter.Body, predicate: null)?.ToList();
+                    if (response == null)
+                        return new byte[0];
+                    return Utilities.JsonBinarySerialize(response);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogCritical(ex, "de-serialize Object exceptions.");
+                    //to respond back to RPC client
+                    return Utilities.JsonBinarySerialize(new TrackingFilterModel() { });
                     }
                 });
             });
@@ -204,7 +201,6 @@ namespace Tracking
             #endregion
 
             #endregion
-
 
             #region internal functions
 

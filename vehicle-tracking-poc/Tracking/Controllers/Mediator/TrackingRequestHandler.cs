@@ -1,17 +1,16 @@
 ﻿using BuildingAspects.Behaviors;
 using DomainModels.Types;
 using DomainModels.Types.Messages;
-using DomainModels.Vehicle;
+using DomainModels.Business;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Tracking.Tracking.Mediator
+namespace Tracking.Controllers.Mediator
 {
     public class TrackingRequestHandler : IRequestHandler<TrackingRequest, IEnumerable<PingModel>>
     {

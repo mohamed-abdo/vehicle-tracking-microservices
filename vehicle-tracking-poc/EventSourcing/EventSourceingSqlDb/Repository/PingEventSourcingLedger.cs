@@ -19,14 +19,25 @@ namespace EventSourceingSqlDb.Repository
             DbContext.PingEventSource.Add(new PingEventSourcing(pingEventSourcing));
             return DbContext.SaveChangesAsync();
         }
-
+        /// <summary>
+        //design decision, max allowed returned rows are fixed by 1000
+        /// </summary>
+        /// <param name="predicate"></param>
+        /// <returns></returns>
         public IQueryable<DbModel> Query(Func<DbModel, bool> predicate)
         {
             return DbContext
                     .PingEventSource
                     .Where(predicate)
+                    .Take(Identifiers.MaxRowsCount)
                     .AsQueryable();
         }
+
+        /// <summary>
+        //design decision, max allowed returned rows are fixed by 1000
+        /// </summary>
+        /// <param name="predicate"></param>
+        /// <returns></returns>
         public IQueryable<DbModel> Query(IFilter queryFilter, Func<DbModel, bool> predicate = null)
         {
             if (predicate == null)
@@ -43,9 +54,10 @@ namespace EventSourceingSqlDb.Repository
                     .Where(predicate)
                     .Where(timeRangePredicate)
                     .Skip(queryFilter.PageNo * Identifiers.DataPageSize)
-                    .Take(queryFilter.rowsCount)
+                    .Take(Math.Min(Identifiers.MaxRowsCount, queryFilter.rowsCount))
                     .OrderByDescending(o => o.Timestamp)
                     .AsQueryable();
+
         }
 
         public IQueryable<DbModel> Query(IFilter queryFilter, IDictionary<string, string> modelCriteria = null)

@@ -1,6 +1,6 @@
 using BuildingAspects.Behaviors;
 using DomainModels.Types.Messages;
-using DomainModels.Vehicle;
+using DomainModels.Business;
 using EventSourceingSqlDb.Adapters;
 using EventSourceingSqlDb.DbModels;
 using EventSourceingSqlDb.Repository;

@@ -73,17 +73,17 @@ namespace WebComponents.Interceptors
             {
                 switch (result)
                 {
-                    case ContentResult cr:
+                    case ContentResult CntR:
                         {
-                            return cr?.Content;
+                            return CntR?.Content;
                         }
-                    case ObjectResult or:
+                    case ObjectResult ObjR:
                         {
-                            return or?.Value;
+                            return ObjR?.Value;
                         }
-                    case JsonResult jr:
+                    case JsonResult JsonR:
                         {
-                            return jr?.Value;
+                            return JsonR?.Value;
                         }
                     default:
                         {

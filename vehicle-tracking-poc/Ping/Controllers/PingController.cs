@@ -1,16 +1,16 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
 using DomainModels.System;
-using DomainModels.Vehicle;
+using DomainModels.Business;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Ping.Contracts;
 using Ping.Models;
-using Ping.Vehicle.Mediator;
 using WebComponents.Interceptors;
+using Ping.Controllers.Mediator;
+using Ping.Helper;
 
 namespace Ping.Controllers
 {
@@ -44,19 +44,19 @@ namespace Ping.Controllers
         {
             return Ok($"ping service hello world;{id}");
         }
-
+        // Design decision, keep vehicleId part of endpoint, since body is optional and on the most of cases will be dropped.
         // POST api/v/<controller>/vehicleId
         [CustomHeader(Models.Identifiers.DomainModel, Models.Identifiers.PingDomainModel)]
         [HttpPost("{vehicleId}")]
-        public async Task<IActionResult> Post(string vehicleId, PingRequest pingRequest, CancellationToken cancellationToken)
+        public async Task<IActionResult> Post(string vehicleId, [FromBody] PingRequest pingRequest, CancellationToken cancellationToken)
         {
             await _mediator.Publish(new PingPublisher(
                             ControllerContext,
-                            new DomainModels.Vehicle.Ping()
+                            new DomainModels.Business.Ping()
                             {
                                 ChassisNumber = vehicleId,
-                                Status = StatusModel.Active,
-                                Message = "Hello world => vehicle"
+                                Status = Mappers.inferStatus(pingRequest?.Status),
+                                Message = pingRequest?.Message
                             },
                             _messagePublisher,
                             _middlewareConfiguration,

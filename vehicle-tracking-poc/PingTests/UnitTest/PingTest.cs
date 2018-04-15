@@ -47,7 +47,7 @@ namespace PingTests.UnitTest
             _mediatorMock = new Mock<IMediator>().Object;
 
             _vehicleId = Guid.NewGuid().ToString();
-            _pingRequest = new PingRequest { Status = VehicleStatus.active, Description = "new vehicle!" };
+            _pingRequest = new PingRequest { Status = VehicleStatus.active, Message = "new vehicle!" };
         }
 
         [Fact]

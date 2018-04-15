@@ -1,6 +1,6 @@
 ﻿using DomainModels.System;
 using DomainModels.Types.Messages;
-using DomainModels.Vehicle;
+using DomainModels.Business;
 using EventSourceingSqlDb.DbModels;
 using EventSourceingSqlDb.Repository;
 using Microsoft.Extensions.Logging;
@@ -17,6 +17,8 @@ namespace EventSourceingSqlDb.Adapters
 
         Func<Func<TrackingModel, bool>, Func<DbModel, bool>> QueryConverter = (modelPredicate) =>
         {
+            if (modelPredicate == null)
+                return null;
             return (model) =>
             {
                 return modelPredicate(new TrackingModel(DbModelFactory.Convert<Tracking>(model)));

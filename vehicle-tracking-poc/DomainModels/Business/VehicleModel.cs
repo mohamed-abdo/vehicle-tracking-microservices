@@ -3,7 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace DomainModels.Vehicle
+namespace DomainModels.Business
 {
     [Serializable]
     public class VehicleModel : DomainModel<Vehicle>
@@ -23,7 +23,7 @@ namespace DomainModels.Vehicle
         public string Model { get; set; }
         public string Color { get; set; }
         public string ProductionYear { get; set; }
-        public string ProductoinFactory { get; set; }
+        public string Country { get; set; }
         public HashSet<string> Features { get; set; }
 
     }

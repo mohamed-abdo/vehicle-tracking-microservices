@@ -1,13 +1,12 @@
 ﻿using BuildingAspects.Services;
 using DomainModels.System;
-using DomainModels.Types.Messages;
-using DomainModels.Vehicle;
+using DomainModels.Business;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using RedisCacheAdapter;
 using System.Collections.Generic;
 
-namespace Tracking.Tracking.Mediator
+namespace Tracking.Controllers.Mediator
 {
     public class TrackingRequest : IRequest<IEnumerable<PingModel>>
     {

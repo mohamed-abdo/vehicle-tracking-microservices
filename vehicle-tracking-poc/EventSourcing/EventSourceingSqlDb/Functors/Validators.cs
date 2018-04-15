@@ -1,4 +1,4 @@
-﻿using DomainModels.Vehicle;
+﻿using DomainModels.Business;
 using System;
 using System.Collections.Generic;
 using System.Text;

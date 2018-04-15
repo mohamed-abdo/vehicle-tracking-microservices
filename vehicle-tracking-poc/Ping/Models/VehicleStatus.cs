@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 namespace Ping.Models
 {
+    [Serializable]
     [Flags]
     public enum VehicleStatus
     {

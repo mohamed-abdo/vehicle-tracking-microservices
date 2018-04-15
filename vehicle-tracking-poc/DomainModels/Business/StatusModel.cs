@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DomainModels.Vehicle
+namespace DomainModels.Business
 {
     [Serializable]
     [Flags]
     public enum StatusModel
     {
-        Active = 1,
-        InActive = 2,
-        Warnning = 4,
-        Critical = 8,
-        Unknown = 16
+        active = 1,
+        inActive = 2,
+        warnning = 4,
+        critical = 8,
+        unknown = 16
     }
 }

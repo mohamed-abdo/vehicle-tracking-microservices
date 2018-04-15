@@ -2,7 +2,7 @@
 using DomainModels.Types.Messages;
 using System;
 
-namespace DomainModels.Vehicle
+namespace DomainModels.Business
 {
     [Serializable]
     public class PingModel : DomainModel<Ping>

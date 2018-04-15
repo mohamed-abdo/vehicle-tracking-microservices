@@ -2,7 +2,7 @@
 using BuildingAspects.Behaviors;
 using DomainModels.DataStructure;
 using DomainModels.System;
-using DomainModels.Vehicle;
+using DomainModels.Business;
 using EventSourceingSqlDb.Adapters;
 using EventSourceingSqlDb.DbModels;
 using Microsoft.AspNetCore.Builder;
@@ -70,7 +70,7 @@ namespace EventSourcingMiddleware
                 {
                     connectOptions.EnableRetryOnFailure();
                     connectOptions.CommandTimeout(Identifiers.TimeoutInSec);
-                })
+                })//.UseLoggerFactory(loggerFactorySrv)// to log queries
             );
             /// Injecting message receiver background service
             ///

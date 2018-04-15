@@ -9,21 +9,21 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Ping.Controllers.Mediator
+namespace Vehicle.Controllers.Mediator
 {
-    public class PingPublisherHandler : INotificationHandler<PingPublisher>
+    public class VehiclePublisherHandler : INotificationHandler<VehiclePublisher>
     {
-        private readonly ILogger<PingPublisherHandler> _logger;
-        public PingPublisherHandler(ILogger<PingPublisherHandler> logger)
+        private readonly ILogger<VehiclePublisherHandler> _logger;
+        public VehiclePublisherHandler(ILogger<VehiclePublisherHandler> logger)
         {
             _logger = logger;
         }
 
-        public async Task Handle(PingPublisher notification, CancellationToken cancellationToken)
+        public async Task Handle(VehiclePublisher notification, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Publish notification=> {notification.Model}");
 
-            var request = new DomainModel<DomainModels.Business.Ping>
+            var request = new DomainModel<DomainModels.Business.Vehicle>
             {
                 Header = new MessageHeader
                 {

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DomainModels.Vehicle
+namespace DomainModels.Business
 {
     [Serializable]
     public class TrackingModel : DomainModel<Tracking>
