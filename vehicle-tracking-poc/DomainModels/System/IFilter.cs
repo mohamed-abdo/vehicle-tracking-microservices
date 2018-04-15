@@ -6,7 +6,7 @@
         long EndByTime { get; }
         //TODO:future feature
         //string SortBy { get; }
-        int PageSize { get; }
+        int rowsCount { get; }
         int PageNo { get; }
     }
 }

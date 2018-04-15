@@ -4,7 +4,7 @@
     <ProjectVersion>2.1</ProjectVersion>
     <ProjectGuid>aceb3273-6757-4282-bbf3-79ed7747f763</ProjectGuid>
     <DockerLaunchBrowser>True</DockerLaunchBrowser>
-    <DockerServiceUrl>http://localhost:{ServicePort}/api/v1/vehicle/1010</DockerServiceUrl>
+    <DockerServiceUrl>http://localhost:{ServicePort}/api/v1/ping/ioio!</DockerServiceUrl>
     <DockerServiceName>ping</DockerServiceName>
   </PropertyGroup>
   <PropertyGroup>

@@ -42,8 +42,8 @@ namespace EventSourceingSqlDb.Repository
                     .PingEventSource
                     .Where(predicate)
                     .Where(timeRangePredicate)
-                    .Skip(queryFilter.PageNo * queryFilter.PageSize)
-                    .Take(queryFilter.PageSize)
+                    .Skip(queryFilter.PageNo * Identifiers.DataPageSize)
+                    .Take(queryFilter.rowsCount)
                     .OrderByDescending(o => o.Timestamp)
                     .AsQueryable();
         }

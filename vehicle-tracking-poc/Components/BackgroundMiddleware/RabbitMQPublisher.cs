@@ -7,7 +7,6 @@ using BuildingAspects.Functors;
 using BuildingAspects.Services;
 using BuildingAspects.Utilities;
 using DomainModels.DataStructure;
-using DomainModels.Types;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
@@ -30,47 +29,53 @@ namespace BackgroundMiddleware
         private readonly string route;
         public RabbitMQPublisher(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
         {
-            this._logger = logger?
+            _logger = logger?
                             .AddConsole()
                             .AddDebug()
                             .CreateLogger<RabbitMQPublisher>()
                             ?? throw new ArgumentNullException("Logger reference is required");
-
-            Validators.EnsureHostConfig(hostConfig);
-            _hostConfig = hostConfig;
-            exchange = _hostConfig.exchange;
-            route = _hostConfig.routes.FirstOrDefault() ?? throw new ArgumentNullException("route queue is missing.");
-            var host = Helper.ExtractHostStructure(_hostConfig.hostName);
-            connectionFactory = new ConnectionFactory()
+            try
             {
-                HostName = host.hostName,
-                Port = host.port ?? defaultMiddlewarePort,
-                UserName = _hostConfig.userName,
-                Password = _hostConfig.password,
-                ContinuationTimeout = TimeSpan.FromSeconds(DomainModels.System.Identifiers.TimeoutInSec)
-            };
-            new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
-           {
-               connection = connectionFactory.CreateConnection();
-               channel = connection.CreateModel();
-               return true;
-           }, (ex) =>
-           {
-               switch (ex)
+                Validators.EnsureHostConfig(hostConfig);
+                _hostConfig = hostConfig;
+                exchange = _hostConfig.exchange;
+                route = _hostConfig.routes.FirstOrDefault() ?? throw new ArgumentNullException("route queue is missing.");
+                var host = Helper.ExtractHostStructure(_hostConfig.hostName);
+                connectionFactory = new ConnectionFactory()
+                {
+                    HostName = host.hostName,
+                    Port = host.port ?? defaultMiddlewarePort,
+                    UserName = _hostConfig.userName,
+                    Password = _hostConfig.password,
+                    ContinuationTimeout = TimeSpan.FromSeconds(DomainModels.System.Identifiers.TimeoutInSec)
+                };
+                new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
                {
-                   case BrokerUnreachableException brokerEx:
-                       return true;
-                   case ConnectFailureException connEx:
-                       return true;
-                   case SocketException socketEx:
-                       return true;
-                   default:
-                       return false;
-               }
-           }).Wait();
-            channel.ExchangeDeclare(exchange: exchange, type: ExchangeType.Topic, durable: true);
-            props = channel.CreateBasicProperties();
-            props.Persistent = true;
+                   connection = connectionFactory.CreateConnection();
+                   channel = connection.CreateModel();
+                   return true;
+               }, (ex) =>
+               {
+                   switch (ex)
+                   {
+                       case BrokerUnreachableException brokerEx:
+                           return true;
+                       case ConnectFailureException connEx:
+                           return true;
+                       case SocketException socketEx:
+                           return true;
+                       default:
+                           return false;
+                   }
+               }).Wait();
+                channel.ExchangeDeclare(exchange: exchange, type: ExchangeType.Topic, durable: true);
+                props = channel.CreateBasicProperties();
+                props.Persistent = true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Failed to initialize RabbitMQPublisher", ex);
+            }
         }
 
         public Task Command<TRequest>(TRequest message)

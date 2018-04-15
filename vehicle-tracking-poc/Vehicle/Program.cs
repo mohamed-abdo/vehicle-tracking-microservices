@@ -1,11 +1,14 @@
 ﻿using System;
 using System.IO;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using BuildingAspects.Behaviors;
 using DomainModels.System;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using RabbitMQ.Client.Exceptions;
+
 namespace Vehicle
 {
     public class Program
@@ -28,6 +31,19 @@ namespace Vehicle
                     .Build()
                     .Run();
                     return Task.CompletedTask;
+                }, (ex) =>
+                {
+                    switch (ex)
+                    {
+                        case BrokerUnreachableException brokerEx:
+                            return true;
+                        case ConnectFailureException connEx:
+                            return true;
+                        case SocketException socketEx:
+                            return true;
+                        default:
+                            return false;
+                    }
                 }).Wait();
                 return 0;
             }
@@ -45,20 +61,7 @@ namespace Vehicle
         public static IWebHostBuilder BuildWebHost(string[] args) =>
             new WebHostBuilder()
                 .UseKestrel()
-                .UseContentRoot(Directory.GetCurrentDirectory())
-                .ConfigureAppConfiguration((hostingContext, config) =>
-                {
-                    var env = hostingContext.HostingEnvironment;
-                    config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                            .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true);
-                    config.AddEnvironmentVariables();
-                })
-                .ConfigureLogging((hostingContext, logging) =>
-                {
-                    logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-                    logging.AddConsole();
-                    logging.AddDebug();
-                });
+                .UseContentRoot(Directory.GetCurrentDirectory());
     }
 }
 

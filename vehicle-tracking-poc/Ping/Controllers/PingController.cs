@@ -12,19 +12,19 @@ using Ping.Models;
 using Ping.Vehicle.Mediator;
 using WebComponents.Interceptors;
 
-namespace Ping
+namespace Ping.Controllers
 {
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
-    public class VehicleController : Controller, IPing
+    public class PingController : Controller, IPing
     {
         private readonly ILogger _logger;
         private readonly IMediator _mediator;
         private readonly IMessageCommand _messagePublisher;
         private readonly IOperationalUnit _operationalUnit;
         private readonly MiddlewareConfiguration _middlewareConfiguration;
-        public VehicleController(
-            ILogger<VehicleController> logger,
+        public PingController(
+            ILogger<PingController> logger,
             IMediator mediator,
             IMessageCommand messagePublisher,
             IOperationalUnit operationalUnit,
@@ -37,31 +37,12 @@ namespace Ping
             _middlewareConfiguration = middlewareConfiguration;
         }
 
-        // GET api/v/<controller>/5
-        [CustomHeader(Models.Identifiers.DomainModel, Models.Identifiers.PingDomainModel)]
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(string id, CancellationToken cancellationToken)
+        // GET api/v/<controller>/0
+        [CustomHeader("string", "print hello")]
+        [HttpGet("{id?}")]
+        public IActionResult Get(string id, CancellationToken cancellationToken)
         {
-            //TODO:in the future in case of correlated action, link them by correlation header, ....       
-            //[CustomHeader(Models.Identifiers.CorrelationId, _operationalUnit.OperationId)]
-
-            // message definition
-            //(MessageHeader Header,PingModel Body, MessageFooter Footer)
-            await _mediator.Publish(
-                new PingPublisher(
-                            ControllerContext,
-                            new DomainModels.Vehicle.Ping()
-                            {
-                                ChassisNumber = id,
-                                Status = StatusModel.Active,
-                                Message = "Hello world => vehicle"
-                            },
-                            _messagePublisher,
-                            _middlewareConfiguration,
-                            _operationalUnit)
-            , cancellationToken);
-            //throw new CustomException(code: ExceptionCodes.MessageMalformed);
-            return Ok(id);
+            return Ok($"ping service hello world;{id}");
         }
 
         // POST api/v/<controller>/vehicleId

@@ -23,6 +23,7 @@ namespace DomainModels.System
         #region settings
 
         public const int RetryCount = 5;
+        public const int DataPageSize = 10;
         public const int TimeoutInSec = 60;
         public const int BreakTimeoutInSec = 5;
         public const int CircutBreakerExceptionsCount = 5;

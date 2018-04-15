@@ -23,7 +23,7 @@ namespace DomainModels.Vehicle
     {
         public long StartFromTime { get; set; }
         public long EndByTime { get; set; }
-        public int PageSize { get; set; }
+        public int rowsCount { get; set; }
         public int PageNo { get; set; }
     }
 }

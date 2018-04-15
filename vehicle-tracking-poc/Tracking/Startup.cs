@@ -26,6 +26,15 @@ namespace Tracking
 {
     public class Startup
     {
+        private readonly MiddlewareConfiguration _systemLocalConfiguration;
+        private readonly IHostingEnvironment _environemnt;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger _logger;
+        private string AssemblyName => $"{Environemnt.ApplicationName} V{this.GetType().Assembly.GetName().Version}";
+
+        public IHostingEnvironment Environemnt => _environemnt;
+        public IConfiguration Configuration => _configuration;
+        public ILogger Logger => _logger;
         public Startup(ILoggerFactory logger, IHostingEnvironment environemnt, IConfiguration configuration)
         {
             var builder = new ConfigurationBuilder()
@@ -54,15 +63,6 @@ namespace Tracking
                 {nameof(_systemLocalConfiguration.MessagesMiddlewarePassword),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewarePassword)},
             });
         }
-
-        private readonly MiddlewareConfiguration _systemLocalConfiguration;
-        private readonly IHostingEnvironment _environemnt;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger _logger;
-        public IHostingEnvironment Environemnt => _environemnt;
-        public IConfiguration Configuration => _configuration;
-        public ILogger Logger => _logger;
-        private string AssemblyName => $"{Environemnt.ApplicationName} V{this.GetType().Assembly.GetName().Version}";
 
         // Inject background service, for receiving message
         public void ConfigureServices(IServiceCollection services)
@@ -120,8 +120,6 @@ namespace Tracking
                 });
 
             #endregion
-
-
 
             #region build ping worker cache
 
@@ -248,7 +246,6 @@ namespace Tracking
                 options.Filters.Add(new CustomResponseResult(_logger, operationalUnit));
             });
         }
-
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment environemnt)
         {

@@ -1,11 +1,12 @@
 ﻿using System;
 using System.IO;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using BuildingAspects.Behaviors;
 using DomainModels.System;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using RabbitMQ.Client.Exceptions;
 
 namespace Customer
 {
@@ -29,12 +30,25 @@ namespace Customer
                     .Build()
                     .Run();
                     return Task.CompletedTask;
+                }, (ex) =>
+                {
+                    switch (ex)
+                    {
+                        case BrokerUnreachableException brokerEx:
+                            return true;
+                        case ConnectFailureException connEx:
+                            return true;
+                        case SocketException socketEx:
+                            return true;
+                        default:
+                            return false;
+                    }
                 }).Wait();
                 return 0;
             }
             catch (Exception ex)
             {
-                mainLogger.LogCritical($"Failed to start vehicle service, {ex.Message}.", ex);
+                mainLogger.LogCritical($"Failed to start customer service, {ex.Message}.", ex);
                 return -1;
             }
             finally
@@ -46,19 +60,6 @@ namespace Customer
         public static IWebHostBuilder BuildWebHost(string[] args) =>
             new WebHostBuilder()
                 .UseKestrel()
-                .UseContentRoot(Directory.GetCurrentDirectory())
-                .ConfigureAppConfiguration((hostingContext, config) =>
-                {
-                    var env = hostingContext.HostingEnvironment;
-                    config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                            .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true);
-                    config.AddEnvironmentVariables();
-                })
-                .ConfigureLogging((hostingContext, logging) =>
-                {
-                    logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-                    logging.AddConsole();
-                    logging.AddDebug();
-                });
+                .UseContentRoot(Directory.GetCurrentDirectory());
     }
 }

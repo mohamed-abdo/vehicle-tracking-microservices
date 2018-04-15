@@ -13,6 +13,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 using Microsoft.AspNetCore.Mvc;
+using Ping.Controllers;
+
 namespace PingTests.UnitTest
 {
     public class PingTest
@@ -20,7 +22,7 @@ namespace PingTests.UnitTest
         private IPing _ping;
         private string _vehicleId;
         private PingRequest _pingRequest;
-        private readonly ILogger<VehicleController> _logger;
+        private readonly ILogger<PingController> _logger;
         private readonly IMediator _mediatorMock;
         private readonly IOperationalUnit _operationalUnit;
         private readonly MiddlewareConfiguration _localConfigurationMock;
@@ -28,7 +30,7 @@ namespace PingTests.UnitTest
         public PingTest()
         {
             var loggerFactortMoq = new Mock<ILoggerFactory>().Object;
-            _logger = loggerFactortMoq.CreateLogger<VehicleController>();
+            _logger = loggerFactortMoq.CreateLogger<PingController>();
 
             _operationalUnit = new OperationalUnit(
                environment: "Mock",
@@ -40,7 +42,7 @@ namespace PingTests.UnitTest
 
             _mediatorMock = new Mock<IMediator>().Object;
 
-            _ping = new VehicleController(_logger, _mediatorMock, _publisherMock, _operationalUnit, _localConfigurationMock);
+            _ping = new PingController(_logger, _mediatorMock, _publisherMock, _operationalUnit, _localConfigurationMock);
 
             _mediatorMock = new Mock<IMediator>().Object;
 

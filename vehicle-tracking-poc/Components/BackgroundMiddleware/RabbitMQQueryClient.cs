@@ -37,71 +37,76 @@ namespace BackgroundMiddleware
         private readonly string route;
         public RabbitMQQueryClient(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
         {
-            this._logger = logger?
+           _logger = logger?
                             .AddConsole()
                             .AddDebug()
                             .CreateLogger<RabbitMQQueryClient<TRequest, TResponse>>()
                             ?? throw new ArgumentNullException("Logger reference is required");
-
-            _hostConfig = hostConfig;
-            exchange = _hostConfig.exchange;
-            route = _hostConfig.routes.FirstOrDefault() ?? throw new ArgumentNullException("route queue is missing.");
-            var host = Helper.ExtractHostStructure(_hostConfig.hostName);
-            connectionFactory = new ConnectionFactory()
+            try
             {
-                HostName = host.hostName,
-                Port = host.port ?? defaultMiddlewarePort,
-                UserName = _hostConfig.userName,
-                Password = _hostConfig.password,
-                ContinuationTimeout = TimeSpan.FromSeconds(DomainModels.System.Identifiers.TimeoutInSec)
-            };
+                _hostConfig = hostConfig;
+                exchange = _hostConfig.exchange;
+                route = _hostConfig.routes.FirstOrDefault() ?? throw new ArgumentNullException("route queue is missing.");
+                var host = Helper.ExtractHostStructure(_hostConfig.hostName);
+                connectionFactory = new ConnectionFactory()
+                {
+                    HostName = host.hostName,
+                    Port = host.port ?? defaultMiddlewarePort,
+                    UserName = _hostConfig.userName,
+                    Password = _hostConfig.password,
+                    ContinuationTimeout = TimeSpan.FromSeconds(DomainModels.System.Identifiers.TimeoutInSec)
+                };
 
-            new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
-           {
-               connection = connectionFactory.CreateConnection();
-               channel = connection.CreateModel();
-               return true;
-           }, (ex) =>
-           {
-               switch (ex)
+                new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
                {
-                   case BrokerUnreachableException brokerEx:
-                       return true;
-                   case ConnectFailureException connEx:
-                       return true;
-                   case SocketException socketEx:
-                       return true;
-                   default:
-                       return false;
-               }
-           }).Wait();
+                   connection = connectionFactory.CreateConnection();
+                   channel = connection.CreateModel();
+                   return true;
+               }, (ex) =>
+               {
+                   switch (ex)
+                   {
+                       case BrokerUnreachableException brokerEx:
+                           return true;
+                       case ConnectFailureException connEx:
+                           return true;
+                       case SocketException socketEx:
+                           return true;
+                       default:
+                           return false;
+                   }
+               }).Wait();
 
-            replyQueueName = channel.QueueDeclare().QueueName;
-            consumer = new EventingBasicConsumer(channel);
-            props = channel.CreateBasicProperties();
-            props.Persistent = true;
-            var correlationId = Guid.NewGuid().ToString();
-            props.CorrelationId = correlationId;
-            props.ReplyTo = replyQueueName;
+                replyQueueName = channel.QueueDeclare().QueueName;
+                consumer = new EventingBasicConsumer(channel);
+                props = channel.CreateBasicProperties();
+                props.Persistent = true;
+                var correlationId = Guid.NewGuid().ToString();
+                props.CorrelationId = correlationId;
+                props.ReplyTo = replyQueueName;
 
-            consumer.Received += (model, ea) =>
-            {
-                try
+                consumer.Received += (model, ea) =>
                 {
-                    if (ea.Body == null || ea.Body.Length == 0)
-                        return;
-                    var response = Utilities.JsonBinaryDeserialize<TResponse>(ea.Body);
-                    if (response != null)
-                        if (ea.BasicProperties.CorrelationId == correlationId)
-                        {
-                            respQueue.Add(response);
-                        }
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError("Error while processing message by query client", e);
-                }
-            };
+                    try
+                    {
+                        if (ea.Body == null || ea.Body.Length == 0)
+                            return;
+                        var response = Utilities.JsonBinaryDeserialize<TResponse>(ea.Body);
+                        if (response != null)
+                            if (ea.BasicProperties.CorrelationId == correlationId)
+                            {
+                                respQueue.Add(response);
+                            }
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError("Error while processing message by query client", e);
+                    }
+                };
+            }
+            catch(Exception ex) {
+                  _logger.LogError("Failed to initialize RabbitMQQueryClient", ex);
+            }
         }
 
         public async Task<TResponse> Query(TRequest message)

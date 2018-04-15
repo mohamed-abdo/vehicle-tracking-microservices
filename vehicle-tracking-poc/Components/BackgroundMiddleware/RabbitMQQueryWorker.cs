@@ -36,81 +36,88 @@ namespace BackgroundMiddleware
             RabbitMQConfiguration hostConfig,
             Func<byte[], byte[]> lambda) : base(serviceProvider)
         {
-            this._logger = logger?
+
+            _logger = logger?
                             .AddConsole()
                             .AddDebug()
                             .CreateLogger<RabbitMQPublisher>()
                             ?? throw new ArgumentNullException("Logger reference is required");
-
-            if (string.IsNullOrEmpty(hostConfig.hostName))
-                throw new ArgumentNullException("hostName is invalid");
-            _hostConfig = hostConfig;
-            exchange = _hostConfig.exchange;
-            route = _hostConfig.routes.FirstOrDefault() ?? throw new ArgumentNullException("route queue is missing.");
-            this.lambda = lambda ?? throw new ArgumentNullException("Callback reference is invalid");
-            var host = Helper.ExtractHostStructure(_hostConfig.hostName);
-            connectionFactory = new ConnectionFactory()
+            try
             {
-                HostName = host.hostName,
-                Port = host.port ?? defaultMiddlewarePort,
-                UserName = _hostConfig.userName,
-                Password = _hostConfig.password,
-                ContinuationTimeout = TimeSpan.FromSeconds(DomainModels.System.Identifiers.TimeoutInSec)
-            };
-
-            new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
-            {
-                connection = connectionFactory.CreateConnection();
-                channel = connection.CreateModel();
-                channel.QueueDeclare(queue: route, durable: false, exclusive: false, autoDelete: false, arguments: null);
-                //TODO: in case scaling the middleware, running multiple workers simultaneously. 
-                channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
-                return Task.CompletedTask;
-            }, (ex) =>
-            {
-                switch (ex)
+                if (string.IsNullOrEmpty(hostConfig.hostName))
+                    throw new ArgumentNullException("hostName is invalid");
+                _hostConfig = hostConfig;
+                exchange = _hostConfig.exchange;
+                route = _hostConfig.routes.FirstOrDefault() ?? throw new ArgumentNullException("route queue is missing.");
+                this.lambda = lambda ?? throw new ArgumentNullException("Callback reference is invalid");
+                var host = Helper.ExtractHostStructure(_hostConfig.hostName);
+                connectionFactory = new ConnectionFactory()
                 {
-                    case BrokerUnreachableException brokerEx:
-                        return true;
-                    case ConnectFailureException connEx:
-                        return true;
-                    case SocketException socketEx:
-                        return true;
-                    default:
-                        return false;
-                }
-            }).Wait();
+                    HostName = host.hostName,
+                    Port = host.port ?? defaultMiddlewarePort,
+                    UserName = _hostConfig.userName,
+                    Password = _hostConfig.password,
+                    ContinuationTimeout = TimeSpan.FromSeconds(DomainModels.System.Identifiers.TimeoutInSec)
+                };
 
-            consumer = new EventingBasicConsumer(channel);
-            consumer.Received += async (model, ea) =>
-            {
-                await new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
+                new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
                 {
-                    var props = ea.BasicProperties;
-                    var replyProps = channel.CreateBasicProperties();
-                    replyProps.CorrelationId = props.CorrelationId;
-                    if (ea.Body == null || ea.Body.Length == 0)
-                        throw new TypeLoadException("Invalid message type");
-                    // callback action feeding  
-                    var binaryResponse = lambda(ea.Body);
-                    channel.BasicPublish(exchange: exchange, routingKey: props.ReplyTo, basicProperties: replyProps, body: binaryResponse);
-                    channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
-
-                    _logger.LogInformation($"[x] Event sourcing service receiving a messaged from exchange: {_hostConfig.exchange}, route :{ea.RoutingKey}.");
-                    return true;
+                    connection = connectionFactory.CreateConnection();
+                    channel = connection.CreateModel();
+                    channel.QueueDeclare(queue: route, durable: false, exclusive: false, autoDelete: false, arguments: null);
+                    //TODO: in case scaling the middleware, running multiple workers simultaneously. 
+                    channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+                    return Task.CompletedTask;
                 }, (ex) =>
                 {
                     switch (ex)
                     {
-                        case TypeLoadException typeEx:
+                        case BrokerUnreachableException brokerEx:
+                            return true;
+                        case ConnectFailureException connEx:
+                            return true;
+                        case SocketException socketEx:
                             return true;
                         default:
                             return false;
                     }
-                });
-            };
-            //bind event handler
-            channel.BasicConsume(queue: route, autoAck: false, consumer: consumer);
+                }).Wait();
+
+                consumer = new EventingBasicConsumer(channel);
+                consumer.Received += async (model, ea) =>
+                {
+                    await new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
+                    {
+                        var props = ea.BasicProperties;
+                        var replyProps = channel.CreateBasicProperties();
+                        replyProps.CorrelationId = props.CorrelationId;
+                        if (ea.Body == null || ea.Body.Length == 0)
+                            throw new TypeLoadException("Invalid message type");
+                        // callback action feeding  
+                        var binaryResponse = lambda(ea.Body);
+                        channel.BasicPublish(exchange: exchange, routingKey: props.ReplyTo, basicProperties: replyProps, body: binaryResponse);
+                        channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+
+                        _logger.LogInformation($"[x] Event sourcing service receiving a messaged from exchange: {_hostConfig.exchange}, route :{ea.RoutingKey}.");
+                        return true;
+                    }, (ex) =>
+                    {
+                        switch (ex)
+                        {
+                            case TypeLoadException typeEx:
+                                return true;
+                            default:
+                                return false;
+                        }
+                    });
+                };
+                //bind event handler
+                channel.BasicConsume(queue: route, autoAck: false, consumer: consumer);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Failed to initialize RabbitMQQueryWorker", ex);
+            }
         }
 
         /// <summary>

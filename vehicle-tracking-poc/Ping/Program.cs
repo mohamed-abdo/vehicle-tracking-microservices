@@ -1,10 +1,12 @@
 ﻿using System;
 using System.IO;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using BuildingAspects.Behaviors;
 using DomainModels.System;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
+using RabbitMQ.Client.Exceptions;
 
 namespace Ping
 {
@@ -33,6 +35,19 @@ namespace Ping
                      .Build()
                      .Run();
                      return Task.CompletedTask;
+                 }, (ex) =>
+                 {
+                     switch (ex)
+                     {
+                         case BrokerUnreachableException brokerEx:
+                             return true;
+                         case ConnectFailureException connEx:
+                             return true;
+                         case SocketException socketEx:
+                             return true;
+                         default:
+                             return false;
+                     }
                  }).Wait();
                 return 0;
             }

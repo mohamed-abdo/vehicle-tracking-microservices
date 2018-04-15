@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using BuildingAspects.Services;
 using DomainModels.System;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using RedisCacheAdapter;
 using Tracking.Tracking.Mediator;
+using WebComponents.Interceptors;
 
 namespace Tracking.Controllers
 {
@@ -37,10 +39,11 @@ namespace Tracking.Controllers
             _middlewareConfiguration = middlewareConfiguration;
         }
         // GET api/values
-        [HttpGet]
-        public IEnumerable<string> Get()
+        [CustomHeader("string", "print hello")]
+        [HttpGet("{id?}")]
+        public IActionResult Get(string id, CancellationToken cancellationToken)
         {
-            return new string[] { "value1", "value2" };
+            return Ok($"tracking service hello world;{id}");
         }
 
         // GET api/values/5
@@ -54,7 +57,7 @@ namespace Tracking.Controllers
                         StartFromTime = startFrom,
                         EndByTime = endBy,
                         PageNo = pageNo,
-                        PageSize = pageSize
+                        rowsCount = pageSize
                     },
                     _redisCache,
                     _messageQuery,
@@ -63,24 +66,6 @@ namespace Tracking.Controllers
                 );
             var result = await _mediator.Send(request);
             return new JsonResult(result);
-        }
-
-        // POST api/values
-        [HttpPost]
-        public void Post([FromBody]string value)
-        {
-        }
-
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
-        {
-        }
-
-        // DELETE api/values/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
         }
     }
 }
