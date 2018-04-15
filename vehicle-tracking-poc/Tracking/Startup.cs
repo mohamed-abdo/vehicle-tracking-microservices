@@ -151,8 +151,9 @@ namespace Tracking
                     try
                     {
                         //TODO: add business logic, result should be serializable
+                        var trackingFilter = Utilities.JsonBinaryDeserialize<TrackingFilterModel>(trackingMessageRequest);
                         Logger.LogInformation($"[x] callback of RabbitMQQueryWorker=>, message: {JsonConvert.SerializeObject(trackingMessageRequest)}");
-                        var response = pingSrv.Query(filterQuery)?.ToList();
+                        var response = pingSrv.Query(trackingFilter.Body, filterQuery)?.ToList();
                         if (response == null)
                             return new byte[0];
                         return Utilities.JsonBinarySerialize(response);

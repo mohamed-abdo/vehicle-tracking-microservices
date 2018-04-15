@@ -22,21 +22,26 @@ namespace EventSourceingSqlDb.Repository
 
         public IQueryable<DbModel> Query(Func<DbModel, bool> predicate)
         {
-            return DbContext.PingEventSource.Where(predicate).AsQueryable();
+            return DbContext
+                    .PingEventSource
+                    .Where(predicate)
+                    .AsQueryable();
         }
         public IQueryable<DbModel> Query(IFilter queryFilter, Func<DbModel, bool> predicate = null)
         {
-            predicate = (m) =>
+            if (predicate == null)
+                predicate = (x) => true;
+            Func<DbModel, bool> timeRangePredicate = (m) =>
             {
                 return
                 m.Timestamp >= queryFilter.StartFromTime &&
-                m.Timestamp <= queryFilter.EndByTime &&
-                (predicate == null ? true : predicate(m));
+                m.Timestamp <= queryFilter.EndByTime;
             };
 
             return DbContext
                     .PingEventSource
                     .Where(predicate)
+                    .Where(timeRangePredicate)
                     .Skip(queryFilter.PageNo * queryFilter.PageSize)
                     .Take(queryFilter.PageSize)
                     .OrderByDescending(o => o.Timestamp)
