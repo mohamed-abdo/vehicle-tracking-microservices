@@ -10,6 +10,13 @@ namespace DomainModels.Vehicle
     [Serializable]
     public class TrackingFilterModel : DomainModel<TrackingFilter>
     {
+        public TrackingFilterModel() { }
+        public TrackingFilterModel(DomainModel<TrackingFilter> domainModel)
+        {
+            Header = domainModel.Header;
+            Body = domainModel.Body;
+            Footer = domainModel.Footer;
+        }
     }
     [Serializable]
     public class TrackingFilter : IFilter

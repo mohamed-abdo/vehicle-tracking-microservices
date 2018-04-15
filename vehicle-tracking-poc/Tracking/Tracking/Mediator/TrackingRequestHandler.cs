@@ -20,7 +20,6 @@ namespace Tracking.Tracking.Mediator
         {
             _logger = logger;
         }
-
         public async Task<IEnumerable<PingModel>> Handle(TrackingRequest request, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Request => {nameof(TrackingModel)}");

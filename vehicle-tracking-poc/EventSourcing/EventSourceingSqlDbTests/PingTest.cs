@@ -71,7 +71,8 @@ namespace EventSourceingSqlDbTests
             var originalObj = messageRec.Data.ToObject<PingModel>();
             Assert.IsTrue(originalObj.EqualsByValue(messageBody), "Add ping failed, can't get the original body from the message.");
         }
-
+        Func<PingModel, (MessageHeader header, Ping body, MessageFooter footer)> Convert = (domainModel) =>
+              (domainModel.Header, domainModel.Body, domainModel.Footer);
         [Test]
         public async Task TestQueryPingEventSourcing()
         {
@@ -83,7 +84,8 @@ namespace EventSourceingSqlDbTests
                 Body = messageBody,
                 Footer = message.Footer
             };
-            var dbObjec = new PingEventSourcing(EventSourceingSqlDb.Functors.Mappers<PingModel>.FromPingModelToEnity(pingMessage));
+
+            var dbObjec = new PingEventSourcing(EventSourceingSqlDb.Functors.Mappers<Ping>.FromPingModelToEnity(Convert(pingMessage)));
 
             _dbContext.PingEventSource.Add(dbObjec);
             await _dbContext.SaveChangesAsync();
@@ -106,7 +108,7 @@ namespace EventSourceingSqlDbTests
 
             byte[] binObjSource = Utilities.JsonBinarySerialize(pingMessage);
 
-            var dbObjec = new PingEventSourcing(EventSourceingSqlDb.Functors.Mappers<PingModel>.FromPingModelToEnity(pingMessage));
+            var dbObjec = new PingEventSourcing(EventSourceingSqlDb.Functors.Mappers<Ping>.FromPingModelToEnity(Convert(pingMessage)));
 
             _dbContext.PingEventSource.Add(dbObjec);
             await _dbContext.SaveChangesAsync();

@@ -1,4 +1,5 @@
 ﻿using DomainModels.System;
+using DomainModels.Types;
 using DomainModels.Types.Messages;
 using DomainModels.Vehicle;
 using EventSourceingSqlDb.DbModels;
@@ -15,10 +16,15 @@ namespace EventSourceingSqlDb.Adapters
         ICommandEventSourcingLedger<PingModel>,
         IQueryEventSourcingLedger<PingModel>
     {
-        Func<PingModel, (MessageHeader header, Ping body, MessageFooter footer)> Convert = (domainModel) =>
-               (domainModel.Header, domainModel.Body, domainModel.Footer);
-
         private readonly PingEventSourcingLedger _pingEventSourcingLedger;
+
+        Func<Func<PingModel, bool>, Func<DbModel, bool>> QueryConverter = (modelPredicate) =>
+        {
+            return (model) =>
+            {
+                return modelPredicate(new PingModel(DbModelFactory.Convert<Ping>(model)));
+            };
+        };
         public PingEventSourcingLedgerAdapter(ILoggerFactory loggerFactory, VehicleDbContext dbContext)
         {
             _pingEventSourcingLedger = new PingEventSourcingLedger(loggerFactory, dbContext);
@@ -27,22 +33,20 @@ namespace EventSourceingSqlDb.Adapters
         {
             return
                 _pingEventSourcingLedger
-                .Add(Functors.Mappers<Ping>.FromPingModelToEnity(Convert(pingEventSourcing)));
+                .Add(DbModelFactory.Create(pingEventSourcing));
         }
 
         public IQueryable<PingModel> Query(Func<PingModel, bool> predicate)
         {
-            return
-                _pingEventSourcingLedger
-                .Query(Functors.Mappers<Ping>.PredicateMapper(Convert(predicate)))
-                .Select(Functors.Mappers<Ping>.FromEnityToPingModel).AsQueryable();
+            return _pingEventSourcingLedger
+                   .Query(QueryConverter(predicate))
+                   .Select(q => new PingModel(DbModelFactory.Convert<Ping>(q)));
         }
         public IQueryable<PingModel> Query(IFilter queryFilter, Func<PingModel, bool> predicate = null)
         {
-            return
-              _pingEventSourcingLedger
-              .Query(queryFilter, Functors.Mappers<PingModel>.PredicateMapper(predicate))
-              .Select(Functors.Mappers<PingModel>.FromEnityToPingModel).AsQueryable();
+            return _pingEventSourcingLedger
+                 .Query(queryFilter, QueryConverter(predicate))
+                 .Select(q => new PingModel(DbModelFactory.Convert<Ping>(q)));
         }
 
         public IQueryable<PingModel> Query(IFilter queryFilter, IDictionary<string, string> modelCriteria = null)

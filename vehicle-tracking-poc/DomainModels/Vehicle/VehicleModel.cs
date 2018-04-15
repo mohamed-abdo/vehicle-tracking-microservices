@@ -7,7 +7,13 @@ namespace DomainModels.Vehicle
     [Serializable]
     public class VehicleModel : DomainModel<Vehicle>
     {
-
+        public VehicleModel() { }
+        public VehicleModel(DomainModel<Vehicle> domainModel)
+        {
+            Header = domainModel.Header;
+            Body = domainModel.Body;
+            Footer = domainModel.Footer;
+        }
     }
     [Serializable]
     public class Vehicle

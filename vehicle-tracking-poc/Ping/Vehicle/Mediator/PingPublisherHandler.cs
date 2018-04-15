@@ -23,7 +23,7 @@ namespace Ping.Vehicle.Mediator
         {
             _logger.LogInformation($"Publish notification=> {notification.Model}");
 
-            var request = new DomainModel
+            var request = new DomainModel<DomainModels.Vehicle.Ping>
             {
                 Header = new MessageHeader
                 {

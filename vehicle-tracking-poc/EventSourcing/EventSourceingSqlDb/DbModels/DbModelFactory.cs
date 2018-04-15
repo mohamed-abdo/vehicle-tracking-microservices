@@ -1,4 +1,5 @@
 ﻿using BuildingAspects.Behaviors;
+using DomainModels.Types;
 using DomainModels.Types.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -27,6 +28,26 @@ namespace EventSourceingSqlDb.DbModels
                 Hint = footer.Hint,
                 Route = JsonConvert.DeserializeObject<IDictionary<string, string>>(footer.Route, Defaults.JsonSerializerSettings)
             };
+        }
+        public static DbModel Create<T>(DomainModel<T> message)
+        {
+            return Create(message.Header, message.Body, message.Footer);
+        }
+
+        public static DomainModel<T> Convert<T>(DbModel model)
+        {
+            var header = new MessageHeader(executionId: model.ExecutionId, timestamp: model.Timestamp, isSucceed: true);
+            var body = model.Data.ToObject<T>();
+            var footer = new MessageFooter
+            {
+                Assembly = model.Assembly,
+                Environment = model.Environment,
+                FingerPrint = model.FingerPrint,
+                Hint = model.Hint,
+                Route = JsonConvert.SerializeObject(model.Route, Defaults.JsonSerializerSettings),
+                Sender = model.Sender
+            };
+            return new DomainModel<T> { Header = header, Body = body, Footer = footer };
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using DomainModels.Types;
+using DomainModels.Types.Messages;
 using System;
 
 namespace DomainModels.Vehicle
@@ -6,6 +7,13 @@ namespace DomainModels.Vehicle
     [Serializable]
     public class PingModel : DomainModel<Ping>
     {
+        public PingModel() { }
+        public PingModel(DomainModel<Ping> domainModel)
+        {
+            Header = domainModel.Header;
+            Body = domainModel.Body;
+            Footer = domainModel.Footer;
+        }
     }
     [Serializable]
     public class Ping

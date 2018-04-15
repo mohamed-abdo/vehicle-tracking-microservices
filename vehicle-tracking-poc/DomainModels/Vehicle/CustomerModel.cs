@@ -9,6 +9,13 @@ namespace DomainModels.Vehicle
     [Serializable]
     public class CustomerModel : DomainModel<Customer>
     {
+        public CustomerModel() { }
+        public CustomerModel(DomainModel<Customer> domainModel)
+        {
+            Header = domainModel.Header;
+            Body = domainModel.Body;
+            Footer = domainModel.Footer;
+        }
     }
     [Serializable]
     public class Customer

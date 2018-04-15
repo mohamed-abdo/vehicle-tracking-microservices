@@ -9,7 +9,13 @@ namespace DomainModels.Vehicle
     [Serializable]
     public class TrackingModel : DomainModel<Tracking>
     {
-
+        public TrackingModel() { }
+        public TrackingModel(DomainModel<Tracking> domainModel)
+        {
+            Header = domainModel.Header;
+            Body = domainModel.Body;
+            Footer = domainModel.Footer;
+        }
     }
     [Serializable]
     public class Tracking
