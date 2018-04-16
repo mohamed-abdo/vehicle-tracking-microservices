@@ -89,7 +89,7 @@ namespace EventSourcingMiddleware
                     exchange = _systemLocalConfiguration.MiddlewareExchange,
                     userName = _systemLocalConfiguration.MessagesMiddlewareUsername,
                     password = _systemLocalConfiguration.MessagesMiddlewarePassword,
-                    routes = GetRoutes("ping.vehicle", "vehicle.vehicle")?.ToArray()
+                    routes = GetRoutes("ping.vehicle", "vehicle.vehicle", "customer.vehicle")?.ToArray()
                 }
                 , (pingMessageCallback) =>
                 {

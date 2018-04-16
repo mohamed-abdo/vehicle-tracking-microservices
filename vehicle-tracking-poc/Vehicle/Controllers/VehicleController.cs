@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BuildingAspects.Services;
@@ -50,6 +48,8 @@ namespace Vehicle.Controllers
         [HttpPost()]
         public async Task<IActionResult> Post([FromBody] VehicleRequest vehicleRequest, CancellationToken cancellationToken)
         {
+            if (vehicleRequest == null)
+                throw new ArgumentNullException("vehicle body request is missing!");
             await _mediator.Publish(new VehiclePublisher(
                             ControllerContext,
                             new DomainModels.Business.Vehicle()

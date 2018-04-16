@@ -22,7 +22,6 @@ services:
     - 32771:80
 
   vehicle:
- vehicle:
     image: vehicle
     depends_on:
     - distributed_cache
@@ -45,6 +44,20 @@ services:
   customer:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+    - distributed_cache
+    - messages_middleware
+    - event_sourcing_middleware
+    - database_sql
+    environment:
+    - ASPNETCORE_ENVIRONMENT=Development
+    - distributed_cache=distributed_cache
+    - cache_db_vehicles=vehicles
+    - messages_middleware=messages_middleware
+    - middleware_exchange=platform
+    - middleware_ping_publisher=*.customer.vehicle
+    - middleware_username=guest
+    - middleware_password=guest
     ports:
     - 32773:80
 

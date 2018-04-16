@@ -23,7 +23,8 @@ namespace DomainModels.Business
         public Guid CustomerId { get; set; }
         public string Name { get; set; }
         public string Mobile { get; set; }
-        public DateTime BirthDate { get; set; }
+        public string Email { get; set; }
+        public DateTime? BirthDate { get; set; }
         public string Country { get; set; }
     }
 }
