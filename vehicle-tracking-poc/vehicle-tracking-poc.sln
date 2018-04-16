@@ -7,39 +7,39 @@ Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-co
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Components", "Components", "{33EE945D-0886-4DF6-91FD-735384347B4F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tracking", "Tracking\Tracking.csproj", "{4D284B39-E250-41CE-8D9A-B38DBDEB3E92}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tracking", "Tracking\Tracking.csproj", "{4D284B39-E250-41CE-8D9A-B38DBDEB3E92}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrackingTests", "TrackingTests\TrackingTests.csproj", "{D82822BB-C2AC-484A-9982-50C15D0CCBDC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrackingTests", "TrackingTests\TrackingTests.csproj", "{D82822BB-C2AC-484A-9982-50C15D0CCBDC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vehicle", "Vehicle\Vehicle.csproj", "{8AB80F13-081A-470E-86C3-783F68D873CA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vehicle", "Vehicle\Vehicle.csproj", "{8AB80F13-081A-470E-86C3-783F68D873CA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VehicleTests", "VehicleTests\VehicleTests.csproj", "{E67F8516-EB60-4289-9701-5732361AB742}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehicleTests", "VehicleTests\VehicleTests.csproj", "{E67F8516-EB60-4289-9701-5732361AB742}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Customer", "Customer\Customer.csproj", "{68AA7A32-D7F1-494C-A17F-1A342DD56C88}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Customer", "Customer\Customer.csproj", "{68AA7A32-D7F1-494C-A17F-1A342DD56C88}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomerTests", "CustomerTests\CustomerTests.csproj", "{3DE43701-DA86-4305-8845-F18F437FB11D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerTests", "CustomerTests\CustomerTests.csproj", "{3DE43701-DA86-4305-8845-F18F437FB11D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ping", "Ping\Ping.csproj", "{F63169C6-706B-47FC-B581-5269458D6287}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ping", "Ping\Ping.csproj", "{F63169C6-706B-47FC-B581-5269458D6287}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuildingAspects", "Components\BuildingAspects\BuildingAspects.csproj", "{51E7A0CE-4E7E-48D1-9B9E-2E2C065F3952}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildingAspects", "Components\BuildingAspects\BuildingAspects.csproj", "{51E7A0CE-4E7E-48D1-9B9E-2E2C065F3952}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BackgroundMiddleware", "Components\BackgroundMiddleware\BackgroundMiddleware.csproj", "{AF0C899A-0940-4F19-A5D6-DB95818A2D6A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackgroundMiddleware", "Components\BackgroundMiddleware\BackgroundMiddleware.csproj", "{AF0C899A-0940-4F19-A5D6-DB95818A2D6A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DomainModels", "DomainModels\DomainModels.csproj", "{6FD9D23D-64A7-45DD-9CD0-E77DC0608A33}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DomainModels", "DomainModels\DomainModels.csproj", "{6FD9D23D-64A7-45DD-9CD0-E77DC0608A33}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebComponents", "Components\WebComponents\WebComponents.csproj", "{26691331-90BD-4BE5-973B-ED48D8C63F03}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebComponents", "Components\WebComponents\WebComponents.csproj", "{26691331-90BD-4BE5-973B-ED48D8C63F03}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EventSourcing", "EventSourcing", "{04644F22-0498-4538-9874-CC95570DA10E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventSourceingSQLDB", "EventSourcing\EventSourceingSqlDb\EventSourceingSQLDB.csproj", "{2E2B07EA-8BFD-4376-A126-64060A806BE1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourceingSQLDB", "EventSourcing\EventSourceingSqlDb\EventSourceingSQLDB.csproj", "{2E2B07EA-8BFD-4376-A126-64060A806BE1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventSourcingMiddleware", "EventSourcing\EventSourcingMiddleware\EventSourcingMiddleware.csproj", "{00EB5FE7-AF40-4458-A5C6-9B84EEE87007}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcingMiddleware", "EventSourcing\EventSourcingMiddleware\EventSourcingMiddleware.csproj", "{00EB5FE7-AF40-4458-A5C6-9B84EEE87007}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventSourceingSQLDBTests", "EventSourcing\EventSourceingSqlDbTests\EventSourceingSQLDBTests.csproj", "{33BE6160-38E0-43AB-B69F-1AEFE75EC4C6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourceingSQLDBTests", "EventSourcing\EventSourceingSqlDbTests\EventSourceingSQLDBTests.csproj", "{33BE6160-38E0-43AB-B69F-1AEFE75EC4C6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PingTests", "PingTests\PingTests.csproj", "{232CE2DB-25A2-4470-908D-BA56C1D3B211}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PingTests", "PingTests\PingTests.csproj", "{232CE2DB-25A2-4470-908D-BA56C1D3B211}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RedisCacheAdapter", "Components\RedisCacheAdapter\RedisCacheAdapter.csproj", "{67E121C2-39B0-4EF3-A5C7-AD9700F6973E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedisCacheAdapter", "Components\RedisCacheAdapter\RedisCacheAdapter.csproj", "{67E121C2-39B0-4EF3-A5C7-AD9700F6973E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PingService", "PingService", "{5AA7B517-BEAE-4CBE-A6FE-63A9D354491C}"
 EndProject
@@ -54,6 +54,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerSQLDB", "CustomerSQLDB\CustomerSQLDB.csproj", "{51F59233-B6A3-4070-95B0-6C98A3BBDD9F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrackingSQLDB", "TrackingSQLDB\TrackingSQLDB.csproj", "{56D5D06F-41B0-4463-B19D-DC610971FCA5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BaseSQLDB", "Components\BaseEntitySQLDB\BaseSQLDB.csproj", "{5C1EDB06-85DE-4243-8E9F-F3ED42D703AE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -141,6 +143,10 @@ Global
 		{56D5D06F-41B0-4463-B19D-DC610971FCA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{56D5D06F-41B0-4463-B19D-DC610971FCA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{56D5D06F-41B0-4463-B19D-DC610971FCA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C1EDB06-85DE-4243-8E9F-F3ED42D703AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C1EDB06-85DE-4243-8E9F-F3ED42D703AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C1EDB06-85DE-4243-8E9F-F3ED42D703AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C1EDB06-85DE-4243-8E9F-F3ED42D703AE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -164,6 +170,7 @@ Global
 		{11D856DA-830C-4F9A-95DC-DCB16E506584} = {6D37FDDB-771C-492E-82FA-469F1CB18C2A}
 		{51F59233-B6A3-4070-95B0-6C98A3BBDD9F} = {965214DD-876A-4559-9731-1CE5148C3026}
 		{56D5D06F-41B0-4463-B19D-DC610971FCA5} = {A132457C-1967-4BA3-A1AA-FA1D1C5EE904}
+		{5C1EDB06-85DE-4243-8E9F-F3ED42D703AE} = {33EE945D-0886-4DF6-91FD-735384347B4F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {107189C0-8946-4CD0-8058-7C9C37B97253}

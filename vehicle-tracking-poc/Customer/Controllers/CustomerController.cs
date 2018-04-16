@@ -56,7 +56,7 @@ namespace Customer.Controllers
                             ControllerContext,
                             new DomainModels.Business.Customer()
                             {
-                                CustomerId = Guid.NewGuid(),
+                                Id = Guid.NewGuid(),
                                 BirthDate = customerRequest.BirthDate,
                                 Country = customerRequest.Country,
                                 Email = customerRequest.Email,

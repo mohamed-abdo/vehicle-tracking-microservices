@@ -82,6 +82,7 @@ services:
     - messages_middleware=messages_middleware
     - middleware_exchange=platform
     - middleware_ping_publisher=*.vehicle.vehicle
+    - middleware_routes_subscriber=*.vehicle.vehicle
     - middleware_username=guest
     - middleware_password=guest
     ports:

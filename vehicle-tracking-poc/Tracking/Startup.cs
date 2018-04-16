@@ -70,7 +70,7 @@ namespace Tracking
             var serviceProvider = services.BuildServiceProvider();
             var loggerFactorySrv = serviceProvider.GetService<ILoggerFactory>();
 
-            services.AddDbContextPool<VehicleDbContext>(options => options.UseSqlServer(
+            services.AddDbContextPool<EventSourcingDbContext>(options => options.UseSqlServer(
               _systemLocalConfiguration.EventDbConnection,
               //enable connection resilience
               connectOptions =>
@@ -129,7 +129,7 @@ namespace Tracking
             services.AddSingleton<IHostedService, RabbitMQQueryWorker>(srv =>
             {
                 //get pingService
-                var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
+                var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<EventSourcingDbContext>());
 
                 return new RabbitMQQueryWorker
                 (serviceProvider, loggerFactorySrv, new RabbitMQConfiguration

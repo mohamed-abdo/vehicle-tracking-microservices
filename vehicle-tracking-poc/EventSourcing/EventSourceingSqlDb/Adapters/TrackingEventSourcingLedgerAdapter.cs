@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BaseSQLDB;
 
 namespace EventSourceingSQLDB.Adapters
 {
@@ -24,7 +25,7 @@ namespace EventSourceingSQLDB.Adapters
             };
         };
 
-        public TrackingEventSourcingLedgerAdapter(ILoggerFactory loggerFactory, VehicleDbContext dbContext)
+        public TrackingEventSourcingLedgerAdapter(ILoggerFactory loggerFactory, EventSourcingDbContext dbContext)
         {
             _pingEventSourcingLedger = new EventSourcingLedger(loggerFactory, dbContext, Identifiers.TrackingServiceName);
         }

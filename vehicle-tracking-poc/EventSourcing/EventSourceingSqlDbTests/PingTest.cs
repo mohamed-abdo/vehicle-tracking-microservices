@@ -18,7 +18,7 @@ namespace EventSourceingSQLDBTests
     public class PingTest
     {
         private readonly Mock<ILoggerFactory> _loggerMoq;
-        private readonly VehicleDbContext _dbContext;
+        private readonly EventSourcingDbContext _dbContext;
         private readonly ICommandEventSourcingLedger<PingModel> _eventSourcingLedger;
         private readonly IQueryEventSourcingLedger<PingModel> _eventSourcingLedgerQuery;
         private PingModel message;
@@ -26,8 +26,8 @@ namespace EventSourceingSQLDBTests
         {
             _loggerMoq = new Mock<ILoggerFactory>(MockBehavior.Loose);
 
-            _dbContext = new VehicleDbContext(new DbContextOptionsBuilder<VehicleDbContext>()
-                .UseInMemoryDatabase(nameof(VehicleDbContext))
+            _dbContext = new EventSourcingDbContext(new DbContextOptionsBuilder<EventSourcingDbContext>()
+                .UseInMemoryDatabase(nameof(EventSourcingDbContext))
                 .Options);
             _eventSourcingLedger = new PingEventSourcingLedgerAdapter(_loggerMoq.Object, _dbContext);
             _eventSourcingLedgerQuery = new PingEventSourcingLedgerAdapter(_loggerMoq.Object, _dbContext);

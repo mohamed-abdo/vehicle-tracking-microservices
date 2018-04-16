@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BaseSQLDB;
 
 namespace EventSourceingSQLDB.Adapters
 {
@@ -25,7 +26,7 @@ namespace EventSourceingSQLDB.Adapters
                 return modelPredicate(new PingModel(DbModelFactory.Convert<Ping>(model)));
             };
         };
-        public PingEventSourcingLedgerAdapter(ILoggerFactory loggerFactory, VehicleDbContext dbContext)
+        public PingEventSourcingLedgerAdapter(ILoggerFactory loggerFactory, EventSourcingDbContext dbContext)
         {
             _pingEventSourcingLedger = new EventSourcingLedger(loggerFactory, dbContext, Identifiers.PingServiceName);
         }

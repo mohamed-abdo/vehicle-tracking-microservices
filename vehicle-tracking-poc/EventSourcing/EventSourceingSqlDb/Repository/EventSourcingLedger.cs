@@ -1,4 +1,5 @@
-﻿using DomainModels.System;
+﻿using BaseSQLDB;
+using DomainModels.System;
 using EventSourceingSQLDB.DbModels;
 using Microsoft.Extensions.Logging;
 using System;
@@ -18,7 +19,7 @@ namespace EventSourceingSQLDB.Repository
         /// <param name="loggerFactory"></param>
         /// <param name="dbContext"></param>
         /// <param name="serviceFilter">default value null, query regardless sender service.</param>
-        public EventSourcingLedger(ILoggerFactory loggerFactory, VehicleDbContext dbContext, string serviceFilter = null) : base(loggerFactory, dbContext)
+        public EventSourcingLedger(ILoggerFactory loggerFactory, EventSourcingDbContext dbContext, string serviceFilter = null) : base(loggerFactory, dbContext)
         {
             _serviceFilter = serviceFilter;
         }
@@ -42,6 +43,7 @@ namespace EventSourceingSQLDB.Repository
                         .EventSourcing
                         .Where(predicate)
                         .Take(Identifiers.MaxRowsCount)
+                        .OrderByDescending(o=>o.Timestamp)
                         .AsQueryable();
             else
                 return DbContext

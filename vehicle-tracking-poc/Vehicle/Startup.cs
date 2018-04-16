@@ -1,5 +1,7 @@
 ﻿using BackgroundMiddleware;
+using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
+using DomainModels.Business;
 using DomainModels.DataStructure;
 using DomainModels.System;
 using MediatR;
@@ -8,9 +10,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Swashbuckle.AspNetCore.Swagger;
 using System.Collections.Generic;
+using VehicleSQLDB;
+using VehicleSQLDB.DbModels;
 using WebComponents.Interceptors;
 
 
@@ -52,6 +57,7 @@ namespace Vehicle
                 {nameof(_systemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>(Identifiers.MessagesMiddleware)},
                 {nameof(_systemLocalConfiguration.MiddlewareExchange),  Configuration.GetValue<string>(Identifiers.MiddlewareExchange)},
                 {nameof(_systemLocalConfiguration.MessagePublisherRoute),  Configuration.GetValue<string>(Identifiers.MessagePublisherRoute)},
+                {nameof(_systemLocalConfiguration.MessageSubscriberRoute),  Configuration.GetValue<string>(Identifiers.MessageSubscriberRoutes)},
                 {nameof(_systemLocalConfiguration.MessagesMiddlewareUsername),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewareUsername)},
                 {nameof(_systemLocalConfiguration.MessagesMiddlewarePassword),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewarePassword)},
             });
@@ -93,6 +99,42 @@ namespace Vehicle
 
             #region worker
 
+            #region event sourcing worker
+
+            services.AddSingleton<IHostedService, RabbitMQSubscriberWorker>(srv =>
+            {
+                //get Vehicle service
+                var vehicleSrv = new VehicleManager(loggerFactorySrv, srv.GetService<VehicleDbContext>());
+
+                return new RabbitMQSubscriberWorker
+                (serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
+                {
+                    hostName = _systemLocalConfiguration.MessagesMiddleware,
+                    exchange = _systemLocalConfiguration.MiddlewareExchange,
+                    userName = _systemLocalConfiguration.MessagesMiddlewareUsername,
+                    password = _systemLocalConfiguration.MessagesMiddlewarePassword,
+                    routes = _systemLocalConfiguration.MessageSubscriberRoute?.Split('-') ?? new string[0]
+                }
+                    , (messageCallback) =>
+                    {
+                        try
+                        {
+                            var message = messageCallback();
+                            if (message != null)
+                            {
+                                var domainModel = Utilities.JsonBinaryDeserialize<VehicleModel>(message);
+                                vehicleSrv.Add(new VehicleSQLDB.DbModels.Vehicle(domainModel.Body)).Wait();
+                            }
+                            Logger.LogInformation($"[x] Vehicle service receiving a message from exchange: {_systemLocalConfiguration.MiddlewareExchange}, route :{_systemLocalConfiguration.MessageSubscriberRoute}");
+                        }
+                        catch (System.Exception ex)
+                        {
+                            Logger.LogCritical(ex, "de-serialize Object exceptions.");
+                        }
+                    });
+            });
+
+            #endregion
 
             #endregion
 

@@ -10,11 +10,17 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Components\BuildingAspects\BuildingAspects.csproj" />
     <ProjectReference Include="..\..\DomainModels\DomainModels.csproj" />
+    <ProjectReference Include="..\..\Components\BaseEntitySQLDB\BaseSQLDB.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Functors\" />
+    <Folder Include="Repository\" />
+  </ItemGroup>
 </Project>

@@ -62,7 +62,7 @@ namespace EventSourcingMiddleware
             var serviceProvider = services.BuildServiceProvider();
             var loggerFactorySrv = serviceProvider.GetService<ILoggerFactory>();
 
-            services.AddDbContextPool<VehicleDbContext>(options => options.UseSqlServer(
+            services.AddDbContextPool<EventSourcingDbContext>(options => options.UseSqlServer(
                 _systemLocalConfiguration.EventDbConnection,
                 //enable connection resilience
                 connectOptions =>
@@ -80,7 +80,7 @@ namespace EventSourcingMiddleware
             services.AddSingleton<IHostedService, RabbitMQSubscriberWorker>(srv =>
             {
                 //get pingServicek
-                var eventSourcingSrv = new EventSourcingLedger(loggerFactorySrv, srv.GetService<VehicleDbContext>());
+                var eventSourcingSrv = new EventSourcingLedger(loggerFactorySrv, srv.GetService<EventSourcingDbContext>());
 
                 return new RabbitMQSubscriberWorker
                 (serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
@@ -89,29 +89,29 @@ namespace EventSourcingMiddleware
                     exchange = _systemLocalConfiguration.MiddlewareExchange,
                     userName = _systemLocalConfiguration.MessagesMiddlewareUsername,
                     password = _systemLocalConfiguration.MessagesMiddlewarePassword,
-                    routes = GetRoutes("ping.vehicle", "vehicle.vehicle", "customer.vehicle")?.ToArray()
+                    routes = _systemLocalConfiguration.MessageSubscriberRoute?.Split('-') ?? new string[0]
                 }
-                , (pingMessageCallback) =>
-                {
-                    try
+                    , (pingMessageCallback) =>
                     {
-                        var message = pingMessageCallback();
-                        if (message != null)
+                        try
                         {
-                            var domainModel = Utilities.JsonBinaryDeserialize<DomainModels.Types.DomainModel<object>>(message);
-                            var dbModel = DbModelFactory.Create(domainModel);
-                            if (dbModel != null)
+                            var message = pingMessageCallback();
+                            if (message != null)
                             {
-                                eventSourcingSrv.Add(dbModel).Wait();
+                                var domainModel = Utilities.JsonBinaryDeserialize<DomainModels.Types.DomainModel<object>>(message);
+                                var dbModel = DbModelFactory.Create(domainModel);
+                                if (dbModel != null)
+                                {
+                                    eventSourcingSrv.Add(dbModel).Wait();
+                                }
                             }
+                            Logger.LogInformation($"[x] Event sourcing service receiving a message from exchange: {_systemLocalConfiguration.MiddlewareExchange}, route :{_systemLocalConfiguration.MessageSubscriberRoute}");
                         }
-                        Logger.LogInformation($"[x] Event sourcing service receiving a message from exchange: {_systemLocalConfiguration.MiddlewareExchange}, route :{_systemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.LogCritical(ex, "de-serialize Object exceptions.");
-                    }
-                });
+                        catch (Exception ex)
+                        {
+                            Logger.LogCritical(ex, "de-serialize Object exceptions.");
+                        }
+                    });
             });
 
             #endregion
@@ -120,16 +120,6 @@ namespace EventSourcingMiddleware
 
         }
         #region internal functions
-        private IEnumerable<string> GetRoutes(params string[] endwithMatch)
-        {
-            foreach (var r in endwithMatch)
-            {
-                yield return _systemLocalConfiguration.MessageSubscriberRoute
-                                .Split('-')
-                                              .Where(route => route.ToLower().EndsWith(r, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-
-            }
-        }
 
         #endregion
 
@@ -138,7 +128,7 @@ namespace EventSourcingMiddleware
             // initialize InfoDbContext
             using (var scope = app.ApplicationServices.CreateScope())
             {
-                var dbContext = scope.ServiceProvider.GetService<VehicleDbContext>();
+                var dbContext = scope.ServiceProvider.GetService<EventSourcingDbContext>();
                 dbContext?.Database?.EnsureCreated();
             }
 
