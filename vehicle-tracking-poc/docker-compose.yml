@@ -70,6 +70,20 @@ services:
     build:
       context: .
       dockerfile: Vehicle/Dockerfile
+    depends_on:
+    - distributed_cache
+    - messages_middleware
+    - event_sourcing_middleware
+    - database_sql
+    environment:
+    - ASPNETCORE_ENVIRONMENT=Development
+    - distributed_cache=distributed_cache
+    - cache_db_vehicles=vehicles
+    - messages_middleware=messages_middleware
+    - middleware_exchange=platform
+    - middleware_ping_publisher=*.vehicle.vehicle
+    - middleware_username=guest
+    - middleware_password=guest
     ports:
     - 32772:80
 
@@ -95,7 +109,7 @@ services:
     - cache_db_vehicles=vehicles
     - messages_middleware=messages_middleware
     - middleware_exchange=platform
-    - middleware_routes_subscriber=*.ping.vehicle
+    - middleware_routes_subscriber=*.ping.vehicle-*.vehicle.vehicle
     - middleware_username=guest
     - middleware_password=guest
     - event_db_connection=Server=database_sql;Database=vehicle_events;User Id=sa;Password=Pass@word

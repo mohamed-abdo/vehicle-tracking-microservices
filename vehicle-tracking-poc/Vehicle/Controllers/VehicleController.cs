@@ -55,7 +55,10 @@ namespace Vehicle.Controllers
                             new DomainModels.Business.Vehicle()
                             {
                                 ChassisNumber = vehicleRequest.ChassisNumber,
-
+                                Color = vehicleRequest.Color,
+                                Country = vehicleRequest.Country,
+                                Model = vehicleRequest.Model,
+                                ProductionYear = vehicleRequest.ProductionYear
                             },
                             _messagePublisher,
                             _middlewareConfiguration,

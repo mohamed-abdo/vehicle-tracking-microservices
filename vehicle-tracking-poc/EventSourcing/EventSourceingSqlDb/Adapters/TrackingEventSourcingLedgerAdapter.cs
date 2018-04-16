@@ -1,5 +1,4 @@
 ﻿using DomainModels.System;
-using DomainModels.Types.Messages;
 using DomainModels.Business;
 using EventSourceingSQLDB.DbModels;
 using EventSourceingSQLDB.Repository;
@@ -13,7 +12,7 @@ namespace EventSourceingSQLDB.Adapters
     public class TrackingEventSourcingLedgerAdapter : IQueryEventSourcingLedger<TrackingModel>
     {
 
-        private readonly PingEventSourcingLedger _pingEventSourcingLedger;
+        private readonly EventSourcingLedger _pingEventSourcingLedger;
 
         Func<Func<TrackingModel, bool>, Func<DbModel, bool>> QueryConverter = (modelPredicate) =>
         {
@@ -27,7 +26,7 @@ namespace EventSourceingSQLDB.Adapters
 
         public TrackingEventSourcingLedgerAdapter(ILoggerFactory loggerFactory, VehicleDbContext dbContext)
         {
-            _pingEventSourcingLedger = new PingEventSourcingLedger(loggerFactory, Identifiers.TrackingServiceName, dbContext);
+            _pingEventSourcingLedger = new EventSourcingLedger(loggerFactory, dbContext, Identifiers.TrackingServiceName);
         }
 
         public string Sender => Identifiers.TrackingServiceName;
@@ -36,7 +35,7 @@ namespace EventSourceingSQLDB.Adapters
         {
             return _pingEventSourcingLedger
                         .Query(QueryConverter(predicate))
-                        .Select(q => new TrackingModel(DbModelFactory.Convert<Tracking>(q)));   
+                        .Select(q => new TrackingModel(DbModelFactory.Convert<Tracking>(q)));
         }
         public IQueryable<TrackingModel> Query(IFilter queryFilter, Func<TrackingModel, bool> predicate = null)
         {

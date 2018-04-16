@@ -8,22 +8,28 @@ using System.Threading.Tasks;
 
 namespace EventSourceingSQLDB.Repository
 {
-    public class PingEventSourcingLedger : BaseEventSourcingLedger,
+    public class EventSourcingLedger : BaseEventSourcingLedger,
         ICommandEventSourcingLedger<DbModel>,
         IQueryEventSourcingLedger<DbModel>
     {
-        public PingEventSourcingLedger(ILoggerFactory loggerFactory, string serviceFilter, VehicleDbContext dbContext) : base(loggerFactory, dbContext)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="loggerFactory"></param>
+        /// <param name="dbContext"></param>
+        /// <param name="serviceFilter">default value null, query regardless sender service.</param>
+        public EventSourcingLedger(ILoggerFactory loggerFactory, VehicleDbContext dbContext, string serviceFilter = null) : base(loggerFactory, dbContext)
         {
             _serviceFilter = serviceFilter;
         }
         private readonly string _serviceFilter;
-        public string Sender => _serviceFilter;
 
         public Task<int> Add(DbModel pingEventSourcing)
         {
-            DbContext.PingEventSource.Add(new PingEventSourcing(pingEventSourcing));
+            DbContext.EventSourcing.Add(new EventSourcing(pingEventSourcing));
             return DbContext.SaveChangesAsync();
         }
+
         /// <summary>
         //design decision, max allowed returned rows are fixed by 1000
         /// </summary>
@@ -31,9 +37,16 @@ namespace EventSourceingSQLDB.Repository
         /// <returns></returns>
         public IQueryable<DbModel> Query(Func<DbModel, bool> predicate)
         {
-            return DbContext
-                    .PingEventSource
-                    .Where(i => i.Sender.Equals(Sender, StringComparison.InvariantCultureIgnoreCase))
+            if (string.IsNullOrEmpty(_serviceFilter))
+                return DbContext
+                        .EventSourcing
+                        .Where(predicate)
+                        .Take(Identifiers.MaxRowsCount)
+                        .AsQueryable();
+            else
+                return DbContext
+                    .EventSourcing
+                    .Where(i => i.Sender.Equals(_serviceFilter, StringComparison.InvariantCultureIgnoreCase))
                     .Where(predicate)
                     .Take(Identifiers.MaxRowsCount)
                     .AsQueryable();
@@ -52,12 +65,13 @@ namespace EventSourceingSQLDB.Repository
             {
                 return
                 m.Timestamp >= queryFilter.StartFromTime &&
-                m.Timestamp <= queryFilter.EndByTime;
+                m.Timestamp <= queryFilter.EndByTime &&
+                string.IsNullOrEmpty(_serviceFilter) ? true :
+                m.Sender.Equals(_serviceFilter, StringComparison.InvariantCultureIgnoreCase);
             };
 
             return DbContext
-                    .PingEventSource
-                    .Where(i => i.Sender.Equals(Sender,StringComparison.InvariantCultureIgnoreCase))
+                    .EventSourcing
                     .Where(predicate)
                     .Where(timeRangePredicate)
                     .Skip(queryFilter.PageNo * Identifiers.DataPageSize)

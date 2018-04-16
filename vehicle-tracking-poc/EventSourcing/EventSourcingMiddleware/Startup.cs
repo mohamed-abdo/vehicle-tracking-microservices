@@ -2,8 +2,6 @@
 using BuildingAspects.Behaviors;
 using DomainModels.DataStructure;
 using DomainModels.System;
-using DomainModels.Business;
-using EventSourceingSQLDB.Adapters;
 using EventSourceingSQLDB.DbModels;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -19,6 +17,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EventSourceingSQLDB.Repository;
 
 namespace EventSourcingMiddleware
 {
@@ -76,12 +75,12 @@ namespace EventSourcingMiddleware
             ///
             #region worker background services
 
-            #region ping worker
+            #region event sourcing worker
 
             services.AddSingleton<IHostedService, RabbitMQSubscriberWorker>(srv =>
             {
                 //get pingServicek
-                var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<VehicleDbContext>());
+                var eventSourcingSrv = new EventSourcingLedger(loggerFactorySrv, srv.GetService<VehicleDbContext>());
 
                 return new RabbitMQSubscriberWorker
                 (serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
@@ -90,7 +89,7 @@ namespace EventSourcingMiddleware
                     exchange = _systemLocalConfiguration.MiddlewareExchange,
                     userName = _systemLocalConfiguration.MessagesMiddlewareUsername,
                     password = _systemLocalConfiguration.MessagesMiddlewarePassword,
-                    routes = getRoutes("ping.vehicle")
+                    routes = GetRoutes("ping.vehicle", "vehicle.vehicle")?.ToArray()
                 }
                 , (pingMessageCallback) =>
                 {
@@ -99,9 +98,12 @@ namespace EventSourcingMiddleware
                         var message = pingMessageCallback();
                         if (message != null)
                         {
-                            var pingModel = Utilities.JsonBinaryDeserialize<PingModel>(message);
-                            if (pingModel != null)
-                                pingSrv.Add(pingModel);
+                            var domainModel = Utilities.JsonBinaryDeserialize<DomainModels.Types.DomainModel<object>>(message);
+                            var dbModel = DbModelFactory.Create(domainModel);
+                            if (dbModel != null)
+                            {
+                                eventSourcingSrv.Add(dbModel).Wait();
+                            }
                         }
                         Logger.LogInformation($"[x] Event sourcing service receiving a message from exchange: {_systemLocalConfiguration.MiddlewareExchange}, route :{_systemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
                     }
@@ -118,12 +120,15 @@ namespace EventSourcingMiddleware
 
         }
         #region internal functions
-        private string[] getRoutes(string endwithMatch)
+        private IEnumerable<string> GetRoutes(params string[] endwithMatch)
         {
-            return _systemLocalConfiguration.MessageSubscriberRoute
-                             .Split(',')
-                                           .Where(route => route.ToLower().EndsWith(endwithMatch, StringComparison.InvariantCultureIgnoreCase))
-                             .ToArray();
+            foreach (var r in endwithMatch)
+            {
+                yield return _systemLocalConfiguration.MessageSubscriberRoute
+                                .Split('-')
+                                              .Where(route => route.ToLower().EndsWith(r, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+
+            }
         }
 
         #endregion

@@ -4,9 +4,6 @@ services:
 
   tracking:
     image: tracking
-    build:
-      context: .
-      dockerfile: Tracking/Dockerfile
     depends_on:
     - distributed_cache
     - messages_middleware
@@ -25,8 +22,22 @@ services:
     - 32771:80
 
   vehicle:
+ vehicle:
+    image: vehicle
+    depends_on:
+    - distributed_cache
+    - messages_middleware
+    - event_sourcing_middleware
+    - database_sql
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+    - ASPNETCORE_ENVIRONMENT=Development
+    - distributed_cache=distributed_cache
+    - cache_db_vehicles=vehicles
+    - messages_middleware=messages_middleware
+    - middleware_exchange=platform
+    - middleware_ping_publisher=*.vehicle.vehicle
+    - middleware_username=guest
+    - middleware_password=guest
     ports:
     - 32772:80
 

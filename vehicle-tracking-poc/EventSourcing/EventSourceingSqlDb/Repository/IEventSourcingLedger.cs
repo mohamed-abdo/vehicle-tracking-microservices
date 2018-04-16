@@ -11,7 +11,7 @@ namespace EventSourceingSQLDB.Repository
         //command should be async task
         Task<int> Add(T pingEventSourcing);
     }
-    public interface IQueryEventSourcingLedger<T> : IServiceFilter where T : new()
+    public interface IQueryEventSourcingLedger<T>
     {
         // return type must be serializable, so i change from IQuerable
         IQueryable<T> Query(Func<T, bool> predicate);

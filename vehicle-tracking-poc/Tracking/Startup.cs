@@ -142,21 +142,21 @@ namespace Tracking
                 }
                 , (trackingMessageRequest) =>
                 {
-                try
-                {
-                    //TODO: add business logic, result should be serializable
-                    var trackingFilter = Utilities.JsonBinaryDeserialize<TrackingFilterModel>(trackingMessageRequest);
-                    Logger.LogInformation($"[x] callback of RabbitMQQueryWorker=> a message");
-                    var response = pingSrv.Query(trackingFilter.Body, predicate: null)?.ToList();
-                    if (response == null)
+                    try
+                    {
+                        //TODO: add business logic, result should be serializable
+                        var trackingFilter = Utilities.JsonBinaryDeserialize<TrackingFilterModel>(trackingMessageRequest);
+                        Logger.LogInformation($"[x] callback of RabbitMQQueryWorker=> a message");
+                        var response = pingSrv.Query(trackingFilter.Body, predicate: null)?.ToList();
+                        if (response == null)
+                            return new byte[0];
+                        return Utilities.JsonBinarySerialize(response);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogCritical(ex, "de-serialize Object exceptions.");
+                        //to respond back to RPC client
                         return new byte[0];
-                    return Utilities.JsonBinarySerialize(response);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogCritical(ex, "de-serialize Object exceptions.");
-                    //to respond back to RPC client
-                    return Utilities.JsonBinarySerialize(new TrackingFilterModel() { });
                     }
                 });
             });

@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 
 namespace EventSourceingSQLDB.Adapters
 {
-    public class PingEventSourcingLedgerAdapter :
+    public class PingEventSourcingLedgerAdapter : IServiceFilter,
         ICommandEventSourcingLedger<PingModel>,
         IQueryEventSourcingLedger<PingModel>
     {
-        private readonly PingEventSourcingLedger _pingEventSourcingLedger;
+        private readonly EventSourcingLedger _pingEventSourcingLedger;
 
         Func<Func<PingModel, bool>, Func<DbModel, bool>> QueryConverter = (modelPredicate) =>
         {
@@ -27,7 +27,7 @@ namespace EventSourceingSQLDB.Adapters
         };
         public PingEventSourcingLedgerAdapter(ILoggerFactory loggerFactory, VehicleDbContext dbContext)
         {
-            _pingEventSourcingLedger = new PingEventSourcingLedger(loggerFactory, Identifiers.PingServiceName, dbContext);
+            _pingEventSourcingLedger = new EventSourcingLedger(loggerFactory, dbContext, Identifiers.PingServiceName);
         }
 
         public string Sender => Identifiers.PingServiceName;

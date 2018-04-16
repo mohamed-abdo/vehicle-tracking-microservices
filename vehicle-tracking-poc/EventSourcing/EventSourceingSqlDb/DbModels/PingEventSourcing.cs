@@ -1,8 +1,8 @@
 ﻿namespace EventSourceingSQLDB.DbModels
 {
-    public class PingEventSourcing : DbModel
+    public class EventSourcing : DbModel
     {
-        public PingEventSourcing() { }
-        public PingEventSourcing(DbModel model) : base(model) { }
+        public EventSourcing() { }
+        public EventSourcing(DbModel model) : base(model) { }
     }
 }

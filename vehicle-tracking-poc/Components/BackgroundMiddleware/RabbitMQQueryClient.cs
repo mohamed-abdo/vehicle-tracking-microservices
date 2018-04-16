@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -9,8 +7,6 @@ using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
 using BuildingAspects.Utilities;
 using DomainModels.DataStructure;
-using DomainModels.Types;
-using DomainModels.Types.Messages;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -37,11 +33,11 @@ namespace BackgroundMiddleware
         private readonly string route;
         public RabbitMQQueryClient(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
         {
-           _logger = logger?
-                            .AddConsole()
-                            .AddDebug()
-                            .CreateLogger<RabbitMQQueryClient<TRequest, TResponse>>()
-                            ?? throw new ArgumentNullException("Logger reference is required");
+            _logger = logger?
+                             .AddConsole()
+                             .AddDebug()
+                             .CreateLogger<RabbitMQQueryClient<TRequest, TResponse>>()
+                             ?? throw new ArgumentNullException("Logger reference is required");
             try
             {
                 _hostConfig = hostConfig;
@@ -89,14 +85,15 @@ namespace BackgroundMiddleware
                 {
                     try
                     {
-                        if (ea.Body == null || ea.Body.Length == 0)
+                        if (ea.Body == null)
                             return;
                         var response = Utilities.JsonBinaryDeserialize<TResponse>(ea.Body);
-                        if (response != null)
-                            if (ea.BasicProperties.CorrelationId == correlationId)
-                            {
-                                respQueue.Add(response);
-                            }
+                        if (response == null)
+                            response = default(TResponse);
+                        if (ea.BasicProperties.CorrelationId == correlationId)
+                        {
+                            respQueue.Add(response);
+                        }
                     }
                     catch (Exception e)
                     {
@@ -104,8 +101,9 @@ namespace BackgroundMiddleware
                     }
                 };
             }
-            catch(Exception ex) {
-                  _logger.LogError("Failed to initialize RabbitMQQueryClient", ex);
+            catch (Exception ex)
+            {
+                _logger.LogError("Failed to initialize RabbitMQQueryClient", ex);
             }
         }
 

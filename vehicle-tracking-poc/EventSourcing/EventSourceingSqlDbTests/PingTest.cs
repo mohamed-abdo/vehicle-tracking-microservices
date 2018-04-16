@@ -55,7 +55,7 @@ namespace EventSourceingSQLDBTests
         {
             var execId = message.Header.ExecutionId;
             var result = await _eventSourcingLedger.Add(message);
-            var messageRec = await _dbContext.PingEventSource
+            var messageRec = await _dbContext.EventSourcing
                 .FirstOrDefaultAsync(p => p.ExecutionId == execId);
             Assert.IsNotNull(messageRec, "Add ping failed, can't find message by execution id.");
         }
@@ -67,7 +67,7 @@ namespace EventSourceingSQLDBTests
             var messageBody = new Ping { ChassisNumber = "Xyz-Vehicle!" };
             message.Body = messageBody;
             var result = await _eventSourcingLedger.Add(message);
-            var messageRec = await _dbContext.PingEventSource.FirstOrDefaultAsync(p => p.ExecutionId == execId);
+            var messageRec = await _dbContext.EventSourcing.FirstOrDefaultAsync(p => p.ExecutionId == execId);
             var originalObj = messageRec.Data.ToObject<PingModel>();
             Assert.IsTrue(originalObj.EqualsByValue(messageBody), "Add ping failed, can't get the original body from the message.");
         }
@@ -85,9 +85,9 @@ namespace EventSourceingSQLDBTests
                 Footer = message.Footer
             };
 
-            var dbObjec = new PingEventSourcing(EventSourceingSQLDB.Functors.Mappers<Ping>.FromPingModelToEnity(Convert(pingMessage)));
+            var dbObjec = new EventSourcing(EventSourceingSQLDB.Functors.Mappers<Ping>.FromPingModelToEnity(Convert(pingMessage)));
 
-            _dbContext.PingEventSource.Add(dbObjec);
+            _dbContext.EventSourcing.Add(dbObjec);
             await _dbContext.SaveChangesAsync();
             var messageRec = _eventSourcingLedgerQuery.Query(p => p.Header.ExecutionId == execId).FirstOrDefault();
 
@@ -108,9 +108,9 @@ namespace EventSourceingSQLDBTests
 
             byte[] binObjSource = Utilities.JsonBinarySerialize(pingMessage);
 
-            var dbObjec = new PingEventSourcing(EventSourceingSQLDB.Functors.Mappers<Ping>.FromPingModelToEnity(Convert(pingMessage)));
+            var dbObjec = new EventSourcing(EventSourceingSQLDB.Functors.Mappers<Ping>.FromPingModelToEnity(Convert(pingMessage)));
 
-            _dbContext.PingEventSource.Add(dbObjec);
+            _dbContext.EventSourcing.Add(dbObjec);
             await _dbContext.SaveChangesAsync();
             var messageRec = _eventSourcingLedgerQuery.Query(p => p.Header.ExecutionId == execId).FirstOrDefault();
 

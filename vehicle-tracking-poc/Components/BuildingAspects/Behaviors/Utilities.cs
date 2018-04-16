@@ -78,12 +78,12 @@ namespace BuildingAspects.Behaviors
         public static byte[] JsonBinarySerialize(object instance)
         {
             if (instance == null) throw new ArgumentNullException(MandatoryParam);
-            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(instance));
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(instance, Defaults.JsonSerializerSettings));
         }
         public static T JsonBinaryDeserialize<T>(byte[] objAsBinary)
         {
             if (objAsBinary == null) throw new ArgumentNullException(MandatoryParam);
-            return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(objAsBinary));
+            return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(objAsBinary), Defaults.JsonSerializerSettings);
         }
         public static byte[] BinarySerialize(object instance)
         {
