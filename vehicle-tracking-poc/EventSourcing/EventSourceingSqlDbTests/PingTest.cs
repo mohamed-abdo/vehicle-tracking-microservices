@@ -1,9 +1,9 @@
 using BuildingAspects.Behaviors;
 using DomainModels.Types.Messages;
 using DomainModels.Business;
-using EventSourceingSqlDb.Adapters;
-using EventSourceingSqlDb.DbModels;
-using EventSourceingSqlDb.Repository;
+using EventSourceingSQLDB.Adapters;
+using EventSourceingSQLDB.DbModels;
+using EventSourceingSQLDB.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -12,7 +12,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EventSourceingSqlDbTests
+namespace EventSourceingSQLDBTests
 {
     [TestFixture]
     public class PingTest
@@ -85,7 +85,7 @@ namespace EventSourceingSqlDbTests
                 Footer = message.Footer
             };
 
-            var dbObjec = new PingEventSourcing(EventSourceingSqlDb.Functors.Mappers<Ping>.FromPingModelToEnity(Convert(pingMessage)));
+            var dbObjec = new PingEventSourcing(EventSourceingSQLDB.Functors.Mappers<Ping>.FromPingModelToEnity(Convert(pingMessage)));
 
             _dbContext.PingEventSource.Add(dbObjec);
             await _dbContext.SaveChangesAsync();
@@ -108,7 +108,7 @@ namespace EventSourceingSqlDbTests
 
             byte[] binObjSource = Utilities.JsonBinarySerialize(pingMessage);
 
-            var dbObjec = new PingEventSourcing(EventSourceingSqlDb.Functors.Mappers<Ping>.FromPingModelToEnity(Convert(pingMessage)));
+            var dbObjec = new PingEventSourcing(EventSourceingSQLDB.Functors.Mappers<Ping>.FromPingModelToEnity(Convert(pingMessage)));
 
             _dbContext.PingEventSource.Add(dbObjec);
             await _dbContext.SaveChangesAsync();

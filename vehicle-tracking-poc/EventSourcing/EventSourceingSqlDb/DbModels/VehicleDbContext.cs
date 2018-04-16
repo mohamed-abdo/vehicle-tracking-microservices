@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace EventSourceingSqlDb.DbModels
+namespace EventSourceingSQLDB.DbModels
 {
     public class VehicleDbContext : DbContext
     {

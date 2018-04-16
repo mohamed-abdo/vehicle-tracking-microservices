@@ -9,5 +9,6 @@ namespace Ping.Models
     {
         public const string DomainModel = "domain-model";
         public const string PingDomainModel= "ping-domain";
+        public const string ServiceName = "ping";
     }
 }

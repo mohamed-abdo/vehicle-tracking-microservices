@@ -26,7 +26,6 @@ namespace BackgroundMiddleware
         private readonly IConnectionFactory connectionFactory;
         private IConnection connection;
         private IModel channel;
-        private readonly IBasicProperties props;
         private readonly EventingBasicConsumer consumer;
         public readonly string exchange, route, queueName;
         //Design decision: keep/ delegate responsibility of translating and casting object to the target type, to receiver callback, even exception will be thrown in his execution thread.

@@ -31,7 +31,7 @@ namespace Tracking.Controllers.Mediator
                 Body = request.Model,
                 Footer = new MessageFooter
                 {
-                    Sender = request.Controller.ActionDescriptor.DisplayName,
+                    Sender = DomainModels.System.Identifiers.TrackingServiceName,
                     FingerPrint = request.Controller.ActionDescriptor.Id,
                     Environment = request.OperationalUnit.Environment,
                     Assembly = request.OperationalUnit.Assembly,

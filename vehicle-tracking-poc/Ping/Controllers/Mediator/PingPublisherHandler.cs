@@ -32,7 +32,7 @@ namespace Ping.Controllers.Mediator
                 Body = notification.Model,
                 Footer = new MessageFooter
                 {
-                    Sender = notification.Controller.ActionDescriptor.DisplayName,
+                    Sender = DomainModels.System.Identifiers.PingServiceName,
                     FingerPrint = notification.Controller.ActionDescriptor.Id,
                     Environment = notification.OperationalUnit.Environment,
                     Assembly = notification.OperationalUnit.Assembly,

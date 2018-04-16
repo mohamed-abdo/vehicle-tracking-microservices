@@ -21,7 +21,6 @@ namespace BackgroundMiddleware
         private readonly IConnectionFactory connectionFactory;
         private IConnection connection;
         private IModel channel;
-        private readonly IBasicProperties props;
         private readonly EventingBasicConsumer consumer;
         public readonly string exchange, route;
         private readonly Func<byte[], byte[]> lambda;

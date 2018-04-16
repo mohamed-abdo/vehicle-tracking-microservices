@@ -1,7 +1,7 @@
-﻿using EventSourceingSqlDb.DbModels;
+﻿using EventSourceingSQLDB.DbModels;
 using Microsoft.Extensions.Logging;
 
-namespace EventSourceingSqlDb.Repository
+namespace EventSourceingSQLDB.Repository
 {
     public abstract class BaseEventSourcingLedger
     {

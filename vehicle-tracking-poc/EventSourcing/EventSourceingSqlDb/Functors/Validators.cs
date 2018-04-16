@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace EventSourceingSqlDb.Functors
+namespace EventSourceingSQLDB.Functors
 {
     public static class Validators<T>
     {

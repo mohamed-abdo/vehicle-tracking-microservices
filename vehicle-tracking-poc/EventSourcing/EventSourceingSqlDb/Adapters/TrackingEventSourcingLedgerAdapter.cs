@@ -1,14 +1,14 @@
 ﻿using DomainModels.System;
 using DomainModels.Types.Messages;
 using DomainModels.Business;
-using EventSourceingSqlDb.DbModels;
-using EventSourceingSqlDb.Repository;
+using EventSourceingSQLDB.DbModels;
+using EventSourceingSQLDB.Repository;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace EventSourceingSqlDb.Adapters
+namespace EventSourceingSQLDB.Adapters
 {
     public class TrackingEventSourcingLedgerAdapter : IQueryEventSourcingLedger<TrackingModel>
     {
@@ -27,20 +27,22 @@ namespace EventSourceingSqlDb.Adapters
 
         public TrackingEventSourcingLedgerAdapter(ILoggerFactory loggerFactory, VehicleDbContext dbContext)
         {
-            _pingEventSourcingLedger = new PingEventSourcingLedger(loggerFactory, dbContext);
+            _pingEventSourcingLedger = new PingEventSourcingLedger(loggerFactory, Identifiers.TrackingServiceName, dbContext);
         }
+
+        public string Sender => Identifiers.TrackingServiceName;
 
         public IQueryable<TrackingModel> Query(Func<TrackingModel, bool> predicate)
         {
             return _pingEventSourcingLedger
-                     .Query(QueryConverter(predicate))
-                     .Select(q => new TrackingModel(DbModelFactory.Convert<Tracking>(q)));
+                        .Query(QueryConverter(predicate))
+                        .Select(q => new TrackingModel(DbModelFactory.Convert<Tracking>(q)));   
         }
         public IQueryable<TrackingModel> Query(IFilter queryFilter, Func<TrackingModel, bool> predicate = null)
         {
             return _pingEventSourcingLedger
-                   .Query(queryFilter, QueryConverter(predicate))
-                   .Select(q => new TrackingModel(DbModelFactory.Convert<Tracking>(q)));
+                       .Query(queryFilter, QueryConverter(predicate))
+                       .Select(q => new TrackingModel(DbModelFactory.Convert<Tracking>(q)));
         }
 
         public IQueryable<TrackingModel> Query(IFilter queryFilter, IDictionary<string, string> modelCriteria = null)

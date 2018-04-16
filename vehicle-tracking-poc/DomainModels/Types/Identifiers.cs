@@ -12,7 +12,6 @@ namespace DomainModels.Types
         #region content Types
 
         public const string ApplicationJson = "application/json";
-
         #endregion
     }
 }

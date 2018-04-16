@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace EventSourceingSqlDb.DbModels
+namespace EventSourceingSQLDB.DbModels
 {
     public static class DbModelFactory
     {

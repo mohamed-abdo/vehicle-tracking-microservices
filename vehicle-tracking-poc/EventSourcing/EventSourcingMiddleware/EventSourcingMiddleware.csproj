@@ -34,7 +34,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Components\BackgroundMiddleware\BackgroundMiddleware.csproj" />
     <ProjectReference Include="..\..\DomainModels\DomainModels.csproj" />
-    <ProjectReference Include="..\EventSourceingSqlDb\EventSourceingSqlDb.csproj" />
+    <ProjectReference Include="..\EventSourceingSqlDb\EventSourceingSQLDB.csproj" />
   </ItemGroup>
 
   <ItemGroup>

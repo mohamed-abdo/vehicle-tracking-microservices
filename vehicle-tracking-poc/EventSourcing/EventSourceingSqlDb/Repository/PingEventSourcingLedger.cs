@@ -1,18 +1,23 @@
 ﻿using DomainModels.System;
-using EventSourceingSqlDb.DbModels;
+using EventSourceingSQLDB.DbModels;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EventSourceingSqlDb.Repository
+namespace EventSourceingSQLDB.Repository
 {
     public class PingEventSourcingLedger : BaseEventSourcingLedger,
         ICommandEventSourcingLedger<DbModel>,
         IQueryEventSourcingLedger<DbModel>
     {
-        public PingEventSourcingLedger(ILoggerFactory loggerFactory, VehicleDbContext dbContext) : base(loggerFactory, dbContext) { }
+        public PingEventSourcingLedger(ILoggerFactory loggerFactory, string serviceFilter, VehicleDbContext dbContext) : base(loggerFactory, dbContext)
+        {
+            _serviceFilter = serviceFilter;
+        }
+        private readonly string _serviceFilter;
+        public string Sender => _serviceFilter;
 
         public Task<int> Add(DbModel pingEventSourcing)
         {
@@ -28,6 +33,7 @@ namespace EventSourceingSqlDb.Repository
         {
             return DbContext
                     .PingEventSource
+                    .Where(i => i.Sender.Equals(Sender, StringComparison.InvariantCultureIgnoreCase))
                     .Where(predicate)
                     .Take(Identifiers.MaxRowsCount)
                     .AsQueryable();
@@ -51,6 +57,7 @@ namespace EventSourceingSqlDb.Repository
 
             return DbContext
                     .PingEventSource
+                    .Where(i => i.Sender.Equals(Sender,StringComparison.InvariantCultureIgnoreCase))
                     .Where(predicate)
                     .Where(timeRangePredicate)
                     .Skip(queryFilter.PageNo * Identifiers.DataPageSize)

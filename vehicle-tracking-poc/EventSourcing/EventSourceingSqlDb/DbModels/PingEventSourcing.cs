@@ -1,4 +1,4 @@
-﻿namespace EventSourceingSqlDb.DbModels
+﻿namespace EventSourceingSQLDB.DbModels
 {
     public class PingEventSourcing : DbModel
     {

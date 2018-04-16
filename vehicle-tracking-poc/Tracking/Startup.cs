@@ -18,8 +18,8 @@ using System;
 using System.Linq;
 using Newtonsoft.Json;
 using RedisCacheAdapter;
-using EventSourceingSqlDb.Adapters;
-using EventSourceingSqlDb.DbModels;
+using EventSourceingSQLDB.Adapters;
+using EventSourceingSQLDB.DbModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace Tracking

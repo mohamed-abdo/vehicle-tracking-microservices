@@ -1,11 +1,11 @@
 ﻿using BuildingAspects.Behaviors;
 using DomainModels.Types;
 using DomainModels.Types.Messages;
-using EventSourceingSqlDb.DbModels;
+using EventSourceingSQLDB.DbModels;
 using Newtonsoft.Json;
 using System;
 
-namespace EventSourceingSqlDb.Functors
+namespace EventSourceingSQLDB.Functors
 {
 
     public class Mappers<T> where T : new()

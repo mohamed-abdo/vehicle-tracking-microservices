@@ -32,7 +32,7 @@ namespace Vehicle.Controllers.Mediator
                 Body = notification.Model,
                 Footer = new MessageFooter
                 {
-                    Sender = notification.Controller.ActionDescriptor.DisplayName,
+                    Sender = DomainModels.System.Identifiers.VeihcleServiceName,
                     FingerPrint = notification.Controller.ActionDescriptor.Id,
                     Environment = notification.OperationalUnit.Environment,
                     Assembly = notification.OperationalUnit.Assembly,
