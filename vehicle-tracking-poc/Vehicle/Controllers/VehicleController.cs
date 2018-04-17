@@ -54,8 +54,9 @@ namespace Vehicle.Controllers
                             ControllerContext,
                             new DomainModels.Business.Vehicle()
                             {
-                                Id=Guid.NewGuid(),
-                                CorrelationId= _operationalUnit.InstanceId.ToString(),
+                                Id = Guid.NewGuid(),
+                                CorrelationId = _operationalUnit.InstanceId.ToString(),
+                                CustomerId = vehicleRequest.CustomerId,
                                 ChassisNumber = vehicleRequest.ChassisNumber,
                                 Color = vehicleRequest.Color,
                                 Country = vehicleRequest.Country,

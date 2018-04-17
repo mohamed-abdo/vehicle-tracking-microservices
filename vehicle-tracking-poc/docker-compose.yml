@@ -85,6 +85,7 @@ services:
     - middleware_routes_subscriber=*.vehicle.vehicle
     - middleware_username=guest
     - middleware_password=guest
+    - event_db_connection=Server=database_sql;Database=vehicles_db;User Id=sa;Password=Pass@word
     ports:
     - 32772:80
 

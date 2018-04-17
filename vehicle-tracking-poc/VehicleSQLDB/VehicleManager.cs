@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DomainModels.System;
@@ -8,8 +7,8 @@ using VehicleSQLDB.DbModels;
 
 namespace VehicleSQLDB
 {
-    public class VehicleManager : ICommandEventSourcingLedger<Vehicle>,
-    IQueryEventSourcingLedger<Vehicle>
+    public class VehicleManager : ICommandVehicleDB<Vehicle>,
+    IQueryVehicleDB<Vehicle>
     {
         public VehicleManager()
         {
@@ -44,22 +43,7 @@ namespace VehicleSQLDB
                 .OrderBy(o=>o.ChassisNumber)
                 .AsQueryable();
         }
-
-        /// <summary>
-        //design decision, max allowed returned rows are fixed by 1000
-        /// </summary>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
-        public IQueryable<Vehicle> Query(IFilter queryFilter, Func<Vehicle, bool> predicate = null)
-        {
-            throw new NotSupportedException();
-
-        }
-
-        public IQueryable<Vehicle> Query(IFilter queryFilter, IDictionary<string, string> modelCriteria = null)
-        {
-            throw new NotImplementedException();
-        }
+      
     }
 }
 

@@ -34,6 +34,7 @@
     <ProjectReference Include="..\Components\WebComponents\WebComponents.csproj" />
     <ProjectReference Include="..\DomainModels\DomainModels.csproj" />
     <ProjectReference Include="..\EventSourcing\EventSourcingMiddleware\EventSourcingMiddleware.csproj" />
+    <ProjectReference Include="..\VehicleSQLDB\VehicleSQLDB.csproj" />
   </ItemGroup>
 
 </Project>

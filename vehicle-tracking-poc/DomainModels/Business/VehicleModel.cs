@@ -28,5 +28,9 @@ namespace DomainModels.Business
         public string Country { get; set; }
         public HashSet<string> Features { get; set; }
 
+        // references (following eventually consistence)
+        public Guid CustomerId { get; set; }
+        public string CustomerName { get; set; }
+
     }
 }

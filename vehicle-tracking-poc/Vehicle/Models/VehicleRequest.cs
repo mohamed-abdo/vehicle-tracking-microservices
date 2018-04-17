@@ -19,5 +19,7 @@ namespace Vehicle.Models
         public string ProductionYear { get; set; }
         [Required]
         public string Country { get; set; }
+        [Required]
+        public Guid CustomerId { get; set; }
     }
 }

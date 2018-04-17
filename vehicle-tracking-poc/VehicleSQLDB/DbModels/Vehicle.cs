@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
 namespace VehicleSQLDB.DbModels
 {
@@ -19,6 +18,8 @@ namespace VehicleSQLDB.DbModels
             Color = vehicle.Color;
             ProductionYear = vehicle.ProductionYear;
             Country = vehicle.Country;
+            CustomerId = vehicle.CustomerId;
+            CustomerName = vehicle.CustomerName;
         }
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -30,5 +31,9 @@ namespace VehicleSQLDB.DbModels
         public virtual string Color { get; set; }
         public virtual string ProductionYear { get; set; }
         public virtual string Country { get; set; }
+
+        // references (following eventually consistence)
+        public virtual Guid CustomerId { get; set; }
+        public virtual string CustomerName { get; set; }
     }
 }

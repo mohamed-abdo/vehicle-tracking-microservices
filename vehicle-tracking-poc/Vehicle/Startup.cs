@@ -7,6 +7,7 @@ using DomainModels.System;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +22,7 @@ using WebComponents.Interceptors;
 
 namespace Vehicle
 {
-	public class Startup
+    public class Startup
     {
         private readonly MiddlewareConfiguration _systemLocalConfiguration;
         private readonly IHostingEnvironment _environemnt;
@@ -54,6 +55,7 @@ namespace Vehicle
             _systemLocalConfiguration = new ServiceConfiguration().Create(new Dictionary<string, string>() {
                 {nameof(_systemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},
                 {nameof(_systemLocalConfiguration.VehiclesCacheDB),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
+                {nameof(_systemLocalConfiguration.EventDbConnection),  Configuration.GetValue<string>(Identifiers.EventDbConnection)},
                 {nameof(_systemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>(Identifiers.MessagesMiddleware)},
                 {nameof(_systemLocalConfiguration.MiddlewareExchange),  Configuration.GetValue<string>(Identifiers.MiddlewareExchange)},
                 {nameof(_systemLocalConfiguration.MessagePublisherRoute),  Configuration.GetValue<string>(Identifiers.MessagePublisherRoute)},
@@ -69,6 +71,15 @@ namespace Vehicle
             var serviceProvider = services.BuildServiceProvider();
             var loggerFactorySrv = serviceProvider.GetService<ILoggerFactory>();
 
+            services.AddDbContextPool<VehicleDbContext>(options => options.UseSqlServer(
+           _systemLocalConfiguration.EventDbConnection,
+               //enable connection resilience
+               connectOptions =>
+               {
+                   connectOptions.EnableRetryOnFailure();
+                   connectOptions.CommandTimeout(Identifiers.TimeoutInSec);
+               })//.UseLoggerFactory(loggerFactorySrv)// to log queries
+             );
             //add application insights information, could be used to monitor the performance, and more analytics when application moved to the cloud.
             loggerFactorySrv.AddApplicationInsights(services.BuildServiceProvider(), LogLevel.Information);
 
@@ -123,7 +134,8 @@ namespace Vehicle
                             if (message != null)
                             {
                                 var domainModel = Utilities.JsonBinaryDeserialize<VehicleModel>(message);
-                                vehicleSrv.Add(new VehicleSQLDB.DbModels.Vehicle(domainModel.Body)).Wait();
+                                var vehicle = new VehicleSQLDB.DbModels.Vehicle(domainModel.Body);
+                                vehicleSrv.Add(vehicle).Wait();
                             }
                             Logger.LogInformation($"[x] Vehicle service receiving a message from exchange: {_systemLocalConfiguration.MiddlewareExchange}, route :{_systemLocalConfiguration.MessageSubscriberRoute}");
                         }
@@ -175,6 +187,12 @@ namespace Vehicle
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IDistributedCache cache, IHostingEnvironment environemnt)
         {
+            // initialize InfoDbContext
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetService<VehicleDbContext>();
+                dbContext?.Database?.EnsureCreated();
+            }
             app.UseStatusCodePages();
             if (environemnt.IsDevelopment())
             {

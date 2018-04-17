@@ -189,7 +189,7 @@ namespace Tracking
                                 if (pingModel != null)
                                     cache.Set(pingModel.Body.ChassisNumber, pingModel.Header.Timestamp.ToString(), Defaults.CacheTimeout).Wait();
                             }
-                            Logger.LogInformation($"[x] Tracking service received a message from exchange: {_systemLocalConfiguration.MiddlewareExchange}, route :{_systemLocalConfiguration.MessageSubscriberRoute}, message: {JsonConvert.SerializeObject(message)}");
+                            Logger.LogInformation($"[x] Tracking service received a message from exchange: {_systemLocalConfiguration.MiddlewareExchange}, route :{_systemLocalConfiguration.MessageSubscriberRoute}");
                         }
                         catch (Exception ex)
                         {
@@ -245,6 +245,12 @@ namespace Tracking
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment environemnt)
         {
+            // initialize InfoDbContext
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetService<EventSourcingDbContext>();
+                dbContext?.Database?.EnsureCreated();
+            }
             app.UseStatusCodePages();
             if (environemnt.IsDevelopment())
             {
