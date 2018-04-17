@@ -1,5 +1,4 @@
-﻿using BaseSQLDB;
-using DomainModels.System;
+﻿using DomainModels.System;
 using EventSourceingSQLDB.DbModels;
 using Microsoft.Extensions.Logging;
 using System;

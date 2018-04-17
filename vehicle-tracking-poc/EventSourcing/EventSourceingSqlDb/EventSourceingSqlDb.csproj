@@ -21,6 +21,5 @@
 
   <ItemGroup>
     <Folder Include="Functors\" />
-    <Folder Include="Repository\" />
   </ItemGroup>
 </Project>

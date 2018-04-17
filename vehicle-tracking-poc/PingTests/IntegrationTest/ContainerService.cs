@@ -40,50 +40,52 @@ namespace PingTests.IntegrationTest
             // start targeted container => ping service
 			StartContainers();
 
-			void Build()
-			{
-				var ServicePath = "../../../";
-				var process = Process.Start(new ProcessStartInfo
-				{
-					FileName = "dotnet",
-					Arguments = $"publish {ServicePath} --configuration {"Debug"} "
-				});
+            #region unused functions
+   //         void Build()
+			//{
+			//	var ServicePath = "../../../";
+			//	var process = Process.Start(new ProcessStartInfo
+			//	{
+			//		FileName = "dotnet",
+			//		Arguments = $"publish {ServicePath} --configuration {"Debug"} "
+			//	});
 
-				process.WaitForExit();
-				Assert.Equal(0, process.ExitCode);
-			}
+			//	process.WaitForExit();
+			//	Assert.Equal(0, process.ExitCode);
+			//}
 
-            void RunForEnvironment()
-            {
-                var ServicePath = "../../../";
-                var process = Process.Start(new ProcessStartInfo
-                {
-                    FileName = "dotnet",
-                    Arguments = $"run {ServicePath} --environment {"Development"} "
-                });
+   //         void RunForEnvironment()
+   //         {
+   //             var ServicePath = "../../../";
+   //             var process = Process.Start(new ProcessStartInfo
+   //             {
+   //                 FileName = "dotnet",
+   //                 Arguments = $"run {ServicePath} --environment {"Development"} "
+   //             });
 
-                process.WaitForExit();
-                Assert.Equal(0, process.ExitCode);
-            }
+   //             process.WaitForExit();
+   //             Assert.Equal(0, process.ExitCode);
+   //         }
 
-            //First build the Docker container image
-            void BuildDocker()
-			{
-				var processStartInfo = new ProcessStartInfo
-				{
-					FileName = "docker-compose",
-					Arguments = $"-f {ServicePath}docker-compose.yml build"
-				};
+   //         //First build the Docker container image
+   //         void BuildDocker()
+			//{
+			//	var processStartInfo = new ProcessStartInfo
+			//	{
+			//		FileName = "docker-compose",
+			//		Arguments = $"-f {ServicePath}docker-compose.yml build"
+			//	};
 
-				AddEnvironmentVariables(processStartInfo);
+			//	AddEnvironmentVariables(processStartInfo);
 
-				var process = Process.Start(processStartInfo);
+			//	var process = Process.Start(processStartInfo);
 
-				process.WaitForExit();
-				Assert.Equal(0, process.ExitCode);
-			}
+			//	process.WaitForExit();
+			//	Assert.Equal(0, process.ExitCode);
+			//}
+            #endregion
 
-			void StartContainers()
+            void StartContainers()
 			{
 				// Now start the docker containers
 				var processStartInfo = new ProcessStartInfo
