@@ -75,6 +75,7 @@ namespace BackgroundMiddleware
             catch (Exception ex)
             {
                 _logger.LogError("Failed to initialize RabbitMQPublisher", ex);
+                throw ex;
             }
         }
 

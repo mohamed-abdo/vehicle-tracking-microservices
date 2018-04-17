@@ -127,6 +127,7 @@ namespace BackgroundMiddleware
             catch (Exception ex)
             {
                 _logger.LogError("Failed to initialize RabbitMQSubscriberWorker", ex);
+                throw ex;
             }
         }
         /// <summary>

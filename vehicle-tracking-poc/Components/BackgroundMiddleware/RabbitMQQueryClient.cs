@@ -95,15 +95,17 @@ namespace BackgroundMiddleware
                             respQueue.Add(response);
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception ex)
                     {
-                        _logger.LogError("Error while processing message by query client", e);
+                        _logger.LogError("Error while processing message by query client", ex);
+                        throw ex;
                     }
                 };
             }
             catch (Exception ex)
             {
                 _logger.LogError("Failed to initialize RabbitMQQueryClient", ex);
+                throw ex;
             }
         }
 
