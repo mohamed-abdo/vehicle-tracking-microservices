@@ -2,6 +2,7 @@
 using DomainModels.System;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace Customer.Controllers.Mediator
 {
@@ -9,26 +10,31 @@ namespace Customer.Controllers.Mediator
     {
         private readonly ControllerContext _controller;
         private readonly DomainModels.Business.Customer _model;
-        private readonly IOperationalUnit _operationalUnit;
+        private readonly Guid _correlationId;
         private readonly IMessageCommand _publisher;
         private readonly MiddlewareConfiguration _localConfiguration;
+        private readonly IOperationalUnit _operationalUnit;
+
         public CustomerPublisher(
             ControllerContext controller,
             DomainModels.Business.Customer model,
             IMessageCommand publisher,
-            MiddlewareConfiguration localConfiguration,
+            MiddlewareConfiguration middlewareConfiguration,
+            Guid correlationId,
             IOperationalUnit operationalUnit)
-        { 
+        {
             _controller = controller;
             _model = model;
+            _correlationId = correlationId;
             _operationalUnit = operationalUnit;
             _publisher = publisher;
-            _localConfiguration = localConfiguration;
+            _localConfiguration = middlewareConfiguration;
         }
         public ControllerContext Controller => _controller;
         public DomainModels.Business.Customer Model => _model;
-        public IOperationalUnit OperationalUnit => _operationalUnit;
         public IMessageCommand MessagePublisher => _publisher;
+        public Guid CorrelationId => _correlationId;
+        public IOperationalUnit OperationalUnit => _operationalUnit;
         public MiddlewareConfiguration MiddlewareConfiguration => _localConfiguration;
     }
 }

@@ -3,7 +3,6 @@ using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
 using DomainModels.Types;
 using DomainModels.Types.Messages;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
@@ -36,13 +35,13 @@ namespace WebComponents.Interceptors
             var correlationHeader = context.HttpContext.Request.Headers[Identifiers.CorrelationId];
             //TODO:replace the following correlation id, since it's correlating all operation from this assembly instance.
             var correlationId = _operationalUnit.InstanceId;
-            if (!string.IsNullOrEmpty(correlationHeader))
-                correlationId = correlationHeader;
+            if (!string.IsNullOrEmpty(correlationHeader) && Guid.TryParse(correlationHeader, out Guid paresedCorId))
+                correlationId = paresedCorId;
 
             //TODO: remove bypassing authorization
             if (false && string.IsNullOrEmpty(context.HttpContext.Request.Headers["authorization"]))
             {
-                var messageHeader = new MessageHeader { CorrelationId = correlationId.ToString() };
+                var messageHeader = new MessageHeader { CorrelationId = correlationId };
 
                 var messageFooter = new MessageFooter
                 {

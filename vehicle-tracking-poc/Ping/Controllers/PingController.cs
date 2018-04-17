@@ -11,6 +11,7 @@ using Ping.Models;
 using WebComponents.Interceptors;
 using Ping.Controllers.Mediator;
 using Ping.Helper;
+using System;
 
 namespace Ping.Controllers
 {
@@ -21,6 +22,7 @@ namespace Ping.Controllers
         private readonly ILogger _logger;
         private readonly IMediator _mediator;
         private readonly IMessageCommand _messagePublisher;
+        private readonly Guid _correlationId;
         private readonly IOperationalUnit _operationalUnit;
         private readonly MiddlewareConfiguration _middlewareConfiguration;
         public PingController(
@@ -33,6 +35,7 @@ namespace Ping.Controllers
             _logger = logger;
             _mediator = mediator;
             _messagePublisher = messagePublisher;
+            _correlationId = Guid.NewGuid();
             _operationalUnit = operationalUnit;
             _middlewareConfiguration = middlewareConfiguration;
         }
@@ -60,6 +63,7 @@ namespace Ping.Controllers
                             },
                             _messagePublisher,
                             _middlewareConfiguration,
+                            _correlationId,
                             _operationalUnit), cancellationToken);
             return Ok();
         }

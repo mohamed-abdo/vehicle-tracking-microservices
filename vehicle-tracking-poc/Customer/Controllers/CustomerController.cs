@@ -19,8 +19,9 @@ namespace Customer.Controllers
         private readonly ILogger _logger;
         private readonly IMediator _mediator;
         private readonly IMessageCommand _messagePublisher;
-        private readonly IOperationalUnit _operationalUnit;
+        private readonly Guid _correlationId;
         private readonly MiddlewareConfiguration _middlewareConfiguration;
+        private readonly IOperationalUnit _operationalUnit;
         public CustomerController(
             ILogger<CustomerController> logger,
             IMediator mediator,
@@ -31,6 +32,7 @@ namespace Customer.Controllers
             _logger = logger;
             _mediator = mediator;
             _messagePublisher = messagePublisher;
+            _correlationId = Guid.NewGuid();
             _operationalUnit = operationalUnit;
             _middlewareConfiguration = middlewareConfiguration;
         }
@@ -55,7 +57,7 @@ namespace Customer.Controllers
                             new DomainModels.Business.Customer()
                             {
                                 Id = Guid.NewGuid(),
-                                CorrelationId = _operationalUnit.InstanceId,
+                                CorrelationId = _correlationId.ToString(),
                                 Name = customerRequest.Name,
                                 BirthDate = customerRequest.BirthDate,
                                 Country = customerRequest.Country,
@@ -64,6 +66,7 @@ namespace Customer.Controllers
                             },
                             _messagePublisher,
                             _middlewareConfiguration,
+                            _correlationId,
                             _operationalUnit), cancellationToken);
             return Ok();
         }

@@ -2,6 +2,7 @@
 using DomainModels.System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -33,9 +34,9 @@ namespace EventSourceingSQLDB.DbModels
         //Header
         public virtual long Id { get; set; }
 
-        public virtual string ExecutionId { get; set; }
+        public virtual Guid ExecutionId { get; set; }
 
-        public virtual string CorrelationId { get; set; }
+        public virtual Guid CorrelationId { get; set; }
 
         public virtual long Timestamp { get; set; }
 

@@ -89,14 +89,12 @@ namespace Vehicle
                 .AddFile(Configuration.GetSection("Logging"))
                 .CreateLogger<Startup>();
 
-            var _operationalUnit = new OperationalUnit(
-                environment: Environemnt.EnvironmentName,
-                assembly: AssemblyName);
-
             // no need to inject the following service since, currently they are injected for the mediator.
 
             services.AddSingleton<MiddlewareConfiguration, MiddlewareConfiguration>(srv => _systemLocalConfiguration);
-            services.AddScoped<IOperationalUnit, IOperationalUnit>(srv => _operationalUnit);
+            services.AddScoped<IOperationalUnit, IOperationalUnit>(srv => new OperationalUnit(
+                environment: Environemnt.EnvironmentName,
+                assembly: AssemblyName));
             services.AddScoped<IMessageCommand, RabbitMQPublisher>(srv => new RabbitMQPublisher(loggerFactorySrv,
             new RabbitMQConfiguration
             {
@@ -169,10 +167,14 @@ namespace Vehicle
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Info { Title = _operationalUnit.Assembly, Version = "v1" });
+                c.SwaggerDoc("v1", new Info { Title = AssemblyName, Version = "v1" });
             });
 
             services.AddMediatR();
+
+            var _operationalUnit = new OperationalUnit(
+              environment: Environemnt.EnvironmentName,
+              assembly: AssemblyName);
 
             services.AddMvc(options =>
             {

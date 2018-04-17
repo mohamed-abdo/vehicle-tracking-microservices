@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using RedisCacheAdapter;
 using System.Collections.Generic;
+using System;
 
 namespace Tracking.Controllers.Mediator
 {
@@ -14,29 +15,32 @@ namespace Tracking.Controllers.Mediator
         private readonly ControllerContext _controller;
         private readonly TrackingFilter _model;
         private readonly IMessageQuery<TrackingFilterModel, IEnumerable<PingModel>> _messageQuery;
-        private readonly IOperationalUnit _oprtationalUnit;
+        private readonly Guid _correlationId;
+        private readonly IOperationalUnit _opertationalUnit;
         private readonly MiddlewareConfiguration _middlewareConfiguration;
         public TrackingRequest(
             ControllerContext controller,
             TrackingFilter model,
             ICacheProvider cache,
             IMessageQuery<TrackingFilterModel, IEnumerable<PingModel>> messageQuery,
-            IOperationalUnit oprtationalUnit,
-            MiddlewareConfiguration middlewareConfiguration
-            )
+            MiddlewareConfiguration middlewareConfiguration,
+            Guid correlationId,
+            IOperationalUnit operationalUnit)
         {
             _cache = cache;
             _controller = controller;
+            _correlationId = correlationId;
             _model = model;
             _messageQuery = messageQuery;
-            _oprtationalUnit = oprtationalUnit;
+            _opertationalUnit = operationalUnit;
             _middlewareConfiguration = middlewareConfiguration;
         }
         public ICacheProvider Locator => _cache;
         public ControllerContext Controller => _controller;
         public TrackingFilter Model => _model;
         public IMessageQuery<TrackingFilterModel, IEnumerable<PingModel>> MessageQuery => _messageQuery;
-        public IOperationalUnit OperationalUnit => _oprtationalUnit;
+        public Guid CorrelationId => _correlationId;
+        public IOperationalUnit OperationalUnit => _opertationalUnit;
         public MiddlewareConfiguration MiddlewareConfiguration => _middlewareConfiguration;
 
     }

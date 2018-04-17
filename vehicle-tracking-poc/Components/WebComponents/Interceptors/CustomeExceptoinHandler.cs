@@ -24,7 +24,6 @@ namespace WebComponents.Interceptors
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IModelMetadataProvider _modelMetadataProvider;
         private readonly IOperationalUnit _operationalUnit;
-
         public CustomeExceptoinHandler(ILogger logger, IOperationalUnit operationalUnit, IHostingEnvironment hostingEnvironment, IModelMetadataProvider modelMetadataProvider = null)
         {
             _logger = logger;
@@ -46,13 +45,13 @@ namespace WebComponents.Interceptors
             var correlationHeader = context.HttpContext.Request.Headers[Identifiers.CorrelationId];
             //TODO:replace the following correlation id, since it's correlating all operation from this assembly instance.
             var correlationId = _operationalUnit.InstanceId;
-            if (!string.IsNullOrEmpty(correlationHeader))
-                correlationId = correlationHeader;
+            if (!string.IsNullOrEmpty(correlationHeader) && Guid.TryParse(correlationHeader, out Guid paresedCorId))
+                correlationId = paresedCorId;
 
             var exception = context.Exception;
             (int code, string message, ResponseHint responseHint) = (exception is CustomException ex) ? ex.CustomMessage : (exception.HResult, exception.Message, ResponseHint.SystemError);
 
-            var messageHeader = new MessageHeader(isSucceed: false) { CorrelationId = correlationId.ToString() };
+            var messageHeader = new MessageHeader( isSucceed: false) { CorrelationId = correlationId };
 
             var messageFooter = new MessageFooter
             {

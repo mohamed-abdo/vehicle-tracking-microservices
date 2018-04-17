@@ -20,7 +20,7 @@ namespace WebComponents.WebMiddlewares
         }
         public async Task Invoke(HttpContext context)
         {
-            var messageHeader = new MessageHeader();
+            var messageHeader = new MessageHeader { };
 
             var messageFooter = new MessageFooter
             {

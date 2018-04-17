@@ -119,6 +119,7 @@ namespace EventSourcingMiddleware
             #endregion
 
         }
+
         #region internal functions
 
         #endregion

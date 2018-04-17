@@ -19,6 +19,7 @@ namespace Vehicle.Controllers
         private readonly ILogger _logger;
         private readonly IMediator _mediator;
         private readonly IMessageCommand _messagePublisher;
+        private readonly Guid _correlationId;
         private readonly IOperationalUnit _operationalUnit;
         private readonly MiddlewareConfiguration _middlewareConfiguration;
         public VehicleController(
@@ -31,6 +32,7 @@ namespace Vehicle.Controllers
             _logger = logger;
             _mediator = mediator;
             _messagePublisher = messagePublisher;
+            _correlationId = Guid.NewGuid();
             _operationalUnit = operationalUnit;
             _middlewareConfiguration = middlewareConfiguration;
         }
@@ -55,7 +57,7 @@ namespace Vehicle.Controllers
                             new DomainModels.Business.Vehicle()
                             {
                                 Id = Guid.NewGuid(),
-                                CorrelationId = _operationalUnit.InstanceId.ToString(),
+                                CorrelationId = _correlationId.ToString(),
                                 CustomerId = vehicleRequest.CustomerId,
                                 //TODO:get customer name (referential data from cache)
                                 //CustomerName = vehicleRequest.CustomerName,
@@ -67,6 +69,7 @@ namespace Vehicle.Controllers
                             },
                             _messagePublisher,
                             _middlewareConfiguration,
+                            _correlationId,
                             _operationalUnit), cancellationToken);
             return Ok();
         }

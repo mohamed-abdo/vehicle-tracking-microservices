@@ -16,7 +16,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Components\BuildingAspects\BuildingAspects.csproj" />
     <ProjectReference Include="..\..\DomainModels\DomainModels.csproj" />
-    <ProjectReference Include="..\..\Components\BaseEntitySQLDB\BaseSQLDB.csproj" />
   </ItemGroup>
 
   <ItemGroup>

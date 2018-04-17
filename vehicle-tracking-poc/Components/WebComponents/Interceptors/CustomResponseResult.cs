@@ -22,7 +22,6 @@ namespace WebComponents.Interceptors
             _logger = logger;
             _operationalUnit = operationalUnit;
         }
-
         public bool IsReusable => false;
         public IFilterMetadata CreateInstance(IServiceProvider serviceProvider)
         {
@@ -34,9 +33,9 @@ namespace WebComponents.Interceptors
             var correlationHeader = context.HttpContext.Request.Headers[Identifiers.CorrelationId];
             //TODO:replace the following correlation id, since it's correlating all operation from this assembly instance.
             var correlationId = _operationalUnit.InstanceId;
-            if (!string.IsNullOrEmpty(correlationHeader))
-                correlationId = correlationHeader;
-            var messageHeader = new MessageHeader(isSucceed: context.HttpContext.Response.StatusCode == 200) { CorrelationId = correlationId.ToString() };
+            if (!string.IsNullOrEmpty(correlationHeader) && Guid.TryParse(correlationHeader,out Guid paresedCorId))
+                correlationId = paresedCorId;
+            var messageHeader = new MessageHeader(isSucceed: context.HttpContext.Response.StatusCode == 200) { CorrelationId = correlationId };
 
             var messageFooter = new MessageFooter
             {

@@ -89,14 +89,13 @@ namespace Tracking
                 .AddFile(Configuration.GetSection("Logging"))
                 .CreateLogger<Startup>();
 
-            var operationalUnit = new OperationalUnit(
-                environment: Environemnt.EnvironmentName,
-                assembly: AssemblyName);
 
             // set cache service for db index 1
             services.AddSingleton<ICacheProvider, CacheManager>(srv => new CacheManager(Logger, _systemLocalConfiguration.CacheServer, 1));
             services.AddSingleton<MiddlewareConfiguration, MiddlewareConfiguration>(srv => _systemLocalConfiguration);
-            services.AddScoped<IOperationalUnit, IOperationalUnit>(srv => operationalUnit);
+            services.AddScoped<IOperationalUnit, IOperationalUnit>(srv => new OperationalUnit(
+                environment: Environemnt.EnvironmentName,
+                assembly: AssemblyName));
             services.AddOptions();
 
             #region worker background services
@@ -228,18 +227,22 @@ namespace Tracking
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Info { Title = operationalUnit.Assembly, Version = "v1" });
+                c.SwaggerDoc("v1", new Info { Title = AssemblyName, Version = "v1" });
             });
 
 
             services.AddMediatR();
 
+            var _operationalUnit = new OperationalUnit(
+               environment: Environemnt.EnvironmentName,
+               assembly: AssemblyName);
+
             services.AddMvc(options =>
             {
                 //TODO: add practical policy instead of empty policy for authentication / authorization .
-                options.Filters.Add(new CustomAuthorizer(_logger, operationalUnit));
-                options.Filters.Add(new CustomeExceptoinHandler(_logger, operationalUnit, Environemnt));
-                options.Filters.Add(new CustomResponseResult(_logger, operationalUnit));
+                options.Filters.Add(new CustomAuthorizer(_logger, _operationalUnit));
+                options.Filters.Add(new CustomeExceptoinHandler(_logger, _operationalUnit, Environemnt));
+                options.Filters.Add(new CustomResponseResult(_logger, _operationalUnit));
             });
         }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
