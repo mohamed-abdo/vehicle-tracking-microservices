@@ -1,5 +1,0 @@
-{"@t":"2018-04-17T13:25:14.3842792Z","@m":"[x] Vehicle service receiving a message from exchange: platform, route :*.vehicle.vehicle","@i":"6b5e5419","SourceContext":"Vehicle.Startup"}
-{"@t":"2018-04-17T14:01:47.3308149Z","@m":"[x] Vehicle service receiving a message from exchange: platform, route :*.vehicle.vehicle","@i":"6b5e5419","SourceContext":"Vehicle.Startup"}
-{"@t":"2018-04-17T14:05:29.1029045Z","@m":"[x] Vehicle service receiving a message from exchange: platform, route :*.vehicle.vehicle","@i":"6b5e5419","SourceContext":"Vehicle.Startup"}
-{"@t":"2018-04-17T15:24:22.9107448Z","@m":"[x] Vehicle service receiving a message from exchange: platform, route :*.vehicle.vehicle","@i":"6b5e5419","SourceContext":"Vehicle.Startup"}
-{"@t":"2018-04-17T15:26:47.1784615Z","@m":"[x] Vehicle service receiving a message from exchange: platform, route :*.vehicle.vehicle","@i":"6b5e5419","SourceContext":"Vehicle.Startup"}

@@ -27,7 +27,7 @@ namespace Vehicle.Controllers.Mediator
             {
                 Header = new MessageHeader
                 {
-                    CorrelationId = notification.OperationalUnit.InstanceId
+                    CorrelationId = notification.CorrelationId
                 },
                 Body = notification.Model,
                 Footer = new MessageFooter

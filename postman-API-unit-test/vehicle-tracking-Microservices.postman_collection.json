@@ -1,13 +1,13 @@
 {
 	"info": {
-		"_postman_id": "f60a3934-5293-430b-9537-49e6af13845b",
+		"_postman_id": "50e3bce7-0ce7-4439-9382-ce3a2e2aa94c",
 		"name": "vehicle-tracking-Microservices",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "Ping service",
-			"description": "",
+			"name": "Ping",
+			"description": null,
 			"item": [
 				{
 					"name": "Ping",
@@ -25,18 +25,136 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\"status\":1,\n\"description\":\"vehicle active status\"\n}"
+							"raw": "{\n\"status\":1,\n\"message\":\"vehicle active status, a message!\"\n}"
 						},
 						"url": {
-							"raw": "{{pingSrv}}/api/v1/vehicle/mohamed-abdo-vehicle",
+							"raw": "{{pingSrv}}/api/v1/ping/mohamed-abdo-vehicle",
 							"host": [
 								"{{pingSrv}}"
 							],
 							"path": [
 								"api",
 								"v1",
-								"vehicle",
+								"ping",
 								"mohamed-abdo-vehicle"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tracking",
+			"description": "",
+			"item": [
+				{
+					"name": "tracking filter",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic user:password"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{trackingSrv}}/api/v1/tracking/1523779090/1623779096/0/5",
+							"host": [
+								"{{trackingSrv}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tracking",
+								"1523779090",
+								"1623779096",
+								"0",
+								"5"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Vehicle",
+			"description": "",
+			"item": [
+				{
+					"name": "Add vehicle",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic user:password"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"chassisNumber\": \"F0986C5F-DA42-43D1-9303-AF30DDDBA8DC\",\r\n  \"model\": \"immune-car-0\",\r\n  \"color\": \"red\",\r\n  \"productionYear\": \"2018\",\r\n  \"country\": \"Germany\",\r\n  \"customerId\": \"73ebff61-0442-4948-85e9-3a8653f6dd3c\"\r\n}"
+						},
+						"url": {
+							"raw": "{{vehicleSrv}}/api/v1/vehicle",
+							"host": [
+								"{{vehicleSrv}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"vehicle"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Customer",
+			"description": "",
+			"item": [
+				{
+					"name": "add customer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic user:password"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"mohamed abdo1\",\r\n  \"mobile\": \"074365346500\",\r\n  \"email\": \"me@abdo@.com\",\r\n  \"birthDate\": \"2018-04-17T13:22:45.498Z\",\r\n  \"country\": \"egypt\"\r\n}"
+						},
+						"url": {
+							"raw": "{{customerSrv}}/api/v1/customer",
+							"host": [
+								"{{customerSrv}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customer"
 							]
 						}
 					},
