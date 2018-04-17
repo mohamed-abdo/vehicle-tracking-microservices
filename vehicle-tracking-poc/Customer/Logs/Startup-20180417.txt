@@ -1,0 +1,1 @@
+{"@t":"2018-04-17T10:47:28.4738206Z","@m":"[x] Customer service receiving a message from exchange: platform, route :*.customer.vehicle","@i":"7a23a230","SourceContext":"Customer.Startup"}

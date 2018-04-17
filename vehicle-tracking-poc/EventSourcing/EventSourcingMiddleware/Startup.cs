@@ -109,7 +109,7 @@ namespace EventSourcingMiddleware
                         }
                         catch (Exception ex)
                         {
-                            Logger.LogCritical(ex, "de-serialize Object exceptions.");
+                            Logger.LogCritical(ex, "Object de-serialization exception.");
                         }
                     });
             });

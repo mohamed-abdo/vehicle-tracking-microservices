@@ -21,7 +21,6 @@ namespace Vehicle.Models
         public string Country { get; set; }
         [Required]
         public Guid CustomerId { get; set; }
-        [Required]
-        public string CustomerName { get; set; }
+
     }
 }

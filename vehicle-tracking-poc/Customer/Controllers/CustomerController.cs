@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BuildingAspects.Services;
@@ -16,15 +14,15 @@ namespace Customer.Controllers
 {
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
-    public class VehicleController : Controller
+    public class CustomerController : Controller
     {
         private readonly ILogger _logger;
         private readonly IMediator _mediator;
         private readonly IMessageCommand _messagePublisher;
         private readonly IOperationalUnit _operationalUnit;
         private readonly MiddlewareConfiguration _middlewareConfiguration;
-        public VehicleController(
-            ILogger<VehicleController> logger,
+        public CustomerController(
+            ILogger<CustomerController> logger,
             IMediator mediator,
             IMessageCommand messagePublisher,
             IOperationalUnit operationalUnit,
@@ -57,11 +55,12 @@ namespace Customer.Controllers
                             new DomainModels.Business.Customer()
                             {
                                 Id = Guid.NewGuid(),
+                                CorrelationId = _operationalUnit.InstanceId,
+                                Name = customerRequest.Name,
                                 BirthDate = customerRequest.BirthDate,
                                 Country = customerRequest.Country,
                                 Email = customerRequest.Email,
-                                Mobile = customerRequest.Mobile,
-                                Name = customerRequest.Name
+                                Mobile = customerRequest.Mobile
                             },
                             _messagePublisher,
                             _middlewareConfiguration,

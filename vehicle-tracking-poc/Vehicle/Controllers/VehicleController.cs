@@ -57,7 +57,8 @@ namespace Vehicle.Controllers
                                 Id = Guid.NewGuid(),
                                 CorrelationId = _operationalUnit.InstanceId.ToString(),
                                 CustomerId = vehicleRequest.CustomerId,
-                                CustomerName = vehicleRequest.CustomerName,
+                                //TODO:get customer name (referential data from cache)
+                                //CustomerName = vehicleRequest.CustomerName,
                                 ChassisNumber = vehicleRequest.ChassisNumber,
                                 Color = vehicleRequest.Color,
                                 Country = vehicleRequest.Country,

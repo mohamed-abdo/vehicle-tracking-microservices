@@ -154,7 +154,7 @@ namespace Tracking
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogCritical(ex, "de-serialize Object exceptions.");
+                        Logger.LogCritical(ex, "Object de-serialization exception.");
                         //to respond back to RPC client
                         return new byte[0];
                     }
@@ -193,7 +193,7 @@ namespace Tracking
                         }
                         catch (Exception ex)
                         {
-                            Logger.LogCritical(ex, "de-serialize Object exceptions.");
+                            Logger.LogCritical(ex, "Object de-serialization exception.");
                         }
                     });
             });

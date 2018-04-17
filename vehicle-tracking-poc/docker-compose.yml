@@ -106,8 +106,10 @@ services:
     - messages_middleware=messages_middleware
     - middleware_exchange=platform
     - middleware_ping_publisher=*.customer.vehicle
+    - middleware_routes_subscriber=*.customer.vehicle
     - middleware_username=guest
     - middleware_password=guest
+    - event_db_connection=Server=database_sql;Database=customers_db;User Id=sa;Password=Pass@word
     ports:
     - 32773:80
 

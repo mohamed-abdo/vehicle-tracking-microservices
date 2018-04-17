@@ -1,13 +1,19 @@
 ﻿using BackgroundMiddleware;
+using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
+using CustomerSQLDB;
+using CustomerSQLDB.DbModels;
+using DomainModels.Business;
 using DomainModels.DataStructure;
 using DomainModels.System;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Swashbuckle.AspNetCore.Swagger;
 using System.Collections.Generic;
@@ -33,7 +39,6 @@ namespace Customer
                 .SetBasePath(environemnt.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables();
-
             _configuration = builder.Build();
 
             _environemnt = environemnt;
@@ -47,9 +52,11 @@ namespace Customer
             _systemLocalConfiguration = new ServiceConfiguration().Create(new Dictionary<string, string>() {
                 {nameof(_systemLocalConfiguration.CacheServer), Configuration.GetValue<string>(Identifiers.CacheServer)},
                 {nameof(_systemLocalConfiguration.VehiclesCacheDB),  Configuration.GetValue<string>(Identifiers.CacheDBVehicles)},
+                {nameof(_systemLocalConfiguration.EventDbConnection),  Configuration.GetValue<string>(Identifiers.EventDbConnection)},
                 {nameof(_systemLocalConfiguration.MessagesMiddleware),  Configuration.GetValue<string>(Identifiers.MessagesMiddleware)},
                 {nameof(_systemLocalConfiguration.MiddlewareExchange),  Configuration.GetValue<string>(Identifiers.MiddlewareExchange)},
                 {nameof(_systemLocalConfiguration.MessagePublisherRoute),  Configuration.GetValue<string>(Identifiers.MessagePublisherRoute)},
+                     {nameof(_systemLocalConfiguration.MessageSubscriberRoute),  Configuration.GetValue<string>(Identifiers.MessageSubscriberRoutes)},
                 {nameof(_systemLocalConfiguration.MessagesMiddlewareUsername),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewareUsername)},
                 {nameof(_systemLocalConfiguration.MessagesMiddlewarePassword),  Configuration.GetValue<string>(Identifiers.MessagesMiddlewarePassword)},
             });
@@ -60,6 +67,16 @@ namespace Customer
         {
             var serviceProvider = services.BuildServiceProvider();
             var loggerFactorySrv = serviceProvider.GetService<ILoggerFactory>();
+
+            services.AddDbContextPool<CustomerDbContext>(options => options.UseSqlServer(
+           _systemLocalConfiguration.EventDbConnection,
+               //enable connection resilience
+               connectOptions =>
+               {
+                   connectOptions.EnableRetryOnFailure();
+                   connectOptions.CommandTimeout(Identifiers.TimeoutInSec);
+               })//.UseLoggerFactory(loggerFactorySrv)// to log queries
+             );
 
             //add application insights information, could be used to monitor the performance, and more analytics when application moved to the cloud.
             loggerFactorySrv.AddApplicationInsights(services.BuildServiceProvider(), LogLevel.Information);
@@ -91,6 +108,43 @@ namespace Customer
 
             #region worker
 
+            #region customer worker
+
+            services.AddSingleton<IHostedService, RabbitMQSubscriberWorker>(srv =>
+            {
+                //get Vehicle service
+                var customerSrv = new CustomerManager(loggerFactorySrv, srv.GetService<CustomerDbContext>());
+
+                return new RabbitMQSubscriberWorker
+                (serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
+                {
+                    hostName = _systemLocalConfiguration.MessagesMiddleware,
+                    exchange = _systemLocalConfiguration.MiddlewareExchange,
+                    userName = _systemLocalConfiguration.MessagesMiddlewareUsername,
+                    password = _systemLocalConfiguration.MessagesMiddlewarePassword,
+                    routes = _systemLocalConfiguration.MessageSubscriberRoute?.Split('-') ?? new string[0]
+                }
+                    , (messageCallback) =>
+                    {
+                        try
+                        {
+                            var message = messageCallback();
+                            if (message != null)
+                            {
+                                var domainModel = Utilities.JsonBinaryDeserialize<CustomerModel>(message);
+                                var customer = new CustomerSQLDB.DbModels.Customer(domainModel.Body);
+                                customerSrv.Add(customer).Wait();
+                            }
+                            Logger.LogInformation($"[x] Customer service receiving a message from exchange: {_systemLocalConfiguration.MiddlewareExchange}, route :{_systemLocalConfiguration.MessageSubscriberRoute}");
+                        }
+                        catch (System.Exception ex)
+                        {
+                            Logger.LogCritical(ex, "Object de-serialization exception.");
+                        }
+                    });
+            });
+
+            #endregion
 
             #endregion
 
@@ -131,6 +185,12 @@ namespace Customer
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IDistributedCache cache, IHostingEnvironment environemnt)
         {
+            // initialize InfoDbContext
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetService<CustomerDbContext>();
+                dbContext?.Database?.EnsureCreated();
+            }
             app.UseStatusCodePages();
             if (environemnt.IsDevelopment())
             {

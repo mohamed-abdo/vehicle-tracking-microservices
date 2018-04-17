@@ -110,7 +110,7 @@ namespace Vehicle
 
             #region worker
 
-            #region event sourcing worker
+            #region vehicle worker
 
             services.AddSingleton<IHostedService, RabbitMQSubscriberWorker>(srv =>
             {
@@ -141,7 +141,7 @@ namespace Vehicle
                         }
                         catch (System.Exception ex)
                         {
-                            Logger.LogCritical(ex, "de-serialize Object exceptions.");
+                            Logger.LogCritical(ex, "Object de-serialization exception.");
                         }
                     });
             });
