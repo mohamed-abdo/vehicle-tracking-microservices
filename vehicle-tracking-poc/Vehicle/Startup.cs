@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using RedisCacheAdapter;
 using Swashbuckle.AspNetCore.Swagger;
 using System.Collections.Generic;
 using VehicleSQLDB;
@@ -114,7 +115,7 @@ namespace Vehicle
             {
                 //get Vehicle service
                 var vehicleSrv = new VehicleManager(loggerFactorySrv, srv.GetService<VehicleDbContext>());
-
+                var cacheSrv = new CacheManager(Logger, _systemLocalConfiguration.CacheServer);
                 return new RabbitMQSubscriberWorker
                 (serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
                 {
@@ -133,7 +134,15 @@ namespace Vehicle
                             {
                                 var domainModel = Utilities.JsonBinaryDeserialize<VehicleModel>(message);
                                 var vehicle = new VehicleSQLDB.DbModels.Vehicle(domainModel.Body);
+                                //get the correlated customer from the cache, to fill name field
+                                var customerBinary = cacheSrv.GetBinary(vehicle.CustomerId.ToString())?.Result;
+                                if (customerBinary != null)
+                                {
+                                   var customer= Utilities.JsonBinaryDeserialize<Customer>(customerBinary);
+                                    vehicle.CustomerName = customer.Name;
+                                }
                                 vehicleSrv.Add(vehicle).Wait();
+                                cacheSrv.SetBinary(vehicle.ChassisNumber, Utilities.JsonBinarySerialize(vehicle)).Wait();
                             }
                             Logger.LogInformation($"[x] Vehicle service receiving a message from exchange: {_systemLocalConfiguration.MiddlewareExchange}, route :{_systemLocalConfiguration.MessageSubscriberRoute}");
                         }

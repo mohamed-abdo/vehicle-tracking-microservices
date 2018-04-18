@@ -11,6 +11,8 @@ using RedisCacheAdapter;
 using WebComponents.Interceptors;
 using Tracking.Controllers.Mediator;
 using System;
+using System.Linq;
+using Tracking.Models;
 
 namespace Tracking.Controllers
 {
@@ -21,7 +23,7 @@ namespace Tracking.Controllers
         private readonly ILogger _logger;
         private ICacheProvider _redisCache;
         private readonly IMediator _mediator;
-        private readonly IMessageQuery<TrackingFilterModel, IEnumerable<PingModel>> _messageQuery;
+        private readonly IMessageQuery<TrackingFilterModel, IEnumerable<DomainModels.Business.Tracking>> _messageQuery;
         private readonly Guid _correlationId;
         private readonly IOperationalUnit _opertationalUnit;
         private readonly MiddlewareConfiguration _middlewareConfiguration;
@@ -29,7 +31,7 @@ namespace Tracking.Controllers
             ILogger<TrackingController> logger,
             IMediator mediator,
             ICacheProvider cache,
-            IMessageQuery<TrackingFilterModel, IEnumerable<PingModel>> messageQuery,
+            IMessageQuery<TrackingFilterModel, IEnumerable<DomainModels.Business.Tracking>> messageQuery,
             IOperationalUnit opertationalUnit,
             MiddlewareConfiguration middlewareConfiguration)
         {
@@ -69,7 +71,9 @@ namespace Tracking.Controllers
                     _opertationalUnit
                 );
             var result = await _mediator.Send(request);
-            return new JsonResult(result);
+            //transform the result model
+            var trackingResult = result?.Select(t => new TrackingResponse(t));
+            return new JsonResult(trackingResult);
         }
     }
 }

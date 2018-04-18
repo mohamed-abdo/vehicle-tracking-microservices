@@ -14,7 +14,7 @@ namespace DomainModels.Types.Messages
         {
             _executionId = executionId ?? Guid.NewGuid();
             _correlationId = correlationId ?? _executionId;
-            _timestamp = timestamp ?? new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+            _timestamp = timestamp ?? new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
             _isSucceed = isSucceed ?? true;
         }
 

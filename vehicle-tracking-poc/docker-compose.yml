@@ -61,7 +61,7 @@ services:
     - middleware_routes_subscriber=*.ping.vehicle
     - middleware_username=guest
     - middleware_password=guest
-    - event_db_connection=Server=database_sql;Database=vehicle_events;User Id=sa;Password=Pass@word
+    - event_db_connection=Server=database_sql;Database=tracking_db;User Id=sa;Password=Pass@word
     ports:
     - 32771:80
 
@@ -130,4 +130,4 @@ services:
     - middleware_routes_subscriber=*.ping.vehicle-*.vehicle.vehicle-*.customer.vehicle
     - middleware_username=guest
     - middleware_password=guest
-    - event_db_connection=Server=database_sql;Database=vehicle_events;User Id=sa;Password=Pass@word
+    - event_db_connection=Server=database_sql;Database=event_sourcing;User Id=sa;Password=Pass@word

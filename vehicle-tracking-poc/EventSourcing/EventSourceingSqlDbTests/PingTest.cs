@@ -38,7 +38,7 @@ namespace EventSourceingSQLDBTests
         {
             message = new PingModel
             {
-                Header = new MessageHeader(executionId: Guid.NewGuid(), timestamp: new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds()),
+                Header = new MessageHeader(executionId: Guid.NewGuid(), timestamp: new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()),
                 Body = new Ping(),
                 Footer = new MessageFooter()
             };

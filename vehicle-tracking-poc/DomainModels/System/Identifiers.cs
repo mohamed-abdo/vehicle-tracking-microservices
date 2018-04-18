@@ -28,11 +28,14 @@ namespace DomainModels.System
         public const int BreakTimeoutInSec = 5;
         public const int CircutBreakerExceptionsCount = 5;
         public const int MaxRowsCount = 1000;
-
+        public const int cache_db_idx0 = 0;
+        public const int cache_db_idx1 = 1;
+        public const int cache_db_idx2 = 2;
         public const string PingServiceName = "ping";
         public const string TrackingServiceName = "tracking";
         public const string VeihcleServiceName = "vehicle";
         public const string CustomerServiceName = "customer";
+        public const string onPing="on_ping";
         #endregion
     }
 }

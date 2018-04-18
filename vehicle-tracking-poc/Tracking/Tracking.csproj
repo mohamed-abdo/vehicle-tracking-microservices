@@ -45,6 +45,7 @@
     <ProjectReference Include="..\DomainModels\DomainModels.csproj" />
     <ProjectReference Include="..\Components\RedisCacheAdapter\RedisCacheAdapter.csproj" />
     <ProjectReference Include="..\EventSourcing\EventSourceingSqlDb\EventSourceingSQLDB.csproj" />
+    <ProjectReference Include="..\TrackingSQLDB\TrackingSQLDB.csproj" />
   </ItemGroup>
 
 </Project>

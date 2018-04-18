@@ -44,8 +44,6 @@ namespace Vehicle.Controllers
             return Ok($"tracking service hello world;{id}");
         }
 
-        // POST api/values
-        // POST api/v/<controller>/vehicleId
         [CustomHeader(Models.Identifiers.DomainModel, Models.Identifiers.VehicleDomainModel)]
         [HttpPost()]
         public async Task<IActionResult> Post([FromBody] VehicleRequest vehicleRequest, CancellationToken cancellationToken)

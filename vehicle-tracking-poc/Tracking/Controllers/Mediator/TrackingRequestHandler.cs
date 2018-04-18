@@ -13,14 +13,14 @@ using Microsoft.Extensions.Primitives;
 
 namespace Tracking.Controllers.Mediator
 {
-    public class TrackingRequestHandler : IRequestHandler<TrackingRequest, IEnumerable<PingModel>>
+    public class TrackingRequestHandler : IRequestHandler<TrackingRequest, IEnumerable<DomainModels.Business.Tracking>>
     {
         private readonly ILogger<TrackingRequestHandler> _logger;
         public TrackingRequestHandler(ILogger<TrackingRequestHandler> logger)
         {
             _logger = logger;
         }
-        public async Task<IEnumerable<PingModel>> Handle(TrackingRequest request, CancellationToken cancellationToken)
+        public async Task<IEnumerable<DomainModels.Business.Tracking>> Handle(TrackingRequest request, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Request => {nameof(TrackingModel)}");
             //add correlation id

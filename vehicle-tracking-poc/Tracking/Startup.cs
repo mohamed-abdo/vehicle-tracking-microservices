@@ -21,6 +21,8 @@ using RedisCacheAdapter;
 using EventSourceingSQLDB.Adapters;
 using EventSourceingSQLDB.DbModels;
 using Microsoft.EntityFrameworkCore;
+using TrackingSQLDB.DbModels;
+using TrackingSQLDB;
 
 namespace Tracking
 {
@@ -70,7 +72,7 @@ namespace Tracking
             var serviceProvider = services.BuildServiceProvider();
             var loggerFactorySrv = serviceProvider.GetService<ILoggerFactory>();
 
-            services.AddDbContextPool<EventSourcingDbContext>(options => options.UseSqlServer(
+            services.AddDbContextPool<TrackingDbContext>(options => options.UseSqlServer(
               _systemLocalConfiguration.EventDbConnection,
               //enable connection resilience
               connectOptions =>
@@ -91,7 +93,7 @@ namespace Tracking
 
 
             // set cache service for db index 1
-            services.AddSingleton<ICacheProvider, CacheManager>(srv => new CacheManager(Logger, _systemLocalConfiguration.CacheServer, 1));
+            services.AddSingleton<ICacheProvider, CacheManager>(srv => new CacheManager(Logger, _systemLocalConfiguration.CacheServer));
             services.AddSingleton<MiddlewareConfiguration, MiddlewareConfiguration>(srv => _systemLocalConfiguration);
             services.AddScoped<IOperationalUnit, IOperationalUnit>(srv => new OperationalUnit(
                 environment: Environemnt.EnvironmentName,
@@ -103,11 +105,11 @@ namespace Tracking
 
             #region tracking vehicle query client
 
-            services.AddScoped<IMessageQuery<TrackingFilterModel, IEnumerable<PingModel>>,
-            RabbitMQQueryClient<TrackingFilterModel, IEnumerable<PingModel>>>(
+            services.AddScoped<IMessageQuery<TrackingFilterModel, IEnumerable<DomainModels.Business.Tracking>>,
+            RabbitMQQueryClient<TrackingFilterModel, IEnumerable<DomainModels.Business.Tracking>>>(
                 srv =>
                 {
-                    return new RabbitMQQueryClient<TrackingFilterModel, IEnumerable<PingModel>>
+                    return new RabbitMQQueryClient<TrackingFilterModel, IEnumerable<DomainModels.Business.Tracking>>
                             (loggerFactorySrv, new RabbitMQConfiguration
                             {
                                 exchange = "",
@@ -127,8 +129,7 @@ namespace Tracking
 
             services.AddSingleton<IHostedService, RabbitMQQueryWorker>(srv =>
             {
-                //get pingService
-                var pingSrv = new PingEventSourcingLedgerAdapter(loggerFactorySrv, srv.GetService<EventSourcingDbContext>());
+                var trackingSrv = new TrackingManager(loggerFactorySrv, srv.GetService<TrackingDbContext>());
 
                 return new RabbitMQQueryWorker
                 (serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
@@ -146,7 +147,7 @@ namespace Tracking
                         //TODO: add business logic, result should be serializable
                         var trackingFilter = Utilities.JsonBinaryDeserialize<TrackingFilterModel>(trackingMessageRequest);
                         Logger.LogInformation($"[x] callback of RabbitMQQueryWorker=> a message");
-                        var response = pingSrv.Query(trackingFilter.Body, predicate: null)?.ToList();
+                        var response = trackingSrv.Query(trackingFilter.Body, predicate: null)?.ToList();
                         if (response == null)
                             return new byte[0];
                         return Utilities.JsonBinarySerialize(response);
@@ -162,11 +163,26 @@ namespace Tracking
             #endregion
 
             //you may get a different cache db, by passing db index parameter.
-            #region cache worker
+            #region cache workers
 
+            //1- cache vehicle status (key/value)
             services.AddSingleton<IHostedService, RabbitMQSubscriberWorker>(srv =>
             {
-                var cache = new CacheManager(Logger, _systemLocalConfiguration.CacheServer, 1);
+                var trackingSrv = new TrackingManager(loggerFactorySrv, srv.GetService<TrackingDbContext>());
+                var cacheSrv = new CacheManager(Logger, _systemLocalConfiguration.CacheServer);
+                cacheSrv.Subscribe(Identifiers.onPing, (message) =>
+                 {
+                     // onPing callback
+                     // add status & time stamp to vehicle 'set'
+                     var pingModel = Utilities.JsonBinaryDeserialize<PingModel>(message);
+                     if (pingModel?.Body != null)
+                     {
+                         cacheSrv.SetHash(pingModel.Body.ChassisNumber, new Dictionary<string, string> {
+                                { pingModel.Header.Timestamp.ToString(), Enum.GetName(typeof(StatusModel), pingModel.Body.Status) }
+                         }, Identifiers.cache_db_idx1).Wait();
+                     }
+                 });
+
                 return new RabbitMQSubscriberWorker
                     (serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
                     {
@@ -181,12 +197,48 @@ namespace Tracking
                         try
                         {
                             var message = pingMessageCallback();
-                            //cache model body by vehicle chassis as a key
                             if (message != null)
                             {
+                                //get ping model
+
                                 var pingModel = Utilities.JsonBinaryDeserialize<PingModel>(message);
                                 if (pingModel != null)
-                                    cache.Set(pingModel.Body.ChassisNumber, pingModel.Header.Timestamp.ToString(), Defaults.CacheTimeout).Wait();
+                                {
+                                    //push vehicle ping on cache that expire after 1 minute, querying this cache db will have vehicles that ping within 1 minute
+                                    cacheSrv.Set(pingModel.Body.ChassisNumber, pingModel.Header.Timestamp.ToString(), Defaults.CacheTimeout, Identifiers.cache_db_idx2)
+                                         .Wait();
+                                    //get relevant vehicle
+                                    Vehicle vehicle = null;
+                                    Customer customer = null;
+                                    var vehicleBinary = cacheSrv.GetBinary(pingModel.Body.ChassisNumber)?.Result;
+                                    if (vehicleBinary != null)
+                                    {
+                                        vehicle = Utilities.JsonBinaryDeserialize<Vehicle>(vehicleBinary);
+                                        //get customer by vehicle
+                                        var customerBinary = cacheSrv.GetBinary(vehicle.CustomerId.ToString())?.Result;
+                                        if (customerBinary != null)
+                                        {
+                                            customer = Utilities.JsonBinaryDeserialize<Customer>(customerBinary);
+                                        }
+                                    }
+                                    //build tracking object 
+                                    var trackingObj = new DomainModels.Business.Tracking
+                                    {
+                                        CorrelationId = pingModel.Header.CorrelationId,
+                                        ChassisNumber = vehicle?.ChassisNumber ?? pingModel.Body.ChassisNumber,
+                                        Model = vehicle?.Model,
+                                        Owner = customer?.Name,
+                                        OwnerRef = (customer?.Id)?.ToString(),
+                                        Status = pingModel.Body.Status,
+                                        Message = pingModel.Body.Message,
+                                        Timestamp = pingModel.Header.Timestamp,
+                                    };
+                                    //push tracking object to repository
+                                    var trackingDbModel = new TrackingSQLDB.DbModels.Tracking(trackingObj);
+                                    trackingSrv.Add(trackingDbModel).Wait();
+                                    // publish on-ping cache event
+                                    cacheSrv.Publish(Identifiers.onPing, message);
+                                }
                             }
                             Logger.LogInformation($"[x] Tracking service received a message from exchange: {_systemLocalConfiguration.MiddlewareExchange}, route :{_systemLocalConfiguration.MessageSubscriberRoute}");
                         }
@@ -196,6 +248,7 @@ namespace Tracking
                         }
                     });
             });
+
 
             #endregion
 
@@ -251,7 +304,7 @@ namespace Tracking
             // initialize InfoDbContext
             using (var scope = app.ApplicationServices.CreateScope())
             {
-                var dbContext = scope.ServiceProvider.GetService<EventSourcingDbContext>();
+                var dbContext = scope.ServiceProvider.GetService<TrackingDbContext>();
                 dbContext?.Database?.EnsureCreated();
             }
             app.UseStatusCodePages();

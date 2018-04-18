@@ -8,19 +8,17 @@ using StackExchange.Redis;
 using System.Linq;
 namespace RedisCacheAdapter
 {
-    public class CacheManager : ICacheProvider
+    public class CacheManager : ICacheProvider, IDisposable
     {
         private const string _redisConnMSG = "redis cache connection is required.";
         private readonly string _redisConnectionStr;
         private readonly ILogger _logger;
         private ConnectionMultiplexer _redisConnection;
-        private readonly int _dbIndex;
-        public CacheManager(ILogger logger, string redisConnectionStr, int dbIndex = 0)
+        public CacheManager(ILogger logger, string redisConnectionStr)
         {
             _logger = logger;
             _redisConnectionStr = redisConnectionStr ?? throw new ArgumentNullException(_redisConnMSG);
             _redisConnection = Redis;
-            _dbIndex = dbIndex;
         }
         private ConnectionMultiplexer Redis =>
              _redisConnection == null || !_redisConnection.IsConnected ?
@@ -30,51 +28,71 @@ namespace RedisCacheAdapter
                          return ConnectionMultiplexer.Connect(_redisConnectionStr);
                      }).Result : _redisConnection;
 
-        public IDatabase CacheDB =>
+        public IDatabase CacheDB(int dbIndex = 0) =>
 
              //The object returned from GetDatabase is a cheap pass-thru object
              //Ref:https://stackexchange.github.io/StackExchange.Redis/Basics
-             Redis?.GetDatabase(_dbIndex);
+             Redis?.GetDatabase(dbIndex);
 
-        public async Task<byte[]> Get(byte[] key)
+        public void Subscribe(string topic, Action<byte[]> callback)
         {
-            return await CacheDB.StringGetAsync(key, CommandFlags.HighPriority);
+            Redis.GetSubscriber().Subscribe(new RedisChannel(topic, RedisChannel.PatternMode.Auto), (channel, message) =>
+            {
+                callback(message);
+            });
+        }
+        public void Publish(string topic, byte[] message)
+        {
+            Redis.GetSubscriber().Publish(new RedisChannel(topic, RedisChannel.PatternMode.Auto), message, CommandFlags.FireAndForget);
         }
 
-        public async Task Set(byte[] key, byte[] value, TimeSpan? timeout)
+        public async Task<byte[]> GetBinary(string key, int dbIndex = 0)
         {
-            await CacheDB.StringSetAsync(key, value, timeout, When.Always, CommandFlags.FireAndForget);
+            return await CacheDB(dbIndex).StringGetAsync(key, CommandFlags.HighPriority);
         }
 
-        public async Task<string> Get(string key)
+        public async Task SetBinary(string key, byte[] value, TimeSpan? timeout = null, int dbIndex = 0)
         {
-            return await CacheDB.StringGetAsync(key, CommandFlags.HighPriority);
+            await CacheDB(dbIndex).StringSetAsync(key, value, timeout, When.Always, CommandFlags.FireAndForget);
         }
 
-        public async Task Set(string key, string value, TimeSpan? timeout)
+        public async Task<string> Get(string key, int dbIndex = 0)
         {
-            await CacheDB.StringSetAsync(key, value, timeout, When.Always, CommandFlags.FireAndForget);
+            return await CacheDB(dbIndex).StringGetAsync(key, CommandFlags.HighPriority);
         }
 
-        public async Task<IEnumerable<string>> GetMembers(string key)
+        public async Task Set(string key, string value, TimeSpan? timeout = null, int dbIndex = 0)
         {
-            return (Array.ConvertAll(await CacheDB.SetMembersAsync(key, CommandFlags.HighPriority), m => (string)m));
+            await CacheDB(dbIndex).StringSetAsync(key, value, timeout, When.Always, CommandFlags.FireAndForget);
         }
 
-        public async Task SetMembers(string key, IEnumerable<string> values)
+        public async Task<IEnumerable<string>> GetMembers(string key, int dbIndex = 0)
         {
-            await CacheDB.SetAddAsync(key, Array.ConvertAll(values?.ToArray(), m => (RedisValue)m), CommandFlags.FireAndForget);
-        }
-        public async Task<Dictionary<string, string>> GetHash(string key)
-        {
-            return (await CacheDB.HashGetAllAsync(key, CommandFlags.HighPriority))?.ToStringDictionary();
+            return (Array.ConvertAll(await CacheDB(dbIndex).SetMembersAsync(key, CommandFlags.HighPriority), m => (string)m));
         }
 
-        public async Task SetHash(string key, Dictionary<string, string> value)
+        public async Task SetMembers(string key, IEnumerable<string> values, int dbIndex = 0)
+        {
+            await CacheDB(dbIndex).SetAddAsync(key, Array.ConvertAll(values?.ToArray(), m => (RedisValue)m), CommandFlags.FireAndForget);
+        }
+        public async Task<Dictionary<string, string>> GetHash(string key, int dbIndex = 0)
+        {
+            return (await CacheDB(dbIndex).HashGetAllAsync(key, CommandFlags.HighPriority))?.ToStringDictionary();
+        }
+
+        public async Task SetHash(string key, IDictionary<string, string> value, int dbIndex = 0)
         {
             var data = value.Select(d => new HashEntry(d.Key, d.Value));
-            await CacheDB.HashSetAsync(key, data?.ToArray(), CommandFlags.FireAndForget);
+            await CacheDB(dbIndex).HashSetAsync(key, data?.ToArray(), CommandFlags.FireAndForget);
         }
 
+        public void Dispose()
+        {
+            if (_redisConnection != null && _redisConnection.IsConnected)
+            {
+                _redisConnection.GetSubscriber().UnsubscribeAll(CommandFlags.FireAndForget);
+                _redisConnection.Close();
+            }
+        }
     }
 }

@@ -20,12 +20,13 @@ namespace DomainModels.Business
     [Serializable]
     public class Tracking
     {
+        public Guid CorrelationId { get; set; }
         public string ChassisNumber { get; set; }
-        public string Vehicle { get; set; }
+        public string Model { get; set; }
         public string Owner { get; set; }
         public string OwnerRef { get; set; }
         public StatusModel Status { get; set; }
-        public DateTime LastUpdate { get; set; }
         public string Message { get; set; }
+        public long Timestamp { get; set; }
     }
 }

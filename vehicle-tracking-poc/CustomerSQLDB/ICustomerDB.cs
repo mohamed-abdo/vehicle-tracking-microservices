@@ -8,7 +8,7 @@ namespace CustomerSQLDB
     public interface ICommandCustomerDB<T> where T : new()
     {
         //command should be async task
-        Task<int> Add(T vehicleDbModel);
+        Task<int> Add(T customerDbModel);
     }
     public interface IQueryCustomerDB<T>
     {
