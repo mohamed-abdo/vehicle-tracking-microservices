@@ -6,6 +6,100 @@
 	},
 	"item": [
 		{
+			"name": "Customer",
+			"description": "",
+			"item": [
+				{
+					"name": "add customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0ed5d858-0cd5-4f38-9fdf-170277fdc258",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"var correlationId = responseHeaders['CorrelationId'];",
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"",
+									"tests[\"Response time is less than 500ms\"] = responseTime < 500;",
+									"",
+									"postman.setEnvironmentVariable(\"customerId\",correlationId);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic user:password"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"mohamed abdo\",\r\n  \"mobile\": \"101010101\",\r\n  \"email\": \"me@abdo.com\",\r\n  \"birthDate\": \"2022-04-17T13:22:45.498Z\",\r\n  \"country\": \"UAE\"\r\n}"
+						},
+						"url": {
+							"raw": "{{customerSrv}}/api/v1/customer",
+							"host": [
+								"{{customerSrv}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customer"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Vehicle",
+			"description": "",
+			"item": [
+				{
+					"name": "Add vehicle",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic user:password"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"chassisNumber\": \"F0986C5F-DA42-43D1-9303-AF30DDDBA8DC\",\r\n  \"model\": \"immune-car-0\",\r\n  \"color\": \"red\",\r\n  \"productionYear\": \"2018\",\r\n  \"country\": \"Germany\",\r\n  \"customerId\": \"CC2AB7D1-78C7-4482-BAD8-3D00E0CFFA30\"\r\n}"
+						},
+						"url": {
+							"raw": "{{vehicleSrv}}/api/v1/vehicle",
+							"host": [
+								"{{vehicleSrv}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"vehicle"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Ping",
 			"description": null,
 			"item": [
@@ -25,10 +119,10 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\"status\":1,\n\"message\":\"vehicle active status, a message!\"\n}"
+							"raw": "{\n\"status\":1,\n\"message\":\"hi i am a vehicle with active status, a message!\"\n}"
 						},
 						"url": {
-							"raw": "{{pingSrv}}/api/v1/ping/mohamed-abdo-vehicle",
+							"raw": "{{pingSrv}}/api/v1/ping/F0986C5F-DA42-43D1-9303-AF30DDDBA8DC",
 							"host": [
 								"{{pingSrv}}"
 							],
@@ -36,7 +130,7 @@
 								"api",
 								"v1",
 								"ping",
-								"mohamed-abdo-vehicle"
+								"F0986C5F-DA42-43D1-9303-AF30DDDBA8DC"
 							]
 						}
 					},
@@ -67,7 +161,7 @@
 							"raw": ""
 						},
 						"url": {
-							"raw": "{{trackingSrv}}/api/v1/tracking/1523779090/1623779096/0/5",
+							"raw": "{{trackingSrv}}/api/v1/tracking/1524062237758/1524562237758/0/5",
 							"host": [
 								"{{trackingSrv}}"
 							],
@@ -75,86 +169,10 @@
 								"api",
 								"v1",
 								"tracking",
-								"1523779090",
-								"1623779096",
+								"1524062237758",
+								"1524562237758",
 								"0",
 								"5"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Vehicle",
-			"description": "",
-			"item": [
-				{
-					"name": "Add vehicle",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Basic user:password"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n  \"chassisNumber\": \"F0986C5F-DA42-43D1-9303-AF30DDDBA8DC\",\r\n  \"model\": \"immune-car-0\",\r\n  \"color\": \"red\",\r\n  \"productionYear\": \"2018\",\r\n  \"country\": \"Germany\",\r\n  \"customerId\": \"73ebff61-0442-4948-85e9-3a8653f6dd3c\"\r\n}"
-						},
-						"url": {
-							"raw": "{{vehicleSrv}}/api/v1/vehicle",
-							"host": [
-								"{{vehicleSrv}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"vehicle"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Customer",
-			"description": "",
-			"item": [
-				{
-					"name": "add customer",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Basic user:password"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n  \"name\": \"mohamed abdo1\",\r\n  \"mobile\": \"074365346500\",\r\n  \"email\": \"me@abdo@.com\",\r\n  \"birthDate\": \"2018-04-17T13:22:45.498Z\",\r\n  \"country\": \"egypt\"\r\n}"
-						},
-						"url": {
-							"raw": "{{customerSrv}}/api/v1/customer",
-							"host": [
-								"{{customerSrv}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"customer"
 							]
 						}
 					},
