@@ -3,6 +3,7 @@ using DomainModels.Types;
 using DomainModels.Types.Messages;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -22,6 +23,8 @@ namespace Vehicle.Controllers.Mediator
         public async Task Handle(VehiclePublisher notification, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Publish notification=> {notification.Model}");
+            //add correlation id
+            notification.Controller.HttpContext.Request.Headers.Add(Identifiers.CorrelationId, new StringValues(notification.CorrelationId.ToString()));
 
             var request = new DomainModel<DomainModels.Business.Vehicle>
             {

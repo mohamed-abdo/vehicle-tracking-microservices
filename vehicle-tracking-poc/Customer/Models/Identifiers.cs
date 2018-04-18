@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace Customer.Models
 {
-    public sealed class Identifiers
+    internal sealed class Identifiers
     {
-        public const string DomainModel = "domain-model";
-        public const string CustomerDomainModel = "customer-domain";
+        internal const string DomainModel = "domain-model";
+        internal const string CustomerDomainModel = "customer-domain";
     }
 }

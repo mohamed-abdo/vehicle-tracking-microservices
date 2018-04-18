@@ -7,11 +7,13 @@ namespace DomainModels.Types.Messages
     {
 
         private readonly Guid _executionId;
+        private Guid _correlationId;
         private readonly long _timestamp;
         private readonly bool _isSucceed;
-        public MessageHeader(Guid? executionId = null, long? timestamp = null, bool? isSucceed = null)
+        public MessageHeader(Guid? executionId = null, Guid? correlationId = null, long? timestamp = null, bool? isSucceed = null)
         {
             _executionId = executionId ?? Guid.NewGuid();
+            _correlationId = correlationId ?? _executionId;
             _timestamp = timestamp ?? new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
             _isSucceed = isSucceed ?? true;
         }
@@ -20,6 +22,6 @@ namespace DomainModels.Types.Messages
         public long Timestamp => _timestamp;
         public bool IsSucceed => _isSucceed;
         //TODO: utilize correlation id for building robust distributed messages.
-        public Guid CorrelationId { get; set; }
+        public Guid CorrelationId { get => _correlationId; set => _correlationId = value; }
     }
 }

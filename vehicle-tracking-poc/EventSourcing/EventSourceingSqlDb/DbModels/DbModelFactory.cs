@@ -36,7 +36,7 @@ namespace EventSourceingSQLDB.DbModels
 
         public static DomainModel<T> Convert<T>(DbModel model)
         {
-            var header = new MessageHeader(executionId: model.ExecutionId, timestamp: model.Timestamp, isSucceed: true);
+            var header = new MessageHeader(executionId: model.ExecutionId, correlationId: model.CorrelationId, timestamp: model.Timestamp, isSucceed: true);
             var body = model.Data.ToObject<T>();
             var footer = new MessageFooter
             {

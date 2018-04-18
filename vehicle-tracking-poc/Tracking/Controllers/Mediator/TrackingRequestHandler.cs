@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Primitives;
 
 namespace Tracking.Controllers.Mediator
 {
@@ -22,6 +23,10 @@ namespace Tracking.Controllers.Mediator
         public async Task<IEnumerable<PingModel>> Handle(TrackingRequest request, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Request => {nameof(TrackingModel)}");
+            //add correlation id
+            request.Controller.HttpContext.Request.Headers.Add(Identifiers.CorrelationId, new StringValues(request.CorrelationId.ToString()));
+
+        
             var trackingFilterModel = new TrackingFilterModel
             {
                 Header = new MessageHeader

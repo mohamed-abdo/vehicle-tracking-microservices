@@ -262,3 +262,4 @@ __pycache__/
 /vehicle-tracking-poc/EventSourcing/EventSourcingMiddleware/Logs
 /vehicle-tracking-poc/Tracking/Logs
 /vehicle-tracking-poc/Ping/Logs
+/vehicle-tracking-poc/Customer/Logs
