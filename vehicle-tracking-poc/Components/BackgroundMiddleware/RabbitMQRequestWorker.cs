@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace BackgroundMiddleware
 {
-    public class RabbitMQQueryWorker : BackgroundService, IDisposable
+    public class RabbitMQRequestWorker : BackgroundService, IDisposable
     {
         private const int defaultMiddlewarePort = 5672;//default rabbitmq port
         private readonly ILogger _logger;
@@ -29,7 +29,7 @@ namespace BackgroundMiddleware
         /// </summary>
         /// <param name="logger">ILogger instance</param>
         /// <param name="hostConfig">rabbitMQ configuration</param>
-        public RabbitMQQueryWorker(
+        public RabbitMQRequestWorker(
             IServiceProvider serviceProvider,
             ILoggerFactory logger,
             RabbitMQConfiguration hostConfig,

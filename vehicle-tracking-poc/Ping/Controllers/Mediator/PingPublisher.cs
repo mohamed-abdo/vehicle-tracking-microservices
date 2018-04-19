@@ -9,14 +9,14 @@ namespace Ping.Controllers.Mediator
     public class PingPublisher : INotification
     {
         private readonly ControllerContext _controller;
-        private readonly DomainModels.Business.Ping _model;
+        private readonly DomainModels.Business.PingDomain.Ping _model;
         private readonly Guid _correlationId;
         private readonly IOperationalUnit _operationalUnit;
         private readonly IMessageCommand _publisher;
         private readonly MiddlewareConfiguration _localConfiguration;
         public PingPublisher(
             ControllerContext controller,
-            DomainModels.Business.Ping model,
+            DomainModels.Business.PingDomain.Ping model,
             IMessageCommand publisher,
             MiddlewareConfiguration middlewareConfiguration,
             Guid correlationId,
@@ -30,7 +30,7 @@ namespace Ping.Controllers.Mediator
             _localConfiguration = middlewareConfiguration;
         }
         public ControllerContext Controller => _controller;
-        public DomainModels.Business.Ping Model => _model;
+        public DomainModels.Business.PingDomain.Ping Model => _model;
         public Guid CorrelationId => _correlationId;
         public IOperationalUnit OperationalUnit => _operationalUnit;
         public IMessageCommand MessagePublisher => _publisher;

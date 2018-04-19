@@ -6,7 +6,7 @@ namespace Tracking.Models
     [Serializable]
     public class TrackingResponse
     {
-        public TrackingResponse(DomainModels.Business.Tracking tracking)
+        public TrackingResponse(DomainModels.Business.TrackingDomain.Tracking tracking)
         {
             CorrelationId = tracking.CorrelationId;
             ChassisNumber = tracking.ChassisNumber;

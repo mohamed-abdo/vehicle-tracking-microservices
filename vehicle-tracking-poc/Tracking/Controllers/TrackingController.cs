@@ -13,6 +13,7 @@ using Tracking.Controllers.Mediator;
 using System;
 using System.Linq;
 using Tracking.Models;
+using DomainModels.Business.TrackingDomain;
 
 namespace Tracking.Controllers
 {
@@ -23,7 +24,7 @@ namespace Tracking.Controllers
         private readonly ILogger _logger;
         private ICacheProvider _redisCache;
         private readonly IMediator _mediator;
-        private readonly IMessageQuery<TrackingFilterModel, IEnumerable<DomainModels.Business.Tracking>> _messageQuery;
+        private readonly IMessageRequest<TrackingFilterModel, IEnumerable<DomainModels.Business.TrackingDomain.Tracking>> _messageQuery;
         private readonly Guid _correlationId;
         private readonly IOperationalUnit _opertationalUnit;
         private readonly MiddlewareConfiguration _middlewareConfiguration;
@@ -31,7 +32,7 @@ namespace Tracking.Controllers
             ILogger<TrackingController> logger,
             IMediator mediator,
             ICacheProvider cache,
-            IMessageQuery<TrackingFilterModel, IEnumerable<DomainModels.Business.Tracking>> messageQuery,
+            IMessageRequest<TrackingFilterModel, IEnumerable<DomainModels.Business.TrackingDomain.Tracking>> messageQuery,
             IOperationalUnit opertationalUnit,
             MiddlewareConfiguration middlewareConfiguration)
         {

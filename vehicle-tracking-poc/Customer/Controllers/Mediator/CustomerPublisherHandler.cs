@@ -25,7 +25,7 @@ namespace Customer.Controllers.Mediator
             _logger.LogInformation($"Publish notification=> {notification.Model}");
             //add correlation id
             notification.Controller.HttpContext.Request.Headers.Add(Identifiers.CorrelationId, new StringValues(notification.CorrelationId.ToString()));
-            var request = new DomainModel<DomainModels.Business.Customer>
+            var request = new DomainModel<DomainModels.Business.CustomerDomain.Customer>
             {
                 Header = new MessageHeader
                 {

@@ -9,7 +9,7 @@ namespace Customer.Controllers.Mediator
     public class CustomerPublisher : INotification
     {
         private readonly ControllerContext _controller;
-        private readonly DomainModels.Business.Customer _model;
+        private readonly DomainModels.Business.CustomerDomain.Customer _model;
         private readonly Guid _correlationId;
         private readonly IMessageCommand _publisher;
         private readonly MiddlewareConfiguration _localConfiguration;
@@ -17,7 +17,7 @@ namespace Customer.Controllers.Mediator
 
         public CustomerPublisher(
             ControllerContext controller,
-            DomainModels.Business.Customer model,
+            DomainModels.Business.CustomerDomain.Customer model,
             IMessageCommand publisher,
             MiddlewareConfiguration middlewareConfiguration,
             Guid correlationId,
@@ -31,7 +31,7 @@ namespace Customer.Controllers.Mediator
             _localConfiguration = middlewareConfiguration;
         }
         public ControllerContext Controller => _controller;
-        public DomainModels.Business.Customer Model => _model;
+        public DomainModels.Business.CustomerDomain.Customer Model => _model;
         public IMessageCommand MessagePublisher => _publisher;
         public Guid CorrelationId => _correlationId;
         public IOperationalUnit OperationalUnit => _operationalUnit;

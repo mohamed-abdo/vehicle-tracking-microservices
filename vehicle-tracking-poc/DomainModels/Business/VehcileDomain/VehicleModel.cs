@@ -3,7 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace DomainModels.Business
+namespace DomainModels.Business.VehicleDomain
 {
     [Serializable]
     public class VehicleModel : DomainModel<Vehicle>
@@ -20,7 +20,7 @@ namespace DomainModels.Business
     public class Vehicle
     {
         public Guid Id { get; set; }
-        public string CorrelationId { get; set; }
+        public Guid CorrelationId { get; set; }
         public string ChassisNumber { get; set; }
         public string Model { get; set; }
         public string Color { get; set; }

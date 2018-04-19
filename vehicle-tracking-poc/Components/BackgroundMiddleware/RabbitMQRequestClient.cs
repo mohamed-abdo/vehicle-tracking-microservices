@@ -17,7 +17,7 @@ namespace BackgroundMiddleware
     /// <summary>
     /// rabbitMQ publisher manager
     /// </summary>
-    public class RabbitMQQueryClient<TRequest, TResponse> : IMessageQuery<TRequest, TResponse>, IDisposable
+    public class RabbitMQRequestClient<TRequest, TResponse> : IMessageRequest<TRequest, TResponse>, IDisposable
     {
         private readonly ILogger _logger;
         private int defaultMiddlewarePort = 5672;//default rabbitmq port
@@ -31,12 +31,12 @@ namespace BackgroundMiddleware
         private readonly IBasicProperties props;
         public readonly string exchange;
         private readonly string route;
-        public RabbitMQQueryClient(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
+        public RabbitMQRequestClient(ILoggerFactory logger, RabbitMQConfiguration hostConfig)
         {
             _logger = logger?
                              .AddConsole()
                              .AddDebug()
-                             .CreateLogger<RabbitMQQueryClient<TRequest, TResponse>>()
+                             .CreateLogger<RabbitMQRequestClient<TRequest, TResponse>>()
                              ?? throw new ArgumentNullException("Logger reference is required");
             try
             {
@@ -109,7 +109,7 @@ namespace BackgroundMiddleware
             }
         }
 
-        public async Task<TResponse> Query(TRequest message)
+        public async Task<TResponse> Request(TRequest message)
         {
             return await new Function(_logger, DomainModels.System.Identifiers.RetryCount).Decorate(() =>
               {

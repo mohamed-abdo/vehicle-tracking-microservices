@@ -6,15 +6,16 @@ using Microsoft.AspNetCore.Mvc;
 using RedisCacheAdapter;
 using System.Collections.Generic;
 using System;
+using DomainModels.Business.TrackingDomain;
 
 namespace Tracking.Controllers.Mediator
 {
-    public class TrackingRequest : IRequest<IEnumerable<DomainModels.Business.Tracking>>
+    public class TrackingRequest : IRequest<IEnumerable<DomainModels.Business.TrackingDomain.Tracking>>
     {
         private readonly ICacheProvider _cache;
         private readonly ControllerContext _controller;
         private readonly TrackingFilter _model;
-        private readonly IMessageQuery<TrackingFilterModel, IEnumerable<DomainModels.Business.Tracking>> _messageQuery;
+        private readonly IMessageRequest<TrackingFilterModel, IEnumerable<DomainModels.Business.TrackingDomain.Tracking>> _messageQuery;
         private readonly Guid _correlationId;
         private readonly IOperationalUnit _opertationalUnit;
         private readonly MiddlewareConfiguration _middlewareConfiguration;
@@ -22,7 +23,7 @@ namespace Tracking.Controllers.Mediator
             ControllerContext controller,
             TrackingFilter model,
             ICacheProvider cache,
-            IMessageQuery<TrackingFilterModel, IEnumerable<DomainModels.Business.Tracking>> messageQuery,
+            IMessageRequest<TrackingFilterModel, IEnumerable<DomainModels.Business.TrackingDomain.Tracking>> messageQuery,
             MiddlewareConfiguration middlewareConfiguration,
             Guid correlationId,
             IOperationalUnit operationalUnit)
@@ -38,7 +39,7 @@ namespace Tracking.Controllers.Mediator
         public ICacheProvider Locator => _cache;
         public ControllerContext Controller => _controller;
         public TrackingFilter Model => _model;
-        public IMessageQuery<TrackingFilterModel, IEnumerable<DomainModels.Business.Tracking>> MessageQuery => _messageQuery;
+        public IMessageRequest<TrackingFilterModel, IEnumerable<DomainModels.Business.TrackingDomain.Tracking>> MessageQuery => _messageQuery;
         public Guid CorrelationId => _correlationId;
         public IOperationalUnit OperationalUnit => _opertationalUnit;
         public MiddlewareConfiguration MiddlewareConfiguration => _middlewareConfiguration;

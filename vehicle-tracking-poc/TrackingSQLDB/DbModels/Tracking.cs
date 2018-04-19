@@ -10,7 +10,7 @@ namespace TrackingSQLDB.DbModels
         public Tracking()
         {
         }
-        public Tracking(DomainModels.Business.Tracking tracking)
+        public Tracking(DomainModels.Business.TrackingDomain.Tracking tracking)
         {
             ChassisNumber = tracking.ChassisNumber;
             Model = tracking.Model;

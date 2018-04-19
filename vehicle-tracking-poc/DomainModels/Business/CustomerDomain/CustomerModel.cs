@@ -1,10 +1,9 @@
-﻿using DomainModels.Types;
-using DomainModels.Types.Messages;
+﻿using DomainModels.Business.VehicleDomain;
+using DomainModels.Types;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace DomainModels.Business
+namespace DomainModels.Business.CustomerDomain
 {
     [Serializable]
     public class CustomerModel : DomainModel<Customer>
@@ -21,11 +20,12 @@ namespace DomainModels.Business
     public class Customer
     {
         public Guid Id { get; set; }
-        public string CorrelationId { get; set; }
+        public Guid CorrelationId { get; set; }
         public string Name { get; set; }
         public string Mobile { get; set; }
         public string Email { get; set; }
         public DateTime? BirthDate { get; set; }
         public string Country { get; set; }
+        public virtual HashSet<Vehicle> Vehicles { get; set; }
     }
 }

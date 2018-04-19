@@ -9,7 +9,7 @@ namespace VehicleSQLDB.DbModels
         public Vehicle()
         {
         }
-        public Vehicle(DomainModels.Business.Vehicle vehicle)
+        public Vehicle(DomainModels.Business.VehicleDomain.Vehicle vehicle)
         {
             Id = vehicle.Id;
             CorrelationId = vehicle.CorrelationId;
@@ -25,7 +25,7 @@ namespace VehicleSQLDB.DbModels
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         //Header
         public virtual Guid Id { get; set; }
-        public virtual string CorrelationId { get; set; }
+        public virtual Guid CorrelationId { get; set; }
         public virtual string ChassisNumber { get; set; }
         public virtual string Model { get; set; }
         public virtual string Color { get; set; }

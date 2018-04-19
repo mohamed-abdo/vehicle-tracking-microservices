@@ -3,7 +3,8 @@ using BuildingAspects.Behaviors;
 using BuildingAspects.Services;
 using CustomerSQLDB;
 using CustomerSQLDB.DbModels;
-using DomainModels.Business;
+using DomainModels.Business.CustomerDomain;
+using DomainModels.Business.VehicleDomain;
 using DomainModels.DataStructure;
 using DomainModels.System;
 using MediatR;
@@ -17,7 +18,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RedisCacheAdapter;
 using Swashbuckle.AspNetCore.Swagger;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using WebComponents.Interceptors;
 namespace Customer
 {
@@ -109,7 +112,7 @@ namespace Customer
             }));
             services.AddOptions();
 
-            #region worker
+            #region workers
 
             #region customer worker
 
@@ -134,7 +137,7 @@ namespace Customer
                             var message = messageCallback();
                             if (message != null)
                             {
-                                var domainModel = Utilities.JsonBinaryDeserialize<CustomerModel>(message);
+                                var domainModel = Utilities.JsonBinaryDeserialize<DomainModels.Business.CustomerDomain.CustomerModel>(message);
                                 var customer = new CustomerSQLDB.DbModels.Customer(domainModel.Body);
                                 customerSrv.Add(customer).Wait();
                                 cacheSrv.SetBinary(customer.Id.ToString(), Utilities.JsonBinarySerialize(customer)).Wait();
@@ -147,6 +150,84 @@ namespace Customer
                         }
                     });
             });
+
+            #endregion
+
+            #region tracking customer query client
+
+            services.AddScoped<IMessageRequest<CustomerFilterModel, IEnumerable<DomainModels.Business.CustomerDomain.Customer>>,
+            RabbitMQRequestClient<CustomerFilterModel, IEnumerable<DomainModels.Business.CustomerDomain.Customer>>>(
+                srv =>
+                {
+                    return new RabbitMQRequestClient<CustomerFilterModel, IEnumerable<DomainModels.Business.CustomerDomain.Customer>>
+                            (loggerFactorySrv, new RabbitMQConfiguration
+                            {
+                                exchange = "",
+                                hostName = _systemLocalConfiguration.MessagesMiddleware,
+                                userName = _systemLocalConfiguration.MessagesMiddlewareUsername,
+                                password = _systemLocalConfiguration.MessagesMiddlewarePassword,
+                                routes = new string[] { "rpc_queue_customer_filter" },
+                            });
+                });
+
+            #endregion
+
+            #region customer query worker
+            // business logic
+            services.AddSingleton<IHostedService, RabbitMQRequestWorker>(srv =>
+            {
+                var customerSrv = new CustomerManager(loggerFactorySrv, srv.GetService<CustomerDbContext>());
+
+                return new RabbitMQRequestWorker
+                (serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
+                {
+                    exchange = "",
+                    hostName = _systemLocalConfiguration.MessagesMiddleware,
+                    userName = _systemLocalConfiguration.MessagesMiddlewareUsername,
+                    password = _systemLocalConfiguration.MessagesMiddlewarePassword,
+                    routes = new string[] { "rpc_queue_customer_filter" },
+                }
+                , (customerFilterMessageRequest) =>
+                {
+                    try
+                    {
+                        //TODO: add business logic, result should be serializable
+                        var customerFilter = Utilities.JsonBinaryDeserialize<CustomerFilterModel>(customerFilterMessageRequest);
+                        Logger.LogInformation($"[x] callback of RabbitMQ customer worker=> a message");
+                        var response = customerSrv.Query((c) =>
+                        {
+                            return c.CorrelationId == customerFilter.Body?.CorrelationId;
+                        })?.ToList();
+                        if (response == null)
+                            return new byte[0];
+                        return Utilities.JsonBinarySerialize(response);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogCritical(ex, "Object de-serialization exception.");
+                        //to respond back to RPC client
+                        return new byte[0];
+                    }
+                });
+            });
+            #endregion
+
+            #region tracking vehicle query client
+
+            services.AddScoped<IMessageRequest<VehicleFilterModel, IEnumerable<Vehicle>>,
+            RabbitMQRequestClient<VehicleFilterModel, IEnumerable<Vehicle>>>(
+                srv =>
+                {
+                    return new RabbitMQRequestClient<VehicleFilterModel, IEnumerable<Vehicle>>
+                            (loggerFactorySrv, new RabbitMQConfiguration
+                            {
+                                exchange = "",
+                                hostName = _systemLocalConfiguration.MessagesMiddleware,
+                                userName = _systemLocalConfiguration.MessagesMiddlewareUsername,
+                                password = _systemLocalConfiguration.MessagesMiddlewarePassword,
+                                routes = new string[] { "rpc_queue_vehicle_filter" },
+                            });
+                });
 
             #endregion
 

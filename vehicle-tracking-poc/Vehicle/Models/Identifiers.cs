@@ -9,5 +9,6 @@ namespace Vehicle.Models
     {
         public const string DomainModel = "domain-model";
         public const string VehicleDomainModel = "vehicle-domain";
+        public const string VehicleResponseDomainModel = "vehicle-response-domain";
     }
 }

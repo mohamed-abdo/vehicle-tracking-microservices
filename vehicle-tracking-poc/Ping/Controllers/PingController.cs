@@ -55,7 +55,7 @@ namespace Ping.Controllers
         {
             await _mediator.Publish(new PingPublisher(
                             ControllerContext,
-                            new DomainModels.Business.Ping()
+                            new DomainModels.Business.PingDomain.Ping()
                             {
                                 ChassisNumber = vehicleId,
                                 Status = Mappers.inferStatus(pingRequest?.Status),

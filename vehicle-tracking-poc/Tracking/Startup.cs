@@ -16,13 +16,14 @@ using Microsoft.Extensions.Hosting;
 using DomainModels.Business;
 using System;
 using System.Linq;
-using Newtonsoft.Json;
 using RedisCacheAdapter;
-using EventSourceingSQLDB.Adapters;
-using EventSourceingSQLDB.DbModels;
 using Microsoft.EntityFrameworkCore;
 using TrackingSQLDB.DbModels;
 using TrackingSQLDB;
+using DomainModels.Business.TrackingDomain;
+using DomainModels.Business.PingDomain;
+using DomainModels.Business.VehicleDomain;
+using DomainModels.Business.CustomerDomain;
 
 namespace Tracking
 {
@@ -102,43 +103,40 @@ namespace Tracking
 
             #region worker background services
 
-
             #region tracking vehicle query client
 
-            services.AddScoped<IMessageQuery<TrackingFilterModel, IEnumerable<DomainModels.Business.Tracking>>,
-            RabbitMQQueryClient<TrackingFilterModel, IEnumerable<DomainModels.Business.Tracking>>>(
+            services.AddScoped<IMessageRequest<TrackingFilterModel, IEnumerable<DomainModels.Business.TrackingDomain.Tracking>>,
+            RabbitMQRequestClient<TrackingFilterModel, IEnumerable<DomainModels.Business.TrackingDomain.Tracking>>>(
                 srv =>
                 {
-                    return new RabbitMQQueryClient<TrackingFilterModel, IEnumerable<DomainModels.Business.Tracking>>
+                    return new RabbitMQRequestClient<TrackingFilterModel, IEnumerable<DomainModels.Business.TrackingDomain.Tracking>>
                             (loggerFactorySrv, new RabbitMQConfiguration
                             {
                                 exchange = "",
                                 hostName = _systemLocalConfiguration.MessagesMiddleware,
                                 userName = _systemLocalConfiguration.MessagesMiddlewareUsername,
                                 password = _systemLocalConfiguration.MessagesMiddlewarePassword,
-                                routes = new string[] { "rpc_queue" },
+                                routes = new string[] { "rpc_queue_tracking_filter" },
                             });
                 });
 
             #endregion
 
-            #region build ping worker cache
 
             #region tracking query worker
             // business logic
-
-            services.AddSingleton<IHostedService, RabbitMQQueryWorker>(srv =>
+            services.AddSingleton<IHostedService, RabbitMQRequestWorker>(srv =>
             {
                 var trackingSrv = new TrackingManager(loggerFactorySrv, srv.GetService<TrackingDbContext>());
 
-                return new RabbitMQQueryWorker
+                return new RabbitMQRequestWorker
                 (serviceProvider, loggerFactorySrv, new RabbitMQConfiguration
                 {
                     exchange = "",
                     hostName = _systemLocalConfiguration.MessagesMiddleware,
                     userName = _systemLocalConfiguration.MessagesMiddlewareUsername,
                     password = _systemLocalConfiguration.MessagesMiddlewarePassword,
-                    routes = new string[] { "rpc_queue" },
+                    routes = new string[] { "rpc_queue_tracking_filter" },
                 }
                 , (trackingMessageRequest) =>
                 {
@@ -146,7 +144,7 @@ namespace Tracking
                     {
                         //TODO: add business logic, result should be serializable
                         var trackingFilter = Utilities.JsonBinaryDeserialize<TrackingFilterModel>(trackingMessageRequest);
-                        Logger.LogInformation($"[x] callback of RabbitMQQueryWorker=> a message");
+                        Logger.LogInformation($"[x] callback of RabbitMQ tracking worker=> a message");
                         var response = trackingSrv.Query(trackingFilter.Body, predicate: null)?.ToList();
                         if (response == null)
                             return new byte[0];
@@ -222,7 +220,7 @@ namespace Tracking
                                         }
                                     }
                                     //build tracking object 
-                                    var trackingObj = new DomainModels.Business.Tracking
+                                    var trackingObj = new DomainModels.Business.TrackingDomain.Tracking
                                     {
                                         CorrelationId = pingModel.Header.CorrelationId,
                                         ChassisNumber = vehicle?.ChassisNumber ?? pingModel.Body.ChassisNumber,
@@ -252,7 +250,6 @@ namespace Tracking
 
             #endregion
 
-            #endregion
 
             #region internal functions
 

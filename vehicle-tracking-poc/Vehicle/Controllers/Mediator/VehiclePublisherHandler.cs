@@ -26,7 +26,7 @@ namespace Vehicle.Controllers.Mediator
             //add correlation id
             notification.Controller.HttpContext.Request.Headers.Add(Identifiers.CorrelationId, new StringValues(notification.CorrelationId.ToString()));
 
-            var request = new DomainModel<DomainModels.Business.Vehicle>
+            var request = new DomainModel<DomainModels.Business.VehicleDomain.Vehicle>
             {
                 Header = new MessageHeader
                 {

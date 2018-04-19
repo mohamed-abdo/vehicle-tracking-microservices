@@ -9,8 +9,8 @@ namespace BuildingAspects.Services
         Task Command<TRequest>(TRequest message);
     }
 
-    public interface IMessageQuery<TRequest, TResponse>
+    public interface IMessageRequest<TRequest, TResponse>
     {
-        Task<TResponse> Query(TRequest message);
+        Task<TResponse> Request(TRequest message);
     }
 }

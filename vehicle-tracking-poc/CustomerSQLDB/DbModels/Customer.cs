@@ -9,7 +9,7 @@ namespace CustomerSQLDB.DbModels
         public Customer()
         {
         }
-        public Customer(DomainModels.Business.Customer customer)
+        public Customer(DomainModels.Business.CustomerDomain.Customer customer)
         {
             Id = customer.Id;
             Name = customer.Name;
@@ -23,7 +23,7 @@ namespace CustomerSQLDB.DbModels
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         //Header
         public virtual Guid Id { get; set; }
-        public virtual string CorrelationId { get; set; }
+        public virtual Guid CorrelationId { get; set; }
         public virtual string Name { get; set; }
         public virtual string Mobile { get; set; }
         public virtual string Email { get; set; }

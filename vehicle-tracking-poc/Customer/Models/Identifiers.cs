@@ -9,5 +9,6 @@ namespace Customer.Models
     {
         internal const string DomainModel = "domain-model";
         internal const string CustomerDomainModel = "customer-domain";
+        internal const string CustomerResponseDomainModel = "customer-response-domain";
     }
 }

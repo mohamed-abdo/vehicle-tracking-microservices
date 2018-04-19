@@ -26,7 +26,7 @@ namespace Ping.Controllers.Mediator
             //add correlation id
             notification.Controller.HttpContext.Request.Headers.Add(Identifiers.CorrelationId, new StringValues(notification.CorrelationId.ToString()));
 
-            var request = new DomainModel<DomainModels.Business.Ping>
+            var request = new DomainModel<DomainModels.Business.PingDomain.Ping>
             {
                 Header = new MessageHeader
                 {
