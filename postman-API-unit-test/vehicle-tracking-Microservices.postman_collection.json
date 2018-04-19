@@ -15,7 +15,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "0ed5d858-0cd5-4f38-9fdf-170277fdc258",
+								"id": "ddd3aee4-135a-4b1a-8eca-b247ab0afb5a",
 								"type": "text/javascript",
 								"exec": [
 									"var jsonData = JSON.parse(responseBody);",
@@ -24,7 +24,7 @@
 									"",
 									"tests[\"Response time is less than 500ms\"] = responseTime < 500;",
 									"",
-									"postman.setEnvironmentVariable(\"customerId\",correlationId);"
+									"postman.setEnvironmentVariable(\"correlationId\",correlationId);"
 								]
 							}
 						}
@@ -58,6 +58,59 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "get customer by correlationId",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c047cc7f-6dfb-43c3-b252-5163184fc3f4",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"var correlationId = responseHeaders['CorrelationId'];",
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"",
+									"tests[\"Response time is less than 500ms\"] = responseTime < 1000;",
+									"",
+									"tests[\"matched correlationId\"] = postman.getEnvironmentVariable(\"correlationId\") == jsonData.correlationId",
+									"",
+									"postman.setEnvironmentVariable(\"customerId\",jsonData.customerId);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic user:password"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"mohamed abdo\",\r\n  \"mobile\": \"101010101\",\r\n  \"email\": \"me@abdo.com\",\r\n  \"birthDate\": \"2022-04-17T13:22:45.498Z\",\r\n  \"country\": \"UAE\"\r\n}"
+						},
+						"url": {
+							"raw": "{{customerSrv}}/api/v1/customer/{{correlationId}}",
+							"host": [
+								"{{customerSrv}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customer",
+								"{{correlationId}}"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -66,7 +119,20 @@
 			"description": "",
 			"item": [
 				{
-					"name": "Add vehicle",
+					"name": "add vehicle",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "9d73520c-03f1-4ea5-bfab-a9a9fc542a87",
+								"type": "text/javascript",
+								"exec": [
+									"var chassisNumber= Math.random().toString(36).substr(2, 11).split('').map(c => Math.random() < 0.5 ? c.toUpperCase() : c).join('');",
+									"postman.setEnvironmentVariable(\"chassisNumber\",chassisNumber);"
+								]
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [
@@ -81,7 +147,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"chassisNumber\": \"F0986C5F-DA42-43D1-9303-AF30DDDBA8DC\",\r\n  \"model\": \"immune-car-0\",\r\n  \"color\": \"red\",\r\n  \"productionYear\": \"2018\",\r\n  \"country\": \"Germany\",\r\n  \"customerId\": \"CC2AB7D1-78C7-4482-BAD8-3D00E0CFFA30\"\r\n}"
+							"raw": "{\r\n  \"chassisNumber\": \"{{chassisNumber}}\",\r\n  \"model\": \"immune-car-x\",\r\n  \"color\": \"black\",\r\n  \"productionYear\": \"2020\",\r\n  \"country\": \"Germany\",\r\n  \"customerId\": \"{{customerId}}\"\r\n}"
 						},
 						"url": {
 							"raw": "{{vehicleSrv}}/api/v1/vehicle",
@@ -96,6 +162,51 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "get vehicle by customerId",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "9c7cccc9-4cfa-4745-8b19-b148d105c4ca",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic user:password"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"chassisNumber\": \"{{chassisNumber}}\",\r\n  \"model\": \"immune-car-0\",\r\n  \"color\": \"red\",\r\n  \"productionYear\": \"2018\",\r\n  \"country\": \"Germany\",\r\n  \"customerId\": \"{{customerId}}\"\r\n}"
+						},
+						"url": {
+							"raw": "{{vehicleSrv}}/api/v1/vehicle/{{customerId}}",
+							"host": [
+								"{{vehicleSrv}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"vehicle",
+								"{{customerId}}"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -104,7 +215,7 @@
 			"description": null,
 			"item": [
 				{
-					"name": "Ping",
+					"name": "ping !",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -122,7 +233,7 @@
 							"raw": "{\n\"status\":1,\n\"message\":\"hi i am a vehicle with active status, a message!\"\n}"
 						},
 						"url": {
-							"raw": "{{pingSrv}}/api/v1/ping/F0986C5F-DA42-43D1-9303-AF30DDDBA8DC",
+							"raw": "{{pingSrv}}/api/v1/ping/{{chassisNumber}}",
 							"host": [
 								"{{pingSrv}}"
 							],
@@ -130,7 +241,7 @@
 								"api",
 								"v1",
 								"ping",
-								"F0986C5F-DA42-43D1-9303-AF30DDDBA8DC"
+								"{{chassisNumber}}"
 							]
 						}
 					},
@@ -161,7 +272,7 @@
 							"raw": ""
 						},
 						"url": {
-							"raw": "{{trackingSrv}}/api/v1/tracking/1524062237758/1524562237758/0/5",
+							"raw": "{{trackingSrv}}/api/v1/tracking/1524062237758/1524562237758/0/10",
 							"host": [
 								"{{trackingSrv}}"
 							],
@@ -172,7 +283,7 @@
 								"1524062237758",
 								"1524562237758",
 								"0",
-								"5"
+								"10"
 							]
 						}
 					},
